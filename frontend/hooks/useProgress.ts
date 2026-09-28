@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { api } from "@/lib/api";
 
 interface ProgressState {
   completed: string[];
@@ -9,44 +11,65 @@ interface ProgressState {
 
 export function useProgress(projectSlug: string) {
   const storageKey = `buildscape_progress_${projectSlug}`;
+  const { user } = useAuth();
+
   const [state, setState] = useState<ProgressState>({
     completed: [],
     hydrated: false,
   });
 
-  // Hydrate from localStorage on mount.
-  // Reading localStorage must happen in an effect (not on the server).
-  // We batch both updates into a single setState to avoid cascading renders.
+  // Hydrate: backend when logged in, localStorage when not
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setState(() => {
-      try {
-        const stored = localStorage.getItem(storageKey);
-        return {
-          completed: stored ? (JSON.parse(stored) as string[]) : [],
-          hydrated: true,
-        };
-      } catch {
-        return { completed: [], hydrated: true };
-      }
-    });
-  }, [storageKey]);
+    if (user) {
+      api
+        .getProgress(projectSlug)
+        .then((data) => {
+          const ids = data.completedPhases.map((p) => p.phaseId);
+          setState({ completed: ids, hydrated: true });
+        })
+        .catch(() => setState({ completed: [], hydrated: true }));
+    } else {
+      setState(() => {
+        try {
+          const stored = localStorage.getItem(storageKey);
+          return {
+            completed: stored ? (JSON.parse(stored) as string[]) : [],
+            hydrated: true,
+          };
+        } catch {
+          return { completed: [], hydrated: true };
+        }
+      });
+    }
+  }, [projectSlug, storageKey, user]);
 
   const togglePhase = useCallback(
     (phaseId: string) => {
+      const isNowCompleting = !state.completed.includes(phaseId);
+
       setState((prev) => {
         const updated = prev.completed.includes(phaseId)
           ? prev.completed.filter((id) => id !== phaseId)
           : [...prev.completed, phaseId];
+
+        // Persist locally always (fallback / offline)
         try {
           localStorage.setItem(storageKey, JSON.stringify(updated));
         } catch {
           /* ignore */
         }
+
         return { ...prev, completed: updated };
       });
+
+      // Sync to backend if logged in and marking complete (no un-complete API for now)
+      if (user && isNowCompleting) {
+        api.completePhase(projectSlug, phaseId).catch(() => {
+          /* fail silently — localStorage already saved */
+        });
+      }
     },
-    [storageKey]
+    [state.completed, storageKey, user, projectSlug]
   );
 
   const isCompleted = useCallback(
@@ -71,3 +94,4 @@ export function useProgress(projectSlug: string) {
     clearProgress,
   };
 }
+

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import { Providers } from "@/components/Providers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -46,8 +47,9 @@ export default function RootLayout({
           className="pointer-events-none fixed inset-0 z-50 opacity-[0.035] bg-grain"
           aria-hidden="true"
         />
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
 }
+
