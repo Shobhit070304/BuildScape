@@ -38,27 +38,32 @@ function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
 
 export function StatsSection() {
   const projects = getAllProjects();
-  const totalProjects = projects.length; // 2
-  const totalPhases = projects.reduce((acc, p) => acc + p.phases.length, 0); // 10
-  const totalHours = projects.reduce((acc, p) => acc + p.estimatedHours, 0); // 20
+  const totalProjects = projects.length;
+  const totalPhases = projects.reduce((acc, p) => acc + p.phases.length, 0);
+  const totalHours = projects.reduce((acc, p) => acc + p.estimatedHours, 0);
 
   const stats = [
-    { label: "Full-Stack Projects", value: totalProjects, suffix: "" },
-    { label: "Structured Phases", value: totalPhases, suffix: "" },
-    { label: "Hours of Building", value: totalHours, suffix: "h" },
+    { label: "Full-Stack Builds", value: totalProjects, suffix: "" },
+    { label: "Step-by-Step Phases", value: totalPhases, suffix: "" },
+    { label: "Guided Engineering", value: totalHours, suffix: "h" },
     { label: "Free & Self-Paced", value: 100, suffix: "%" },
   ];
 
   return (
-    <section className="mb-16 grid grid-cols-2 gap-4 rounded-2xl border border-[#222222] bg-[#0e0e0e] p-6 sm:p-8 md:grid-cols-4">
-      {stats.map(({ label, value, suffix }) => (
-        <div key={label} className="text-center">
-          <div className="mb-1 font-serif text-3xl font-bold leading-none text-[#e4ddd3] sm:text-4xl">
-            <Counter target={value} suffix={suffix} />
+    <section className="mb-20">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-[#24211b] bg-[#1d1a16] shadow-xl md:grid-cols-4">
+        {stats.map(({ label, value, suffix }) => (
+          <div
+            key={label}
+            className="flex flex-col items-center justify-center bg-[#0e0d0b] p-6 text-center transition-colors hover:bg-[#12100d]"
+          >
+            <div className="mb-1.5 font-serif text-3xl font-bold tracking-tight text-[#f0eae1] sm:text-4xl">
+              <Counter target={value} suffix={suffix} />
+            </div>
+            <div className="text-xs font-medium text-[#8a8178]">{label}</div>
           </div>
-          <div className="text-xs text-[#7a7168]">{label}</div>
-        </div>
-      ))}
+        ))}
+      </div>
     </section>
   );
 }

@@ -26,37 +26,55 @@ export function Navbar() {
         <div className="flex items-center gap-3">
           <Link
             href="/projects"
-            className="rounded-md px-3.5 py-1.5 text-xs text-[#8a8178] transition-colors hover:text-[#e4ddd3]"
+            className="rounded-md px-3 py-1.5 text-xs text-[#8a8178] transition-colors hover:text-[#e4ddd3]"
           >
             Projects
           </Link>
 
+          {user && (
+            <Link
+              href="/profile"
+              className="rounded-md px-3 py-1.5 text-xs text-[#8a8178] transition-colors hover:text-[#e4ddd3]"
+            >
+              Profile
+            </Link>
+          )}
+
           {isLoading ? (
             <div className="h-7 w-20 animate-pulse rounded-md bg-[#1a1a1a]" />
           ) : user ? (
-            <div className="flex items-center gap-2">
-              {user.avatar ? (
-                <Image
-                  src={user.avatar}
-                  alt={user.name}
-                  width={28}
-                  height={28}
-                  className="rounded-full border border-[#2a2a2a]"
-                />
-              ) : (
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-950/50 border border-amber-800/40 text-[0.65rem] font-bold text-[#c9a96e]">
-                  {user.name[0].toUpperCase()}
-                </div>
-              )}
-              <span className="hidden text-xs text-[#8a8178] sm:block">
-                {user.name.split(" ")[0]}
-              </span>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/profile"
+                className="flex items-center gap-2 rounded-md border border-[#222222] bg-[#111111] px-2.5 py-1 transition-colors hover:border-[#333333]"
+                title="View your profile"
+              >
+                {user.avatar ? (
+                  <Image
+                    src={user.avatar}
+                    alt={user.name}
+                    width={20}
+                    height={20}
+                    className="rounded-full border border-[#2a2a2a]"
+                  />
+                ) : (
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full border border-amber-800/40 bg-amber-950/50 text-[0.6rem] font-bold text-[#c9a96e]">
+                    {user.name[0]?.toUpperCase()}
+                  </div>
+                )}
+                <span className="text-xs font-medium text-[#d4cbbd]">
+                  {user.name.split(" ")[0]}
+                </span>
+              </Link>
+
+              {/* Clear, distinct Logout button */}
               <button
                 onClick={logout}
-                title="Sign out"
-                className="flex items-center rounded-md p-1.5 text-[#4a4540] transition-colors hover:text-[#e4ddd3]"
+                className="flex items-center gap-1.5 rounded-md border border-stone-800 bg-stone-900/80 px-2.5 py-1 text-xs font-medium text-stone-300 transition-all hover:border-stone-700 hover:bg-stone-800 hover:text-white"
+                title="Log out of your account"
               >
-                <LogOut className="h-3.5 w-3.5" />
+                <LogOut className="h-3.5 w-3.5 text-stone-400" />
+                <span>Log out</span>
               </button>
             </div>
           ) : (

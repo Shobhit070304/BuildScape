@@ -16,13 +16,15 @@ Learn modern software engineering by building real-world projects phase by phase
 ### ✅ Phase 1: Frontend & UI
 - Landing page with modern dark theme and curriculum overview
 - Project library (`/projects`) with search and track/difficulty filters
-- Interactive project workspace (`/projects/[slug]`) with phase-by-phase Markdown guidance, progress tracker, and local storage fallback
+- Project overview page (`/projects/[slug]`) with full curriculum roadmap and sticky enrollment box
+- Interactive workspace window (`/projects/[slug]/workspace`) with phase-by-phase Markdown guidance, progress tracker, and local storage fallback
+- User profile page (`/profile`) tracking enrolled projects and completion progress
 
 ### ✅ Phase 2: Backend & Authentication
 - **MongoDB Models:** `User`, `Project`, `Phase`, `UserProjectEnrollment`, `UserTaskProgress`
 - **Google OAuth & JWT:** ID token verification, session JWTs, and protected routes
-- **REST APIs:** Project listing, full project details, enrollment, and phase completion tracking
-- **Frontend Sync:** Google login in Navbar and cloud progress saving with `useProgress`
+- **REST APIs:** Project listing, full project details, enrollment, phase completion, and enrolled projects tracking
+- **Frontend Sync:** Google login in Navbar, cloud progress saving with `useProgress`, and clear one-click logout
 
 ---
 
@@ -73,6 +75,7 @@ npm run dev
 - `POST /api/auth/google` — Google OAuth login / registration
 - `GET /api/auth/me` — Current user profile *(protected)*
 - `GET /api/projects` — List all projects
+- `GET /api/projects/my/enrolled` — Get user enrolled projects *(protected)*
 - `GET /api/projects/:slug` — Project details & phases
 - `POST /api/projects/:slug/enroll` — Enroll in project *(protected)*
 - `POST /api/projects/:slug/phases/:phaseId/complete` — Mark phase complete *(protected)*

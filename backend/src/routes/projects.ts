@@ -5,10 +5,14 @@ import {
   enrollProject,
   completePhase,
   getProgress,
+  getEnrolledProjects,
 } from "../controllers/projects.controller";
 import { authenticate } from "../middleware/authenticate";
 
 const router = Router();
+
+// User enrolled projects (must be before /:slug)
+router.get("/my/enrolled", authenticate, getEnrolledProjects);
 
 // Public
 router.get("/", listProjects);

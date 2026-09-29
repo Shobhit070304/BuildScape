@@ -127,3 +127,48 @@ export async function getProgress(req: Request, res: Response) {
     res.status(500).json({ error: "Failed to fetch progress" });
   }
 }
+
+/** GET /api/projects/my/enrolled — get all projects the user is enrolled in with progress */
+export async function getEnrolledProjects(req: Request, res: Response) {
+  try {
+    const enrollments = await UserProjectEnrollment.find({
+      userId: req.user!.userId,
+    }).populate("projectId");
+
+    const projectsWithProgress = await Promise.all(
+      enrollments.map(async (enrollment) => {
+        const project = enrollment.projectId as any;
+        if (!project) return null;
+
+        const completedPhases = await UserTaskProgress.find({
+          userId: req.user!.userId,
+          projectId: project._id,
+        }).select("phaseId completedAt");
+
+        return {
+          enrollmentId: enrollment._id,
+          enrolledAt: (enrollment as any).enrolledAt,
+          currentPhaseIndex: enrollment.currentPhaseIndex,
+          completedCount: completedPhases.length,
+          totalPhases: project.phases ? project.phases.length : 0,
+          completedPhases: completedPhases.map((p) => p.phaseId),
+          project: {
+            _id: project._id,
+            slug: project.slug,
+            title: project.title,
+            tagline: project.tagline,
+            track: project.track,
+            difficulty: project.difficulty,
+            estimatedHours: project.estimatedHours,
+            techStack: project.techStack,
+          },
+        };
+      })
+    );
+
+    res.json({ enrollments: projectsWithProgress.filter(Boolean) });
+  } catch {
+    res.status(500).json({ error: "Failed to fetch enrolled projects" });
+  }
+}
+

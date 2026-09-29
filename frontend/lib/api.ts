@@ -57,6 +57,9 @@ export const api = {
       `/api/projects/${slug}/phases/${phaseId}/complete`,
       { method: "POST" }
     ),
+
+  getEnrolledProjects: () =>
+    request<{ enrollments: EnrolledProjectItem[] }>("/api/projects/my/enrolled"),
 };
 
 // Shared types
@@ -65,6 +68,25 @@ export interface AuthUser {
   email: string;
   name: string;
   avatar?: string;
+}
+
+export interface EnrolledProjectItem {
+  enrollmentId: string;
+  enrolledAt: string;
+  currentPhaseIndex: number;
+  completedCount: number;
+  totalPhases: number;
+  completedPhases: string[];
+  project: {
+    _id: string;
+    slug: string;
+    title: string;
+    tagline: string;
+    track: string;
+    difficulty: string;
+    estimatedHours: number;
+    techStack: string[];
+  };
 }
 
 export interface ApiProject {

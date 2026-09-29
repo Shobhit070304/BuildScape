@@ -57,3 +57,32 @@ export const TRACK_COLORS: Record<string, string> = {
 export function getTrackColor(track: string): string {
   return TRACK_COLORS[track] ?? TRACK_COLORS.default;
 }
+
+export function getPhaseDescription(phase: Phase): string {
+  if (!phase.content) return "";
+  const match = phase.content.match(/What You Will Accomplish\s*\n+([\s\S]*?)(?=\n+---|\n+##|$)/i);
+  if (match && match[1]) {
+    return match[1]
+      .replace(/\*\*([^*]+)\*\*/g, "$1")
+      .replace(/`([^`]+)`/g, "$1")
+      .replace(/\n+/g, " ")
+      .trim();
+  }
+  const lines = phase.content.split("\n");
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (
+      trimmed &&
+      !trimmed.startsWith("#") &&
+      !trimmed.startsWith("-") &&
+      !trimmed.startsWith("```") &&
+      !trimmed.startsWith("---")
+    ) {
+      return trimmed
+        .replace(/\*\*([^*]+)\*\*/g, "$1")
+        .replace(/`([^`]+)`/g, "$1");
+    }
+  }
+  return phase.title;
+}
+

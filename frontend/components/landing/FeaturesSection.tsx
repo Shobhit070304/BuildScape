@@ -1,4 +1,11 @@
-import { Code2, Terminal, CheckCircle2, GitBranch, Globe, Database } from "lucide-react";
+import {
+  Code2,
+  Terminal,
+  CheckCircle2,
+  GitBranch,
+  Globe,
+  Cloud,
+} from "lucide-react";
 
 interface FeatureCardProps {
   icon: React.ReactNode;
@@ -8,11 +15,11 @@ interface FeatureCardProps {
 
 function FeatureCard({ icon, title, description }: FeatureCardProps) {
   return (
-    <div className="rounded-xl border border-[#222222] bg-[#0e0e0e] p-6 transition-all duration-200 hover:border-[#383838] hover:bg-[#121212] hover:shadow-lg">
-      <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-lg border border-amber-700/40 bg-amber-950/30 shadow-sm">
+    <div className="group rounded-2xl border border-[#24211b] bg-[#0e0d0b] p-6 transition-all duration-200 hover:-translate-y-1 hover:border-[#38332a] hover:bg-[#12100d] hover:shadow-xl">
+      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl border border-amber-800/40 bg-amber-950/30 text-[#c9a96e] shadow-sm transition-colors group-hover:border-amber-600/50 group-hover:bg-amber-900/30 group-hover:text-amber-300">
         {icon}
       </div>
-      <h3 className="mb-2 font-serif text-base font-semibold text-[#e4ddd3]">
+      <h3 className="mb-2 font-serif text-lg font-bold text-[#e4ddd3] transition-colors group-hover:text-[#d4b577]">
         {title}
       </h3>
       <p className="text-xs leading-relaxed text-[#8a8178]">
@@ -25,55 +32,55 @@ function FeatureCard({ icon, title, description }: FeatureCardProps) {
 export function FeaturesSection() {
   const features = [
     {
-      icon: <Code2 className="h-4.5 w-4.5 text-[#c9a96e]" />,
+      icon: <Code2 className="h-5 w-5" />,
       title: "Concepts before code",
       description:
-        "Every phase starts with a clear explanation of why, not just how. You understand the mental model before you write a single line.",
+        "Every phase starts with a clear mental model and architectural diagram. You understand the 'why' before writing a single line of syntax.",
     },
     {
-      icon: <Terminal className="h-4.5 w-4.5 text-[#c9a96e]" />,
+      icon: <Terminal className="h-5 w-5" />,
       title: "Every command included",
       description:
-        "No more guessing what to run. Every npm install, mkdir, and config change is spelled out with the exact command to copy.",
+        "No more guesswork or broken tutorials. Every package installation, directory command, and configuration step is explicitly detailed.",
     },
     {
-      icon: <CheckCircle2 className="h-4.5 w-4.5 text-[#c9a96e]" />,
-      title: "Phase checkpoints",
+      icon: <CheckCircle2 className="h-5 w-5" />,
+      title: "Phase verification checkpoints",
       description:
-        "Each phase ends with a checklist. Did your server start? Does the route work? Verify your understanding before moving on.",
+        "Each phase concludes with a strict checkpoint checklist. Verify that your routes, database models, and components run cleanly before moving on.",
     },
     {
-      icon: <GitBranch className="h-4.5 w-4.5 text-[#c9a96e]" />,
-      title: "Production architecture",
+      icon: <GitBranch className="h-5 w-5" />,
+      title: "Real SaaS architecture",
       description:
-        "You're not building a tutorial app. Projects follow real architecture patterns — layered services, typed schemas, error handling.",
+        "Build layered codebases that mimic production tech companies: typed schemas, structured services, robust error handling, and clean boundaries.",
     },
     {
-      icon: <Globe className="h-4.5 w-4.5 text-[#c9a96e]" />,
+      icon: <Globe className="h-5 w-5" />,
       title: "Always ends with deployment",
       description:
-        "Every project ships. You end up with a live URL, a GitHub repo, and a project you can actually add to your portfolio.",
+        "Every project ships live to Vercel or Render with custom domains, production environment configs, and GitHub portfolio repositories.",
     },
     {
-      icon: <Database className="h-4.5 w-4.5 text-[#c9a96e]" />,
-      title: "Offline progress tracking",
+      icon: <Cloud className="h-5 w-5" />,
+      title: "Cloud sync & guest mode",
       description:
-        "Your completion is saved locally. No login required. Close the tab, come back next week — your progress is right where you left it.",
+        "Sign in with Google to sync your completed phases and enrollments across all devices, or build immediately as a guest with instant local storage saving.",
     },
   ];
 
   return (
-    <section className="border-t border-[#1a1a1a] py-16">
-      <div className="mb-10">
-        <p className="mb-2 text-[0.7rem] font-semibold uppercase tracking-widest text-[#7a7168]">
-          What makes it different
+    <section className="mb-24">
+      <div className="mb-10 text-center">
+        <p className="mb-2 text-[0.7rem] font-semibold uppercase tracking-wider text-[#7a7168]">
+          The BuildScape Standard
         </p>
-        <h2 className="font-serif text-2xl font-bold text-[#e4ddd3] sm:text-3xl">
-          Built for people who learn by doing
+        <h2 className="font-serif text-3xl font-bold tracking-tight text-[#f0eae1] sm:text-4xl">
+          Engineered for developers who learn by building
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
         {features.map((feature) => (
           <FeatureCard key={feature.title} {...feature} />
         ))}

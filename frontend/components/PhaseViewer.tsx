@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -90,12 +90,30 @@ function PhaseSidebarItem({
 
 interface PhaseViewerProps {
   project: Project;
+  initialPhaseId?: string;
 }
 
-export function PhaseViewer({ project }: PhaseViewerProps) {
-  const [activeIndex, setActiveIndex] = useState(0);
+export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
+  const getInitialIdx = () => {
+    if (!initialPhaseId) return 0;
+    const idx = project.phases.findIndex(
+      (p) => p.id === initialPhaseId || String(p.orderIndex) === initialPhaseId
+    );
+    return idx !== -1 ? idx : 0;
+  };
+
+  const [activeIndex, setActiveIndex] = useState(getInitialIdx);
   const { completed, hydrated, togglePhase, isCompleted, clearProgress } =
     useProgress(project.slug);
+
+  useEffect(() => {
+    if (initialPhaseId) {
+      const idx = project.phases.findIndex(
+        (p) => p.id === initialPhaseId || String(p.orderIndex) === initialPhaseId
+      );
+      if (idx !== -1) setActiveIndex(idx);
+    }
+  }, [initialPhaseId, project.phases]);
 
   const activePhase = project.phases[activeIndex];
   const totalPhases = project.phases.length;
