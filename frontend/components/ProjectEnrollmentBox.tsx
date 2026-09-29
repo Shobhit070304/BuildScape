@@ -73,9 +73,9 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
   const hasStarted = completedCount > 0;
 
   return (
-    <div className="rounded-xl border border-[#26221c] bg-[#11100e] p-6 shadow-xl shadow-black/40">
+    <div id="enrollment-box" className="rounded-xl border border-[#26221c] bg-[#11100e] p-5 shadow-xl shadow-black/40">
       {/* Box Header */}
-      <div className="mb-5 flex items-center justify-between border-b border-[#221f1a] pb-4">
+      <div className="mb-4 flex items-center justify-between border-b border-[#221f1a] pb-3.5">
         <span className="text-xs font-semibold uppercase tracking-wider text-[#9e9587]">
           Project Access
         </span>

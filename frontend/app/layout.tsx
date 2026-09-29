@@ -44,7 +44,7 @@ export default function RootLayout({
       <body className="bg-neutral-950 text-stone-100 font-sans antialiased selection:bg-amber-900/50 selection:text-amber-200">
         {/* Grain overlay */}
         <div
-          className="pointer-events-none fixed inset-0 z-50 opacity-[0.035] bg-grain"
+          className="pointer-events-none fixed inset-0 z-50 opacity-[0.012] bg-grain"
           aria-hidden="true"
         />
         <Providers>{children}</Providers>

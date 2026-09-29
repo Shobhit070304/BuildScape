@@ -2,8 +2,10 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronLeft, Clock, Layers, ArrowLeft } from "lucide-react";
-import { getAllProjects, getProjectBySlug } from "@/lib/projects";
+import { getAllProjects, fetchProjectBySlugFromDb } from "@/lib/projects";
 import { PhaseViewer } from "@/components/PhaseViewer";
+import { TechBadge } from "@/components/TechBadge";
+import { WorkspaceEnrollmentGuard } from "@/components/WorkspaceEnrollmentGuard";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -16,7 +18,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const project = getProjectBySlug(slug);
+  const project = await fetchProjectBySlugFromDb(slug);
   if (!project) return { title: "Project not found" };
   return {
     title: `${project.title} — Workspace`,
@@ -30,75 +32,64 @@ const DIFFICULTY_CLASSES: Record<string, string> = {
   Advanced: "text-rose-400 bg-rose-950/30 border-rose-900/50",
 };
 
-const TRACK_CLASSES: Record<string, string> = {
-  "Next.js": "text-sky-300 bg-sky-950/25 border-sky-800/45",
-  "Node.js": "text-green-300 bg-green-950/25 border-green-800/45",
-};
-
 export default async function ProjectWorkspacePage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const { phase } = await searchParams;
-  const project = getProjectBySlug(slug);
+  const project = await fetchProjectBySlugFromDb(slug);
   if (!project) notFound();
 
   const diffClass =
     DIFFICULTY_CLASSES[project.difficulty] ??
     "text-amber-400 bg-amber-950/30 border-amber-800/50";
-  const trackClass =
-    TRACK_CLASSES[project.track] ??
-    "text-[#a8a29e] bg-[#1e1e1e]/40 border-[#333333]";
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden">
-      {/* Top breadcrumb bar */}
-      <div className="flex h-12 shrink-0 items-center gap-3 overflow-hidden border-b border-[#1a1a1a] bg-[#0a0a0a] px-4">
-        <Link
-          href={`/projects/${project.slug}`}
-          className="flex shrink-0 items-center gap-1 text-xs text-[#c9a96e] transition-colors hover:text-[#d4b577]"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Project Overview
-        </Link>
-
-        <span className="h-3.5 w-px bg-[#2a2520]" />
-
-        <Link
-          href="/projects"
-          className="hidden shrink-0 items-center gap-1 text-xs text-[#7a7168] transition-colors hover:text-[#e4ddd3] sm:flex"
-        >
-          All projects
-        </Link>
-
-        <span className="hidden h-3.5 w-px bg-[#2a2520] sm:block" />
-
-        {/* Project meta */}
-        <div className="flex min-w-0 items-center gap-2 overflow-hidden">
-          <Layers className="h-3.5 w-3.5 shrink-0 text-[#4a4540]" />
-          <span
-            className={`inline-flex shrink-0 items-center rounded border px-1.5 py-0.5 text-[0.68rem] font-medium ${trackClass}`}
+    <WorkspaceEnrollmentGuard project={project}>
+      <div className="flex h-dvh flex-col overflow-hidden">
+        {/* Top breadcrumb bar */}
+        <div className="flex h-11 shrink-0 items-center gap-3 overflow-hidden border-b border-[#1a1a1a] bg-[#0a0a0a] px-4">
+          <Link
+            href={`/projects/${project.slug}`}
+            className="flex shrink-0 items-center gap-1 text-xs text-[#c9a96e] transition-colors hover:text-[#d4b577]"
           >
-            {project.track}
-          </span>
-          <span
-            className={`inline-flex shrink-0 items-center rounded border px-1.5 py-0.5 text-[0.68rem] font-medium ${diffClass}`}
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Project Overview
+          </Link>
+
+          <span className="h-3.5 w-px bg-[#2a2520]" />
+
+          <Link
+            href="/projects"
+            className="hidden shrink-0 items-center gap-1 text-xs text-[#7a7168] transition-colors hover:text-[#e4ddd3] sm:flex"
           >
-            {project.difficulty}
-          </span>
-          <span className="truncate font-serif text-sm font-semibold text-[#e4ddd3]">
-            {project.title}
-          </span>
+            All projects
+          </Link>
+
+          <span className="hidden h-3.5 w-px bg-[#2a2520] sm:block" />
+
+          {/* Project meta */}
+          <div className="flex min-w-0 items-center gap-2 overflow-hidden">
+            <TechBadge name={project.track} size="xs" />
+            <span
+              className={`inline-flex shrink-0 items-center rounded border px-1.5 py-0.5 text-[0.65rem] font-medium ${diffClass}`}
+            >
+              {project.difficulty}
+            </span>
+            <span className="truncate text-xs font-semibold text-[#e4ddd3]">
+              {project.title}
+            </span>
+          </div>
+
+          <div className="ml-auto flex shrink-0 items-center gap-1.5 text-xs text-[#7a7168]">
+            <Clock className="h-3 w-3" />
+            {project.estimatedHours}h estimated
+          </div>
         </div>
 
-        <div className="ml-auto flex shrink-0 items-center gap-1.5 text-xs text-[#7a7168]">
-          <Clock className="h-3 w-3" />
-          {project.estimatedHours}h estimated
+        {/* Phase viewer */}
+        <div className="flex-1 overflow-hidden">
+          <PhaseViewer project={project} initialPhaseId={phase} />
         </div>
       </div>
-
-      {/* Phase viewer */}
-      <div className="flex-1 overflow-hidden">
-        <PhaseViewer project={project} initialPhaseId={phase} />
-      </div>
-    </div>
+    </WorkspaceEnrollmentGuard>
   );
 }

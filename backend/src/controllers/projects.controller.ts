@@ -3,10 +3,10 @@ import { Project } from "../models/Project";
 import { UserProjectEnrollment } from "../models/UserProjectEnrollment";
 import { UserTaskProgress } from "../models/UserTaskProgress";
 
-/** GET /api/projects — list all projects (without phase content for perf) */
+/** GET /api/projects — list all projects (excluding heavy phase markdown content for performance) */
 export async function listProjects(_req: Request, res: Response) {
   try {
-    const projects = await Project.find().select("-phases");
+    const projects = await Project.find().select("-phases.content").sort({ createdAt: -1 });
     res.json({ projects });
   } catch {
     res.status(500).json({ error: "Failed to fetch projects" });
@@ -169,6 +169,44 @@ export async function getEnrolledProjects(req: Request, res: Response) {
     res.json({ enrollments: projectsWithProgress.filter(Boolean) });
   } catch {
     res.status(500).json({ error: "Failed to fetch enrolled projects" });
+  }
+}
+
+/** POST /api/projects — add a project */
+export async function createProject(req: Request, res: Response): Promise<void> {
+  try {
+    const project = await Project.create(req.body);
+    res.status(201).json({ success: true, project });
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to create project", details: err.message });
+  }
+}
+
+/** PUT /api/projects/:slug — update a project */
+export async function updateProject(req: Request, res: Response): Promise<void> {
+  try {
+    const project = await Project.findOneAndUpdate(
+      { slug: req.params.slug },
+      req.body,
+      { new: true, upsert: true }
+    );
+    res.json({ success: true, project });
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to update project", details: err.message });
+  }
+}
+
+/** DELETE /api/projects/:slug — delete a project */
+export async function deleteProject(req: Request, res: Response): Promise<void> {
+  try {
+    const project = await Project.findOneAndDelete({ slug: req.params.slug });
+    if (!project) {
+      res.status(404).json({ error: "Project not found" });
+      return;
+    }
+    res.json({ success: true, message: "Project deleted successfully" });
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to delete project", details: err.message });
   }
 }
 

@@ -11,6 +11,7 @@ import healthRouter from "./routes/health";
 import authRouter from "./routes/auth";
 import projectsRouter from "./routes/projects";
 
+// Buildscape Express Server
 const app = express();
 
 // Core middleware

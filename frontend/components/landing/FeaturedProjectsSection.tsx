@@ -17,11 +17,11 @@ export function FeaturedProjectsSection() {
               Curated Curriculum
             </span>
           </div>
-          <h2 className="font-serif text-3xl font-bold tracking-tight text-[#f0eae1] sm:text-4xl">
-            Featured Full-Stack Projects
+          <h2 className="text-2xl font-bold tracking-tight text-[#f0eae1] sm:text-3xl">
+            Featured Projects
           </h2>
-          <p className="mt-2 text-xs text-[#8a8178] sm:text-sm">
-            Complete, end-to-end architectures designed to build true engineering confidence.
+          <p className="mt-1.5 text-xs text-[#8a8178] sm:text-sm">
+            Curated end-to-end architectures designed to build true engineering confidence.
           </p>
         </div>
 
@@ -34,9 +34,9 @@ export function FeaturedProjectsSection() {
         </Link>
       </div>
 
-      {/* Projects Grid */}
-      <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-        {projects.map((p) => (
+      {/* Projects Grid (Strictly 2 featured projects) */}
+      <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2">
+        {projects.slice(0, 2).map((p) => (
           <ProjectCard key={p.id} project={p} />
         ))}
       </div>

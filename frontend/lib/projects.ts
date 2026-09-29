@@ -19,18 +19,84 @@ export interface Project {
   phases: Phase[];
 }
 
-const projects = projectsData as Project[];
+const localProjects = projectsData as Project[];
 
 export function getAllProjects(): Project[] {
-  return projects;
+  return localProjects;
 }
 
 export function getProjectBySlug(slug: string): Project | undefined {
-  return projects.find((p) => p.slug === slug);
+  return localProjects.find((p) => p.slug === slug);
+}
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+
+/**
+ * Fetch all projects from MongoDB API with automatic fallback to local data.
+ */
+export async function fetchProjectsFromDb(): Promise<Project[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/projects`, {
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.projects && Array.isArray(data.projects) && data.projects.length > 0) {
+      return data.projects.map((p: any) => ({
+        id: p._id || p.id || p.slug,
+        slug: p.slug,
+        title: p.title,
+        tagline: p.tagline,
+        track: p.track,
+        difficulty: p.difficulty,
+        estimatedHours: p.estimatedHours,
+        techStack: p.techStack || [],
+        phases: p.phases || [],
+      }));
+    }
+  } catch (err) {
+    console.warn("⚠️ [BuildScape] Could not load projects from DB API, using local fallback.", err);
+  }
+  return getAllProjects();
+}
+
+
+/**
+ * Fetch a single project with full phase content from MongoDB API with automatic fallback.
+ */
+export async function fetchProjectBySlugFromDb(slug: string): Promise<Project | undefined> {
+  try {
+    const res = await fetch(`${API_BASE}/api/projects/${slug}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.project) {
+      const p = data.project;
+      return {
+        id: p._id || p.id || p.slug,
+        slug: p.slug,
+        title: p.title,
+        tagline: p.tagline,
+        track: p.track,
+        difficulty: p.difficulty,
+        estimatedHours: p.estimatedHours,
+        techStack: p.techStack || [],
+        phases: p.phases || [],
+      };
+    }
+  } catch (err) {
+    console.warn(`⚠️ [BuildScape] Could not load project "${slug}" from DB API, using local fallback.`);
+  }
+  return getProjectBySlug(slug);
 }
 
 export function getAllTracks(): string[] {
-  return Array.from(new Set(projects.map((p) => p.track))).sort();
+  // Return the core technology tracks prioritized: Next.js, Node.js, Python
+  const primaryTechs = ["Next.js", "Node.js", "Python"];
+  const dynamicTracks = Array.from(new Set(localProjects.map((p) => p.track)));
+  const unique = Array.from(new Set([...primaryTechs, ...dynamicTracks]));
+  return unique.filter((t) => t !== "AI Engineering" && t !== "Full Stack");
 }
 
 export const DIFFICULTY_ORDER = {
@@ -46,11 +112,13 @@ export const DIFFICULTY_COLORS: Record<string, string> = {
 };
 
 export const TRACK_COLORS: Record<string, string> = {
-  "Next.js": "text-sky-300 bg-sky-950/50 border-sky-900",
-  "Node.js": "text-lime-300 bg-lime-950/50 border-lime-900",
+  "Next.js": "text-zinc-100 bg-zinc-900/90 border-zinc-700",
+  "Node.js": "text-emerald-400 bg-emerald-950/60 border-emerald-800",
+  Python: "text-amber-300 bg-amber-950/50 border-amber-800",
   React: "text-cyan-300 bg-cyan-950/50 border-cyan-900",
-  Python: "text-yellow-300 bg-yellow-950/50 border-yellow-900",
-  "Go": "text-teal-300 bg-teal-950/50 border-teal-900",
+  TypeScript: "text-sky-300 bg-sky-950/50 border-sky-900",
+  PostgreSQL: "text-cyan-400 bg-cyan-950/50 border-cyan-900",
+  Redis: "text-rose-400 bg-rose-950/50 border-rose-900",
   default: "text-stone-300 bg-stone-800/50 border-stone-700",
 };
 
@@ -85,4 +153,3 @@ export function getPhaseDescription(phase: Phase): string {
   }
   return phase.title;
 }
-

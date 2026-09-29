@@ -1,7 +1,7 @@
 import "dotenv/config";
 import mongoose from "mongoose";
 import { Project } from "../models/Project";
-import projectsData from "../../../frontend/data/projects.json";
+import projectsData from "../../data/projects.json";
 
 async function seed() {
   const uri = process.env.MONGODB_URI;
@@ -13,35 +13,22 @@ async function seed() {
   await mongoose.connect(uri);
   console.log("✅ Connected to MongoDB");
 
-  // Clear existing projects
-  await Project.deleteMany({});
-  console.log("🗑️  Cleared existing projects");
+  console.log(`\n📦 Seeding ${projectsData.length} projects into MongoDB:`);
 
-  // Insert from JSON
-  const projects = projectsData.map((p: any) => ({
-    slug: p.slug,
-    title: p.title,
-    tagline: p.tagline,
-    track: p.track,
-    difficulty: p.difficulty,
-    estimatedHours: p.estimatedHours,
-    techStack: p.techStack,
-    phases: p.phases.map((ph: any) => ({
-      id: ph.id,
-      orderIndex: ph.orderIndex,
-      title: ph.title,
-      content: ph.content,
-    })),
-  }));
+  for (const p of projectsData as any[]) {
+    await Project.findOneAndUpdate(
+      { slug: p.slug },
+      { $set: p },
+      { upsert: true, new: true }
+    );
+    console.log(`  ✔ [${p.track}] ${p.title} (${p.phases?.length || 0} phases)`);
+  }
 
-  await Project.insertMany(projects);
-  console.log(`✅ Seeded ${projects.length} projects`);
-
+  console.log(`\n✅ Successfully seeded ${projectsData.length} projects!`);
   await mongoose.disconnect();
-  console.log("👋 Done");
 }
 
 seed().catch((err) => {
-  console.error("Seed failed:", err);
+  console.error("❌ Seed failed:", err);
   process.exit(1);
 });
