@@ -45,7 +45,7 @@ GOOGLE_CLIENT_ID=your_google_client_id
 **`frontend/.env`**
 ```env
 API_URL=http://localhost:4000
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_ID=your_google_client_id
 ```
 
 ### 2. Seed Database (optional)
