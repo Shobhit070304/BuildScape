@@ -4,10 +4,6 @@ import { Project } from "../models/Project";
 import fs from "fs";
 import path from "path";
 
-// Use the frontend fallback as the single source for curated project content.
-const projectsJsonPath = path.resolve(__dirname, "../../../frontend/data/projects.json");
-const projectsData = JSON.parse(fs.readFileSync(projectsJsonPath, "utf-8"));
-
 // Explicit seed command; server startup never clears or replaces this collection.
 async function seed() {
   const uri = process.env.MONGODB_URI;
@@ -15,6 +11,18 @@ async function seed() {
     console.error("❌ MONGODB_URI not set in .env");
     process.exit(1);
   }
+
+  // Prefer backend/data/projects.json, fallback to frontend/data/projects.json
+  const backendJsonPath = path.resolve(__dirname, "../../data/projects.json");
+  const frontendJsonPath = path.resolve(__dirname, "../../../frontend/data/projects.json");
+  const jsonPath = fs.existsSync(backendJsonPath) ? backendJsonPath : frontendJsonPath;
+
+  if (!fs.existsSync(jsonPath)) {
+    console.error("❌ projects.json not found at:", jsonPath);
+    process.exit(1);
+  }
+
+  const projectsData = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
 
   await mongoose.connect(uri);
   console.log("✅ Connected to MongoDB");
