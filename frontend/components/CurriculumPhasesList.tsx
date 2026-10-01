@@ -89,7 +89,7 @@ export function CurriculumPhasesList({ project }: CurriculumPhasesListProps) {
       {/* Image 2 Continuous Vertical Roadmap Timeline */}
       <div className="relative pl-6 sm:pl-7">
         {/* Continuous vertical line connecting all step nodes */}
-        <div className="absolute left-[7px] top-2.5 bottom-6 w-px bg-zinc-800" />
+        <div className="absolute left-1.75 top-2.5 bottom-6 w-px bg-zinc-800" />
 
         <div className="space-y-7">
           {project.phases.map((phase, idx) => {
@@ -103,7 +103,7 @@ export function CurriculumPhasesList({ project }: CurriculumPhasesListProps) {
                 className="group relative cursor-pointer select-none"
               >
                 {/* Circle Node ○ on the line */}
-                <div className="absolute -left-[24px] sm:-left-[27px] top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-zinc-600 bg-[#0a0a0a] transition-all duration-200 group-hover:border-purple-400 group-hover:scale-110">
+                <div className="absolute -left-6 sm:-left-6.75 top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-zinc-600 bg-bg transition-all duration-200 group-hover:border-purple-400 group-hover:scale-110">
                   <div className="h-1 w-1 rounded-full bg-zinc-500 group-hover:bg-purple-400 transition-colors" />
                 </div>
 

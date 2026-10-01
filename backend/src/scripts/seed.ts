@@ -1,8 +1,12 @@
 import "dotenv/config";
 import mongoose from "mongoose";
 import { Project } from "../models/Project";
+import fs from "fs";
+import path from "path";
+
 // Use the frontend fallback as the single source for curated project content.
-import projectsData from "../../../frontend/data/projects.json";
+const projectsJsonPath = path.resolve(__dirname, "../../../frontend/data/projects.json");
+const projectsData = JSON.parse(fs.readFileSync(projectsJsonPath, "utf-8"));
 
 // Explicit seed command; server startup never clears or replaces this collection.
 async function seed() {
