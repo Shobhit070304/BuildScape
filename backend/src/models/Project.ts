@@ -1,20 +1,20 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { IPhase, PhaseSchema } from "./Phase";
 
 export { IPhase, PhaseSchema };
 
-export interface IProject extends Document {
+export interface IProject {
   slug: string;
   title: string;
   tagline: string;
   description?: string;
   whatYouWillLearn?: string[];
   track: string;
-  difficulty: "Beginner" | "Intermediate" | "Advanced";
+  difficulty: "Entry" | "Basic" | "Intermediate" | "Advanced" | "Expert" | "Beginner";
   estimatedHours: number;
   techStack: string[];
   phases: IPhase[];
-  createdAt: Date;
+  createdAt?: Date;
 }
 
 const ProjectSchema = new Schema<IProject>(

@@ -6,7 +6,7 @@ Learn modern software engineering by building real-world projects phase by phase
 
 ## Tech Stack
 
-- **Frontend:** Next.js 15, React 19, Tailwind CSS, `@react-oauth/google`
+- **Frontend:** Next.js 16, React 19, Tailwind CSS, `@react-oauth/google`
 - **Backend:** Node.js, Express, TypeScript, MongoDB (Mongoose), JWT
 
 ---
@@ -25,6 +25,8 @@ Learn modern software engineering by building real-world projects phase by phase
 - **Google OAuth & JWT:** ID token verification, session JWTs, and protected routes
 - **REST APIs:** Project listing, full project details, enrollment, phase completion, and enrolled projects tracking
 - **Frontend Sync:** Google login in Navbar, cloud progress saving with `useProgress`, and clear one-click logout
+- **Backend structure:** Routes → controllers → services → repositories → Mongoose models
+- **Project content:** `frontend/data/projects.json` is the single source used for the frontend fallback and explicit database seeding
 
 ---
 
@@ -38,7 +40,6 @@ PORT=4000
 MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
 ```
 
 **`frontend/.env`**
@@ -47,7 +48,9 @@ NEXT_PUBLIC_API_URL=http://localhost:4000
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
 ```
 
-### 2. Seed Database
+### 2. Seed Database (optional)
+
+The server never seeds or deletes project records at startup. Run this command when you intentionally want to upsert the curated project data:
 
 ```bash
 cd backend

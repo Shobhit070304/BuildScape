@@ -11,7 +11,6 @@ import healthRouter from "./routes/health";
 import authRouter from "./routes/auth";
 import projectsRouter from "./routes/projects";
 
-// Buildscape Express Server
 const app = express();
 
 // Core middleware
@@ -30,34 +29,17 @@ app.use("/api/projects", projectsRouter);
 app.use(notFound);
 app.use(errorHandler);
 
-// Connect to DB, clean projects collection and seed fresh all projects
-connectDB().then(async () => {
-  try {
-    const fs = await import("fs");
-    const path = await import("path");
-    const { Project } = await import("./models/Project");
-
-    const dataPath = path.resolve(__dirname, "../data/projects.json");
-    if (fs.existsSync(dataPath)) {
-      const raw = fs.readFileSync(dataPath, "utf-8");
-      const projects = JSON.parse(raw);
-      if (Array.isArray(projects) && projects.length > 0) {
-        console.log("🧹 [BuildScape] Cleaning projects collection from MongoDB...");
-        const delRes = await Project.deleteMany({});
-        console.log(`🧹 [BuildScape] Cleaned ${delRes.deletedCount} old projects from collection.`);
-
-        await Project.insertMany(projects);
-        console.log(`✅ [BuildScape] Successfully fresh-seeded ${projects.length} complete projects into MongoDB!`);
-      }
-    }
-  } catch (err) {
-    console.error("❌ [BuildScape] Clean and seed failed:", err);
-  }
-
-  app.listen(env.PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${env.PORT}`);
+// Connect the database before accepting requests; startup never mutates project data.
+connectDB()
+  .then(() => {
+    app.listen(env.PORT, () => {
+      console.log(`🚀 Server running on http://localhost:${env.PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error("Server startup failed:", error);
+    process.exitCode = 1;
   });
-});
 
 export default app;
 

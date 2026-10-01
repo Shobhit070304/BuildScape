@@ -1,8 +1,10 @@
 import "dotenv/config";
 import mongoose from "mongoose";
 import { Project } from "../models/Project";
-import projectsData from "../../data/projects.json";
+// Use the frontend fallback as the single source for curated project content.
+import projectsData from "../../../frontend/data/projects.json";
 
+// Explicit seed command; server startup never clears or replaces this collection.
 async function seed() {
   const uri = process.env.MONGODB_URI;
   if (!uri) {

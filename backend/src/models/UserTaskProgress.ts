@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
-export interface IUserTaskProgress extends Document {
+export interface IUserTaskProgress {
   userId: mongoose.Types.ObjectId;
   projectId: mongoose.Types.ObjectId;
   phaseId: string; // matches IPhase.id

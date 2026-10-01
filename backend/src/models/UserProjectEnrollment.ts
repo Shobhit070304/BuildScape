@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
-export interface IUserProjectEnrollment extends Document {
+export interface IUserProjectEnrollment {
   userId: mongoose.Types.ObjectId;
   projectId: mongoose.Types.ObjectId;
   enrolledAt: Date;

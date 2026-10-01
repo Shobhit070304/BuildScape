@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import { Schema } from "mongoose";
 
 export interface IPhase {
   id: string;
@@ -18,5 +18,3 @@ export const PhaseSchema = new Schema<IPhase>(
   },
   { _id: false }
 );
-
-export const Phase = mongoose.model<IPhase>("Phase", PhaseSchema);
