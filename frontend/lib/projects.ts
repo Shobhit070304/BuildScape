@@ -33,13 +33,12 @@ export function getProjectBySlug(slug: string): Project | undefined {
   return localProjects.find((p) => p.slug === slug);
 }
 
-const API_BASE = process.env.API_URL;
 /**
  * Fetch all projects from MongoDB API with automatic fallback to local data.
  */
 export async function fetchProjectsFromDb(): Promise<Project[]> {
   try {
-    const res = await fetch(`${API_BASE}/api/projects`, {
+    const res = await fetch(`${process.env.API_URL}/api/projects`, {
       cache: "no-store",
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -71,7 +70,7 @@ export async function fetchProjectsFromDb(): Promise<Project[]> {
  */
 export async function fetchProjectBySlugFromDb(slug: string): Promise<Project | undefined> {
   try {
-    const res = await fetch(`${API_BASE}/api/projects/${slug}`, {
+    const res = await fetch(`${process.env.API_URL}/api/projects/${slug}`, {
       cache: "no-store",
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);

@@ -1,5 +1,3 @@
-const BASE = process.env.API_URL;
-
 function getToken() {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("bs_token");
@@ -10,7 +8,7 @@ async function request<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const token = getToken();
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(`${process.env.API_URL}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
