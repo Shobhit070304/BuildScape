@@ -1,27 +1,241 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Search, X, Database } from "lucide-react";
+import {
+  Search,
+  X,
+  Database,
+  Layers,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { ProjectCard } from "@/components/ProjectCard";
-import { TechBadge } from "@/components/TechBadge";
 import { getAllProjects, getAllTracks } from "@/lib/projects";
 import { api } from "@/lib/api";
 import type { Project } from "@/lib/projects";
 
-const DIFFICULTIES = ["Beginner", "Intermediate", "Advanced"] as const;
+// Track brand icons matching Image 1
+function renderTrackIcon(track: string) {
+  switch (track) {
+    case "Web Development":
+      return (
+        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-[#e34f26] text-[9px] font-black text-white">
+          5
+        </span>
+      );
+    case "Full-Stack SpringBoot":
+    case "Spring Boot":
+      return (
+        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#6db33f]/25 text-[#6db33f]">
+          <svg className="h-3 w-3 fill-current" viewBox="0 0 24 24">
+            <path d="M21.5 13.5c-1.5 5.5-6.5 9-12 7.5S.5 14.5 2 9s6.5-9 12-7.5c2.5.7 4.7 2.2 6.2 4.3l-3.2 2.3c-1.1-1.4-2.6-2.3-4.3-2.7-4-.9-7.9 1.6-8.9 5.6s1.6 7.9 5.6 8.9c3.4.8 6.9-1 8.2-4.2l3.9 2.1z" />
+          </svg>
+        </span>
+      );
+    case "Machine Learning":
+      return (
+        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-purple-500/20 text-purple-300">
+          <svg className="h-2.5 w-2.5 fill-current" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3" />
+            <circle cx="5" cy="8" r="2" />
+            <circle cx="19" cy="8" r="2" />
+            <circle cx="7" cy="17" r="2" />
+            <circle cx="17" cy="17" r="2" />
+          </svg>
+        </span>
+      );
+    case "React & Node.js":
+      return (
+        <span className="flex h-4 w-4 shrink-0 items-center justify-center text-[#61dafb]">
+          <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 24 24">
+            <ellipse cx="12" cy="12" rx="4" ry="10" transform="rotate(30 12 12)" fill="none" stroke="currentColor" strokeWidth="1.5" />
+            <ellipse cx="12" cy="12" rx="4" ry="10" transform="rotate(90 12 12)" fill="none" stroke="currentColor" strokeWidth="1.5" />
+            <ellipse cx="12" cy="12" rx="4" ry="10" transform="rotate(150 12 12)" fill="none" stroke="currentColor" strokeWidth="1.5" />
+            <circle cx="12" cy="12" r="1.5" />
+          </svg>
+        </span>
+      );
+    case "C++":
+      return (
+        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#00599c] text-[8px] font-bold text-white">
+          C+
+        </span>
+      );
+    case "Python":
+      return (
+        <span className="flex h-4 w-4 shrink-0 items-center justify-center text-amber-400">
+          <svg className="h-3 w-3 fill-current" viewBox="0 0 24 24">
+            <path d="M12 2C6.5 2 6.5 4.5 6.5 4.5V7h5.5v1H5s-3 0-3 5.5 2.5 5.5 2.5 5.5h1.5v-2.5c0-1.5 1.5-1.5 1.5-1.5h5.5c1.5 0 1.5-1.5 1.5-1.5V7c0-2-2.5-5-6-5zm-1.5 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm1.5 18c5.5 0 5.5-2.5 5.5-2.5V17H12v-1h7s3 0 3-5.5-2.5-5.5-2.5-5.5h-1.5v2.5c0 1.5-1.5 1.5-1.5 1.5H11c-1.5 0-1.5 1.5-1.5 1.5V17c0 2 2.5 5 6 5zm1.5-2a1 1 0 1 1 0-2 1 1 0 0 1 0 2z" />
+          </svg>
+        </span>
+      );
+    case "Ethereum dApps":
+      return (
+        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-zinc-300">
+          <svg className="h-2.5 w-2.5 fill-current" viewBox="0 0 24 24">
+            <polygon points="12 2 4 13 12 17 20 13 12 2" />
+            <polygon points="12 18 4 14 12 22 20 14 12 18" />
+          </svg>
+        </span>
+      );
+    case "Rust":
+      return (
+        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-stone-800 text-stone-200 text-[9px] font-bold">
+          ⚙
+        </span>
+      );
+    case "Golang":
+      return (
+        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-[#00add8] text-[8px] font-black text-white">
+          GO
+        </span>
+      );
+    case "Java":
+      return (
+        <span className="flex h-4 w-4 shrink-0 items-center justify-center text-rose-400">
+          ☕
+        </span>
+      );
+    case "C Language":
+      return (
+        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-[#00599c]/90 text-[8px] font-bold text-white">
+          C
+        </span>
+      );
+    case "Next.js":
+      return (
+        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white text-[8px] font-bold text-black">
+          N
+        </span>
+      );
+    case "C#":
+      return (
+        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-[#9b4993] text-[7px] font-bold text-white">
+          C#
+        </span>
+      );
+    case "Node.js":
+      return (
+        <span className="flex h-4 w-4 shrink-0 items-center justify-center text-emerald-400 text-[9px] font-bold">
+          ⬢
+        </span>
+      );
+    default:
+      return (
+        <span className="flex h-4 w-4 shrink-0 items-center justify-center text-zinc-400 text-[10px]">
+          ✦
+        </span>
+      );
+  }
+}
+
+const ALL_PRIMARY_TRACKS = [
+  "Web Development",
+  "Full-Stack SpringBoot",
+  "Machine Learning",
+  "React & Node.js",
+  "C++",
+  "Python",
+  "Ethereum dApps",
+  "Rust",
+  "Golang",
+  "Java",
+  "C Language",
+  "Next.js",
+  "C#",
+];
+
+const LEVEL_OPTIONS = [
+  { label: "Entry", difficulty: "Entry" },
+  { label: "Basic", difficulty: "Basic" },
+  { label: "Intermediate", difficulty: "Intermediate" },
+  { label: "Advanced", difficulty: "Advanced" },
+  { label: "Expert", difficulty: "Expert" },
+];
+
+const COMING_SOON_TRACKS: Record<
+  string,
+  { desc: string; builds: string[]; quarter: string }
+> = {
+  "Web Development": {
+    desc: "Modern frontend mastery with responsive layout systems, animation engines, and production web standards.",
+    builds: [
+      "E-Commerce Storefront with Next.js & Stripe Checkout",
+      "Interactive Canvas Graphics & 2D Physics Engine",
+    ],
+    quarter: "Q4 2026",
+  },
+  "Machine Learning": {
+    desc: "From training neural networks to production inferencing, vector search, and distributed model pipelines.",
+    builds: [
+      "Transformer Attention Architecture from Scratch in PyTorch",
+      "Production MLOps Feature Store & Latency Benchmarker",
+    ],
+    quarter: "Q4 2026",
+  },
+  "React & Node.js": {
+    desc: "Full-stack single-page application development with modern React hooks, server streaming, and Express microservices.",
+    builds: [
+      "Real-Time Collaborative Canvas (Figma Lite) with WebSockets",
+      "High-Throughput GraphQL Subscriptions Gateway",
+    ],
+    quarter: "Q4 2026",
+  },
+  "C++": {
+    desc: "High-performance systems programming, memory safety management, and game runtime foundations.",
+    builds: [
+      "High-Performance 2D Game Physics Engine with SIMD",
+      "Thread-Safe Lock-Free Memory Allocator & Pool",
+    ],
+    quarter: "Q1 2027",
+  },
+  "Ethereum dApps": {
+    desc: "Decentralized finance protocols, smart contract security, and Web3 EVM applications.",
+    builds: [
+      "Decentralized Liquidity Pool & Automated Market Maker (AMM)",
+      "ERC-721 NFT Minting Engine with Merkle Proofs",
+    ],
+    quarter: "Q1 2027",
+  },
+  Java: {
+    desc: "Enterprise core systems with Jakarta EE, multithreading, and reactive streams.",
+    builds: [
+      "Distributed Banking Ledger with Jakarta EE & Kafka",
+      "Reactive Microservice Mesh with Quarkus",
+    ],
+    quarter: "Q4 2026",
+  },
+  "C Language": {
+    desc: "Low-level computer architecture, operating system interfaces, and bare-metal programming.",
+    builds: [
+      "Linux Shell & Process Manager with Signals from Scratch",
+      "Lightweight Embedded RTOS Kernel & Task Scheduler",
+    ],
+    quarter: "Q1 2027",
+  },
+  "C#": {
+    desc: "Modern cross-platform .NET 9 backends, cloud APIs, and game development.",
+    builds: [
+      "High-Throughput ASP.NET Core 9 Microservices Platform",
+      "Cross-Platform 2D Game Engine in C#",
+    ],
+    quarter: "Q1 2027",
+  },
+};
 
 export default function ProjectsPage() {
   const initialProjects = getAllProjects();
-  const allTracks = getAllTracks();
-
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [isFromDb, setIsFromDb] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedTrack, setSelectedTrack] = useState<string | null>(null);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
+  const [selectedLevelLabel, setSelectedLevelLabel] = useState<string | null>(null);
+  const [isFreeOnly, setIsFreeOnly] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [notifiedTracks, setNotifiedTracks] = useState<string[]>([]);
 
-  // Fetch dynamic projects from MongoDB API on mount
+  // Fetch dynamic projects from DB API on mount
   useEffect(() => {
     let isMounted = true;
     api
@@ -33,6 +247,8 @@ export default function ProjectsPage() {
             slug: p.slug,
             title: p.title,
             tagline: p.tagline,
+            description: p.description,
+            whatYouWillLearn: p.whatYouWillLearn,
             track: p.track,
             difficulty: p.difficulty as any,
             estimatedHours: p.estimatedHours,
@@ -61,144 +277,321 @@ export default function ProjectsPage() {
         p.tagline.toLowerCase().includes(q) ||
         p.techStack.some((t) => t.toLowerCase().includes(q));
 
-      // Multi-technology filter: matches track OR any technology in techStack
+      // Technology filter: checks track or techStack
       const matchTrack =
         !selectedTrack ||
-        p.track === selectedTrack ||
-        p.techStack.includes(selectedTrack);
+        p.track.toLowerCase().includes(selectedTrack.toLowerCase()) ||
+        selectedTrack.toLowerCase().includes(p.track.toLowerCase()) ||
+        p.techStack.some((t) => t.toLowerCase() === selectedTrack.toLowerCase());
 
-      const matchDiff = !selectedDifficulty || p.difficulty === selectedDifficulty;
-      return matchSearch && matchTrack && matchDiff;
+      // Level filter: exact 1-to-1 match with the 5 discrete difficulty levels
+      let matchLevel = true;
+      if (selectedLevelLabel) {
+        matchLevel = p.difficulty.toLowerCase() === selectedLevelLabel.toLowerCase();
+      }
+
+      return matchSearch && matchTrack && matchLevel;
     });
-  }, [projects, search, selectedTrack, selectedDifficulty]);
+  }, [projects, search, selectedTrack, selectedLevelLabel]);
 
-  const hasFilters = !!(search || selectedTrack || selectedDifficulty);
+  const hasFilters = !!(search || selectedTrack || selectedLevelLabel || isFreeOnly);
 
   function clearFilters() {
     setSearch("");
     setSelectedTrack(null);
-    setSelectedDifficulty(null);
+    setSelectedLevelLabel(null);
+    setIsFreeOnly(false);
   }
 
-  const diffChipBase =
-    "cursor-pointer rounded-md border border-[#222222] bg-transparent px-2.5 py-1 text-xs text-[#7a7168] transition-all hover:border-[#333333] hover:text-[#e4ddd3]";
-  const diffChipActive =
-    "cursor-pointer rounded-md border border-amber-800/55 bg-amber-950/35 px-2.5 py-1 text-xs font-medium text-[#d4a855]";
+  // Slice tracks for Image 1 toggle
+  const visibleTracks = isExpanded ? ALL_PRIMARY_TRACKS : ALL_PRIMARY_TRACKS.slice(0, 9);
 
   return (
     <>
       <Navbar />
-      <main className="w-full">
-        <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12 py-10">
-          {/* Header */}
-          <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <p className="text-[0.7rem] font-medium uppercase tracking-widest text-[#4a4540]">
-                  Curriculum Library
-                </p>
-                {isFromDb && (
-                  <span className="inline-flex items-center gap-1 rounded bg-emerald-950/50 border border-emerald-900/60 px-1.5 py-0.5 text-[0.62rem] font-medium text-emerald-400">
-                    <Database className="h-2.5 w-2.5" />
-                    Live Database
-                  </span>
-                )}
-              </div>
-              <h1 className="mb-1.5 font-serif text-3xl font-bold text-[#e4ddd3]">
-                Production Projects
-              </h1>
-              <p className="text-sm text-[#7a7168]">
-                {projects.length} advanced projects across {allTracks.join(", ")}. Pick a project to build end-to-end.
-              </p>
-            </div>
-          </div>
-
-          {/* Search */}
-          <div className="relative mb-4">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#4a4540]" />
-            <input
-              type="text"
-              placeholder="Search by technology (e.g. Next.js, Python, Redis, Docker, Tree-sitter)..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-lg border border-[#222222] bg-[#111111] py-2.5 pl-9 pr-9 text-sm text-[#e4ddd3] placeholder-[#5a5450] outline-none transition-colors focus:border-[#333333]"
-            />
-            {search && (
-              <button
-                onClick={() => setSearch("")}
-                className="absolute right-3 top-1/2 flex -translate-y-1/2 cursor-pointer items-center text-[#4a4540] hover:text-[#e4ddd3]"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
+      <main className="w-full bg-[#0a0a0a] min-h-screen text-[#f0eae1] pb-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-7">
+          {/* Top Category Label (Image 1) */}
+          <div className="flex items-center gap-2 mb-1.5">
+            <p className="text-xs font-mono font-bold tracking-widest text-[#a855f7] uppercase">
+              LIBRARY
+            </p>
+            {isFromDb && (
+              <span className="inline-flex items-center gap-1 rounded bg-emerald-950/50 border border-emerald-900/60 px-1.5 py-0.5 text-[0.62rem] font-medium text-emerald-400">
+                <Database className="h-2.5 w-2.5" />
+                Live Sync
+              </span>
             )}
           </div>
 
-          {/* Technology & Difficulty Filter Chips */}
-          <div className="mb-6 flex flex-wrap items-center gap-2">
-            <span className="mr-1 text-xs text-[#5a5450] font-medium">Technology:</span>
+          {/* Heading (Image 1) */}
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-6">
+            Curated projects across every track.
+          </h1>
 
-            {allTracks.map((tech) => {
-              const isSelected = selectedTrack === tech;
-              return (
+          {/* Filter Section (Image 1 layout) */}
+          <div className="space-y-3.5 mb-5">
+            {/* Row 1: TRACK */}
+            <div className="flex items-start gap-3 sm:gap-4">
+              <span className="w-12 sm:w-14 shrink-0 pt-1 text-[11px] font-mono tracking-widest text-zinc-500 uppercase">
+                TRACK
+              </span>
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 flex-1">
+                {/* All Track Pill */}
                 <button
-                  key={tech}
-                  onClick={() => setSelectedTrack(isSelected ? null : tech)}
-                  className={`cursor-pointer transition-all ${
-                    isSelected ? "ring-2 ring-amber-500/50 scale-105" : "opacity-75 hover:opacity-100"
+                  onClick={() => setSelectedTrack(null)}
+                  className={`rounded-full px-3 py-1 text-xs font-medium cursor-pointer transition-all ${
+                    selectedTrack === null
+                      ? "bg-[#2e1065] text-[#d8b4fe] border border-[#7e22ce]"
+                      : "bg-[#141414] text-zinc-400 border border-zinc-800 hover:text-zinc-200 hover:border-zinc-700"
                   }`}
                 >
-                  <TechBadge name={tech} size="sm" showIcon={true} />
+                  All
                 </button>
-              );
-            })}
 
-            <span className="mx-1 text-[#2a2a2a]">|</span>
+                {/* Track Pills with brand icons */}
+                {visibleTracks.map((track) => {
+                  const isSelected = selectedTrack === track;
+                  return (
+                    <button
+                      key={track}
+                      onClick={() => setSelectedTrack(isSelected ? null : track)}
+                      className={`group flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium cursor-pointer transition-all ${
+                        isSelected
+                          ? "bg-[#2e1065] text-[#d8b4fe] border border-[#7e22ce]"
+                          : "bg-[#141414] text-zinc-300 border border-zinc-800 hover:border-zinc-700 hover:text-white"
+                      }`}
+                    >
+                      {renderTrackIcon(track)}
+                      <span>{track}</span>
+                    </button>
+                  );
+                })}
 
-            <span className="mr-1 text-xs text-[#5a5450] font-medium">Difficulty:</span>
-            {DIFFICULTIES.map((d) => (
-              <button
-                key={d}
-                onClick={() => setSelectedDifficulty(selectedDifficulty === d ? null : d)}
-                className={selectedDifficulty === d ? diffChipActive : diffChipBase}
-              >
-                {d}
-              </button>
-            ))}
+                {/* ^ Less / v More button */}
+                <button
+                  onClick={() => setIsExpanded((prev) => !prev)}
+                  className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-zinc-400 border border-zinc-800 bg-[#141414] hover:text-zinc-200 hover:border-zinc-700 transition-all cursor-pointer"
+                >
+                  {isExpanded ? (
+                    <>
+                      <ChevronUp className="h-3 w-3" />
+                      <span>Less</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-3 w-3" />
+                      <span>More</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
 
-            {hasFilters && (
-              <button
-                onClick={clearFilters}
-                className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-[#222222] bg-transparent px-2.5 py-1 text-xs text-[#7a7168] transition-all hover:text-[#e4ddd3] ml-auto"
-              >
-                <X className="h-3 w-3" />
-                Reset filters
-              </button>
-            )}
+            {/* Row 2: LEVEL */}
+            <div className="flex items-start gap-3 sm:gap-4">
+              <span className="w-12 sm:w-14 shrink-0 pt-1 text-[11px] font-mono tracking-widest text-zinc-500 uppercase">
+                LEVEL
+              </span>
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 flex-1">
+                {/* All Level Pill */}
+                <button
+                  onClick={() => setSelectedLevelLabel(null)}
+                  className={`rounded-full px-3 py-1 text-xs font-medium cursor-pointer transition-all ${
+                    selectedLevelLabel === null
+                      ? "bg-[#2e1065] text-[#d8b4fe] border border-[#7e22ce]"
+                      : "bg-[#141414] text-zinc-400 border border-zinc-800 hover:text-zinc-200 hover:border-zinc-700"
+                  }`}
+                >
+                  All
+                </button>
+
+                {/* Level Pills */}
+                {LEVEL_OPTIONS.map((lvl) => {
+                  const isSelected = selectedLevelLabel === lvl.label;
+                  return (
+                    <button
+                      key={lvl.label}
+                      onClick={() =>
+                        setSelectedLevelLabel(isSelected ? null : lvl.label)
+                      }
+                      className={`rounded-full px-3 py-1 text-xs font-medium cursor-pointer transition-all ${
+                        isSelected
+                          ? "bg-[#2e1065] text-[#d8b4fe] border border-[#7e22ce]"
+                          : "bg-[#141414] text-zinc-400 border border-zinc-800 hover:text-zinc-200 hover:border-zinc-700"
+                      }`}
+                    >
+                      {lvl.label}
+                    </button>
+                  );
+                })}
+
+                <span className="text-zinc-600 px-0.5">·</span>
+
+                {/* Free Pill */}
+                <button
+                  onClick={() => setIsFreeOnly((prev) => !prev)}
+                  className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium cursor-pointer transition-all ${
+                    isFreeOnly
+                      ? "bg-[#2e1065] text-[#d8b4fe] border border-[#7e22ce]"
+                      : "bg-[#141414] text-zinc-400 border border-zinc-800 hover:text-zinc-200 hover:border-zinc-700"
+                  }`}
+                >
+                  <span>🎁</span>
+                  <span>Free</span>
+                </button>
+
+                {hasFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-zinc-800 bg-[#141414] px-2.5 py-1 text-xs text-zinc-400 hover:text-white transition-all ml-auto"
+                  >
+                    <X className="h-3 w-3" />
+                    <span>Reset</span>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Results Grid */}
-          {filtered.length === 0 ? (
-            <div className="py-16 text-center">
-              <p className="mb-2 text-sm text-[#7a7168]">No projects matched your criteria.</p>
-              <button
-                onClick={clearFilters}
-                className="cursor-pointer text-sm text-[#c9a96e] hover:underline"
-              >
-                Clear all filters
-              </button>
+          {/* Thin divider with project count (Image 1) */}
+          <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3 mb-5">
+            <div className="flex items-center gap-2">
+              <Layers className="h-3.5 w-3.5 text-zinc-500" />
+              <span className="font-mono text-xs text-zinc-400">
+                {filtered.length} projects
+              </span>
             </div>
-          ) : (
-            <>
-              <p className="mb-4 text-xs text-[#4a4540]">
-                Showing {filtered.length} of {projects.length} projects
-                {selectedTrack && ` featuring ${selectedTrack}`}
-              </p>
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                {filtered.map((project) => (
-                  <ProjectCard key={project.id} project={project} />
-                ))}
+
+            {/* Quick search input */}
+            <div className="relative w-48 sm:w-64">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-500" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full rounded-md border border-zinc-800 bg-[#121212] py-1.5 pl-8 pr-7 text-xs text-zinc-200 placeholder-zinc-500 outline-none transition-colors focus:border-zinc-700"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-200 cursor-pointer"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Results Grid or Coming Soon Component */}
+          {filtered.length === 0 ? (
+            selectedTrack && COMING_SOON_TRACKS[selectedTrack] ? (
+              <div className="rounded-2xl border border-purple-800/40 bg-gradient-to-b from-[#161024] via-[#0e0e0e] to-[#0a0a0a] p-6 sm:p-8 shadow-2xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-5 mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-purple-700/60 bg-purple-950/60 shadow-md">
+                      {renderTrackIcon(selectedTrack)}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-base sm:text-lg font-bold text-white">
+                          {selectedTrack} Curriculum
+                        </h2>
+                        <span className="inline-flex items-center rounded-full border border-purple-700/60 bg-purple-950/60 px-2.5 py-0.5 text-[10px] font-semibold text-purple-300 animate-pulse">
+                          ✦ In Active Development
+                        </span>
+                      </div>
+                      <p className="text-xs text-zinc-400 mt-0.5">
+                        {COMING_SOON_TRACKS[selectedTrack].desc}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs text-zinc-500">
+                      Target: {COMING_SOON_TRACKS[selectedTrack].quarter}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Planned Builds Roadmap Preview */}
+                <div className="mb-6">
+                  <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-purple-400 mb-3">
+                    Upcoming Production Builds In This Track
+                  </h3>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {COMING_SOON_TRACKS[selectedTrack].builds.map(
+                      (buildTitle, idx) => (
+                        <div
+                          key={buildTitle}
+                          className="flex items-start gap-3 rounded-xl border border-zinc-800/80 bg-[#121212] p-3.5"
+                        >
+                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-800/80 font-mono text-[10px] font-bold text-zinc-400">
+                            0{idx + 1}
+                          </div>
+                          <div>
+                            <h4 className="text-xs sm:text-sm font-semibold text-zinc-200">
+                              {buildTitle}
+                            </h4>
+                            <span className="mt-1 inline-block text-[10px] font-mono text-purple-400">
+                              Phase breakdown & blueprints in progress
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-wrap items-center gap-3 pt-2">
+                  <button
+                    onClick={() => {
+                      if (!notifiedTracks.includes(selectedTrack)) {
+                        setNotifiedTracks([...notifiedTracks, selectedTrack]);
+                      }
+                    }}
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-semibold transition-all cursor-pointer ${
+                      notifiedTracks.includes(selectedTrack)
+                        ? "bg-emerald-950 border border-emerald-700 text-emerald-300"
+                        : "bg-[#2e1065] border border-purple-600/70 text-purple-200 hover:bg-[#3b0764] hover:text-white"
+                    }`}
+                  >
+                    <span>
+                      {notifiedTracks.includes(selectedTrack)
+                        ? "✓ You're on the Early Access List"
+                        : "🔔 Notify Me When Track Drops"}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedTrack(null)}
+                    className="rounded-lg border border-zinc-800 bg-zinc-900/80 px-4 py-2 text-xs font-medium text-zinc-300 hover:text-white hover:border-zinc-700 transition-all cursor-pointer"
+                  >
+                    Browse Live Tracks (Spring Boot, Go, Rust, Next.js, Python, Node)
+                  </button>
+                </div>
               </div>
-            </>
+            ) : (
+              <div className="py-14 text-center rounded-xl border border-dashed border-zinc-800/80 bg-[#0d0d0d]">
+                <p className="mb-2 text-xs text-zinc-400">
+                  No projects matched your criteria.
+                </p>
+                <button
+                  onClick={clearFilters}
+                  className="cursor-pointer text-xs text-purple-400 hover:underline"
+                >
+                  Clear all filters
+                </button>
+              </div>
+            )
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {filtered.map((project) => (
+                <ProjectCard key={project.id} project={project} />
+              ))}
+            </div>
           )}
         </div>
       </main>

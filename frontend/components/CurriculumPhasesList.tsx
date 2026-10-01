@@ -51,79 +51,91 @@ export function CurriculumPhasesList({ project }: CurriculumPhasesListProps) {
     }
   };
 
+  const totalTasks = project.phases.reduce((sum, p) => sum + (p.tasksCount ?? 8), 0);
+
+  const onStepClick = (e: React.MouseEvent, phaseId: string, phaseIndex: number) => {
+    if (!isEnrolled) {
+      handlePhaseClick(e, phaseId, phaseIndex);
+    } else {
+      router.push(`/projects/${project.slug}/workspace?phase=${phaseId}`);
+    }
+  };
+
   return (
-    <div className="space-y-3">
+    <div className="w-full">
       {promptMessage && (
-        <div className="rounded-lg border border-amber-800/60 bg-amber-950/40 p-3 text-xs text-amber-200 flex items-center justify-between animate-fadeIn">
+        <div className="mb-6 rounded-lg border border-amber-800/60 bg-amber-950/40 p-3 text-xs text-amber-200 flex items-center justify-between animate-fadeIn">
           <span>🔒 {promptMessage}</span>
           <button
             onClick={() => setPromptMessage(null)}
-            className="text-amber-400 hover:text-amber-100 text-xs underline ml-2"
+            className="text-amber-400 hover:text-amber-100 text-xs underline ml-2 cursor-pointer"
           >
             Dismiss
           </button>
         </div>
       )}
 
-      {project.phases.map((phase, idx) => {
-        const description = getPhaseDescription(phase);
+      {/* Image 2 ROADMAP Header Bar */}
+      <div className="flex items-center justify-between border-b border-zinc-800 pb-3 mb-7">
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-mono font-bold tracking-widest text-[#a855f7] uppercase">
+            ROADMAP
+          </span>
+          <div className="h-px w-12 bg-zinc-800 hidden sm:block" />
+        </div>
+        <span className="font-mono text-xs text-zinc-500">
+          {project.phases.length} steps · {totalTasks} tasks
+        </span>
+      </div>
 
-        return (
-          <div
-            key={phase.id}
-            onClick={(e) => handlePhaseClick(e, phase.id, idx)}
-            className={`group relative block rounded-xl border p-4 transition-all duration-200 ${
-              isEnrolled
-                ? "cursor-pointer border-[#221f1a] bg-[#11100e] hover:-translate-y-0.5 hover:border-amber-700/50 hover:bg-[#151310] hover:shadow-lg"
-                : "cursor-pointer border-[#1f1d19] bg-[#0d0c0a] opacity-80 hover:opacity-100 hover:border-amber-900/60"
-            }`}
-          >
-            <div className="flex items-start gap-3.5">
-              {/* Phase Number Badge */}
+      {/* Image 2 Continuous Vertical Roadmap Timeline */}
+      <div className="relative pl-6 sm:pl-7">
+        {/* Continuous vertical line connecting all step nodes */}
+        <div className="absolute left-[7px] top-2.5 bottom-6 w-px bg-zinc-800" />
+
+        <div className="space-y-7">
+          {project.phases.map((phase, idx) => {
+            const stepNum = String(idx + 1).padStart(2, "0");
+            const tasksCount = phase.tasksCount ?? (7 + (idx % 4));
+            const description = getPhaseDescription(phase);
+
+            return (
               <div
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border font-mono text-xs font-bold transition-colors ${
-                  isEnrolled
-                    ? "border-amber-800/40 bg-amber-950/30 text-[#c9a96e] group-hover:border-amber-600/60 group-hover:bg-amber-900/40 group-hover:text-amber-300"
-                    : "border-stone-800 bg-stone-900 text-stone-500"
-                }`}
+                key={phase.id}
+                onClick={(e) => onStepClick(e, phase.id, idx)}
+                className="group relative cursor-pointer select-none"
               >
-                {String(idx + 1).padStart(2, "0")}
-              </div>
+                {/* Circle Node ○ on the line */}
+                <div className="absolute -left-[24px] sm:-left-[27px] top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-zinc-600 bg-[#0a0a0a] transition-all duration-200 group-hover:border-purple-400 group-hover:scale-110">
+                  <div className="h-1 w-1 rounded-full bg-zinc-500 group-hover:bg-purple-400 transition-colors" />
+                </div>
 
-              {/* Phase Details */}
-              <div className="flex-1 min-w-0 pr-8">
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                  <h3 className="text-sm font-semibold text-[#e4ddd3] transition-colors group-hover:text-[#d4b577]">
-                    {phase.title}
-                  </h3>
-                  <span className="font-mono text-[0.65rem] uppercase tracking-wider text-[#5c5449]">
-                    Phase {idx + 1} of {project.phases.length}
+                {/* Step Title Row */}
+                <div className="flex items-baseline justify-between gap-3">
+                  <div className="flex items-baseline gap-2 sm:gap-2.5 min-w-0">
+                    <span className="font-mono text-xs font-medium text-zinc-400 shrink-0">
+                      {stepNum}
+                    </span>
+                    <h3 className="text-xs sm:text-sm font-bold text-zinc-100 transition-colors group-hover:text-purple-300 truncate">
+                      {phase.title}
+                    </h3>
+                  </div>
+
+                  {/* Tasks count on the right */}
+                  <span className="font-mono text-[11px] sm:text-xs text-zinc-500 shrink-0 whitespace-nowrap">
+                    {tasksCount} tasks
                   </span>
                 </div>
 
-                {/* Phase Description */}
-                <p className="text-[0.78rem] leading-relaxed text-[#8a8178] transition-colors group-hover:text-[#a89f91]">
+                {/* Step Description */}
+                <p className="mt-1 pl-6 sm:pl-7 text-xs leading-relaxed text-zinc-400 transition-colors group-hover:text-zinc-300">
                   {description}
                 </p>
               </div>
-
-              {/* Action indicator */}
-              <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-500 group-hover:text-amber-400 transition-colors">
-                {isEnrolled ? (
-                  <div className="flex h-6 w-6 items-center justify-center rounded-md border border-[#2a241c] bg-[#1a1713] text-[#c9a96e]">
-                    <ArrowRight className="h-3 w-3" />
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1 rounded bg-stone-900/90 border border-stone-800 px-2 py-0.5 text-[0.62rem] text-stone-400">
-                    <Lock className="h-2.5 w-2.5 text-amber-500/80" />
-                    <span>Locked</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      })}
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

@@ -81,66 +81,86 @@ export default async function ProjectOverviewPage({ params, searchParams }: Page
             </div>
           )}
 
-          {/* Project Header Banner (Sleeker and tighter) */}
-          <div className="mb-8 rounded-2xl border border-[#221f1a] bg-gradient-to-b from-[#14120f] to-[#0e0d0b] p-5 sm:p-8 shadow-lg">
-            <div className="flex flex-wrap items-center gap-2 mb-3.5">
+          {/* Project Header Banner (Sleek, compact, high-density) */}
+          <div className="mb-6 rounded-xl border border-zinc-800 bg-[#0e0e0e] p-4 sm:p-6 shadow-xl">
+            <div className="flex flex-wrap items-center gap-2 mb-3">
               <TechBadge name={project.track} size="xs" />
               <span
                 className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[0.68rem] font-medium ${diffClass}`}
               >
                 {project.difficulty}
               </span>
-              <span className="flex items-center gap-1 text-[0.72rem] text-[#8a8178]">
-                <Clock className="h-3 w-3 text-[#5c5449]" />
+              <span className="flex items-center gap-1 text-[0.72rem] text-zinc-400">
+                <Clock className="h-3 w-3 text-zinc-500" />
                 {project.estimatedHours} hours estimated
               </span>
             </div>
 
-            <h1 className="mb-2 text-2xl font-bold tracking-tight text-[#e4ddd3] sm:text-3xl">
+            <h1 className="mb-2 text-xl font-bold tracking-tight text-white sm:text-2xl">
               {project.title}
             </h1>
 
-            <p className="max-w-3xl text-xs sm:text-sm leading-relaxed text-[#9e9587] mb-5">
+            <p className="max-w-3xl text-xs sm:text-sm leading-relaxed text-zinc-400 mb-4">
               {project.tagline}
             </p>
 
             {/* Tech stack */}
-            <div className="flex flex-wrap items-center gap-1.5 pt-2.5 border-t border-[#1e1c18]">
-              <span className="text-[0.72rem] text-[#5c5449] mr-1">Technologies:</span>
+            <div className="flex flex-wrap items-center gap-1.5 pt-3 border-t border-zinc-800/80">
+              <span className="text-[0.72rem] text-zinc-500 mr-1">Stack:</span>
               {project.techStack.map((tech) => (
                 <TechBadge key={tech} name={tech} size="xs" showIcon={true} />
               ))}
             </div>
           </div>
 
-          {/* Main Grid: Left Curriculum, Right Enrollment Box */}
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-            {/* Left Column: All Phases with Descriptions */}
-            <div className="lg:col-span-8">
-              <div className="mb-5 flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold text-[#e4ddd3]">
-                    Curriculum & Phases
-                  </h2>
-                  <p className="text-xs text-[#7a7168] mt-0.5">
-                    {project.phases.length} progressive phases taking you from zero to production deployment.
+          {/* Main Grid: Left Curriculum & Description, Right Enrollment Box */}
+          <div className="grid grid-cols-1 gap-7 lg:grid-cols-12">
+            {/* Left Column: Description, What You Will Learn, and Image 2 Roadmap */}
+            <div className="lg:col-span-8 space-y-6">
+              {/* Project Description */}
+              {project.description && (
+                <div className="rounded-xl border border-zinc-800/80 bg-[#0d0d0d] p-4 sm:p-5">
+                  <h3 className="text-xs font-mono uppercase tracking-widest text-[#a855f7] mb-2 font-semibold">
+                    PROJECT OVERVIEW
+                  </h3>
+                  <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                    {project.description}
                   </p>
                 </div>
+              )}
+
+              {/* What You Will Learn */}
+              {project.whatYouWillLearn && project.whatYouWillLearn.length > 0 && (
+                <div className="rounded-xl border border-zinc-800/80 bg-[#0d0d0d] p-4 sm:p-5">
+                  <h3 className="text-xs font-mono uppercase tracking-widest text-[#a855f7] mb-3 font-semibold">
+                    WHAT YOU WILL LEARN
+                  </h3>
+                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                    {project.whatYouWillLearn.map((item, i) => (
+                      <div key={i} className="flex items-start gap-2.5 text-xs text-zinc-300">
+                        <CheckCircle className="h-3.5 w-3.5 shrink-0 text-[#a855f7] mt-0.5" />
+                        <span className="leading-snug">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Locked / Enrolled Interactive Image 2 Roadmap */}
+              <div className="rounded-xl border border-zinc-800/80 bg-[#0d0d0d] p-4 sm:p-6">
+                <CurriculumPhasesList project={project} />
               </div>
 
-              {/* Locked / Enrolled Interactive Phases List */}
-              <CurriculumPhasesList project={project} />
-
-              {/* What you will ship notice */}
-              <div className="mt-8 rounded-xl border border-emerald-900/40 bg-emerald-950/20 p-4">
+              {/* Fully working deliverable notice */}
+              <div className="rounded-xl border border-emerald-900/40 bg-emerald-950/20 p-4">
                 <div className="flex items-start gap-3">
-                  <CheckCircle className="h-4.5 w-4.5 shrink-0 text-emerald-400 mt-0.5" />
+                  <CheckCircle className="h-4 w-4 shrink-0 text-emerald-400 mt-0.5" />
                   <div>
                     <h4 className="text-xs sm:text-sm font-semibold text-emerald-300">
-                      Fully Working Deliverable
+                      Production Deliverable
                     </h4>
                     <p className="text-xs text-emerald-400/80 mt-0.5 leading-relaxed">
-                      By completing all {project.phases.length} phases, you will deploy a complete, fully functioning version of this application live on the web to showcase in your developer portfolio.
+                      By completing all {project.phases.length} phases, you will deploy a complete, fully functioning version of this system live on cloud infrastructure to showcase in your portfolio.
                     </p>
                   </div>
                 </div>
@@ -149,7 +169,7 @@ export default async function ProjectOverviewPage({ params, searchParams }: Page
 
             {/* Right Column: Enrollment Card (Sticky) */}
             <div className="lg:col-span-4">
-              <div className="sticky top-20">
+              <div className="sticky top-16">
                 <ProjectEnrollmentBox project={project} />
               </div>
             </div>

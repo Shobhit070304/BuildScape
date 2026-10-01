@@ -7,6 +7,8 @@ export interface IProject extends Document {
   slug: string;
   title: string;
   tagline: string;
+  description?: string;
+  whatYouWillLearn?: string[];
   track: string;
   difficulty: "Beginner" | "Intermediate" | "Advanced";
   estimatedHours: number;
@@ -20,10 +22,12 @@ const ProjectSchema = new Schema<IProject>(
     slug: { type: String, required: true, unique: true },
     title: { type: String, required: true },
     tagline: { type: String, required: true },
+    description: { type: String },
+    whatYouWillLearn: [{ type: String }],
     track: { type: String, required: true },
     difficulty: {
       type: String,
-      enum: ["Beginner", "Intermediate", "Advanced"],
+      enum: ["Entry", "Basic", "Intermediate", "Advanced", "Expert", "Beginner"],
       required: true,
     },
     estimatedHours: { type: Number, required: true },

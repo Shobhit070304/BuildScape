@@ -5,15 +5,20 @@ export interface Phase {
   orderIndex: number;
   title: string;
   content: string;
+  tasksCount?: number;
 }
+
+export type ProjectDifficulty = "Entry" | "Basic" | "Intermediate" | "Advanced" | "Expert" | "Beginner";
 
 export interface Project {
   id: string;
   slug: string;
   title: string;
   tagline: string;
+  description?: string;
+  whatYouWillLearn?: string[];
   track: string;
-  difficulty: "Beginner" | "Intermediate" | "Advanced";
+  difficulty: ProjectDifficulty;
   estimatedHours: number;
   techStack: string[];
   phases: Phase[];
@@ -47,6 +52,8 @@ export async function fetchProjectsFromDb(): Promise<Project[]> {
         slug: p.slug,
         title: p.title,
         tagline: p.tagline,
+        description: p.description,
+        whatYouWillLearn: p.whatYouWillLearn,
         track: p.track,
         difficulty: p.difficulty,
         estimatedHours: p.estimatedHours,
@@ -78,6 +85,8 @@ export async function fetchProjectBySlugFromDb(slug: string): Promise<Project | 
         slug: p.slug,
         title: p.title,
         tagline: p.tagline,
+        description: p.description,
+        whatYouWillLearn: p.whatYouWillLearn,
         track: p.track,
         difficulty: p.difficulty,
         estimatedHours: p.estimatedHours,
@@ -92,23 +101,42 @@ export async function fetchProjectBySlugFromDb(slug: string): Promise<Project | 
 }
 
 export function getAllTracks(): string[] {
-  // Return the core technology tracks prioritized: Next.js, Node.js, Python
-  const primaryTechs = ["Next.js", "Node.js", "Python"];
+  const primaryTechs = [
+    "Web Development",
+    "Full-Stack SpringBoot",
+    "Machine Learning",
+    "React & Node.js",
+    "C++",
+    "Python",
+    "Ethereum dApps",
+    "Rust",
+    "Golang",
+    "Java",
+    "C Language",
+    "Next.js",
+    "C#",
+    "Node.js"
+  ];
   const dynamicTracks = Array.from(new Set(localProjects.map((p) => p.track)));
-  const unique = Array.from(new Set([...primaryTechs, ...dynamicTracks]));
-  return unique.filter((t) => t !== "AI Engineering" && t !== "Full Stack");
+  return Array.from(new Set([...primaryTechs, ...dynamicTracks]));
 }
 
-export const DIFFICULTY_ORDER = {
-  Beginner: 0,
-  Intermediate: 1,
-  Advanced: 2,
+export const DIFFICULTY_ORDER: Record<string, number> = {
+  Entry: 0,
+  Basic: 1,
+  Intermediate: 2,
+  Advanced: 3,
+  Expert: 4,
+  Beginner: 1,
 };
 
 export const DIFFICULTY_COLORS: Record<string, string> = {
-  Beginner: "text-emerald-400 bg-emerald-950/60 border-emerald-900",
-  Intermediate: "text-amber-400 bg-amber-950/60 border-amber-900",
-  Advanced: "text-rose-400 bg-rose-950/60 border-rose-900",
+  Entry: "text-sky-400 bg-sky-950/50 border-sky-800/60",
+  Basic: "text-emerald-400 bg-emerald-950/50 border-emerald-800/60",
+  Intermediate: "text-amber-400 bg-amber-950/50 border-amber-800/60",
+  Advanced: "text-rose-400 bg-rose-950/50 border-rose-800/60",
+  Expert: "text-purple-400 bg-purple-950/50 border-purple-800/60",
+  Beginner: "text-emerald-400 bg-emerald-950/50 border-emerald-800/60",
 };
 
 export const TRACK_COLORS: Record<string, string> = {

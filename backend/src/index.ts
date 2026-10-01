@@ -30,8 +30,30 @@ app.use("/api/projects", projectsRouter);
 app.use(notFound);
 app.use(errorHandler);
 
-// Connect to DB then start server
-connectDB().then(() => {
+// Connect to DB, clean projects collection and seed fresh all projects
+connectDB().then(async () => {
+  try {
+    const fs = await import("fs");
+    const path = await import("path");
+    const { Project } = await import("./models/Project");
+
+    const dataPath = path.resolve(__dirname, "../data/projects.json");
+    if (fs.existsSync(dataPath)) {
+      const raw = fs.readFileSync(dataPath, "utf-8");
+      const projects = JSON.parse(raw);
+      if (Array.isArray(projects) && projects.length > 0) {
+        console.log("🧹 [BuildScape] Cleaning projects collection from MongoDB...");
+        const delRes = await Project.deleteMany({});
+        console.log(`🧹 [BuildScape] Cleaned ${delRes.deletedCount} old projects from collection.`);
+
+        await Project.insertMany(projects);
+        console.log(`✅ [BuildScape] Successfully fresh-seeded ${projects.length} complete projects into MongoDB!`);
+      }
+    }
+  } catch (err) {
+    console.error("❌ [BuildScape] Clean and seed failed:", err);
+  }
+
   app.listen(env.PORT, () => {
     console.log(`🚀 Server running on http://localhost:${env.PORT}`);
   });

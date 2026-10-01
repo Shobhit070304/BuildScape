@@ -1,24 +1,26 @@
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { StatsSection } from "@/components/landing/StatsSection";
-import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { FeaturedProjectsSection } from "@/components/landing/FeaturedProjectsSection";
+import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { ComparisonSection } from "@/components/landing/ComparisonSection";
 import { FaqSection } from "@/components/landing/FaqSection";
 import { CtaSection } from "@/components/landing/CtaSection";
 import { FooterSection } from "@/components/landing/FooterSection";
+import { ScrollSectionTracker } from "@/components/landing/ScrollSectionTracker";
 
 export default function HomePage() {
   return (
     <>
       <Navbar />
-      <main className="w-full bg-[#0a0a0a]">
-        <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
+      <ScrollSectionTracker />
+      <main className="w-full bg-[#0a0a0a] overflow-x-hidden">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <HeroSection />
           <StatsSection />
-          <HowItWorksSection />
           <FeaturedProjectsSection />
+          <HowItWorksSection />
           <FeaturesSection />
           <ComparisonSection />
           <FaqSection />

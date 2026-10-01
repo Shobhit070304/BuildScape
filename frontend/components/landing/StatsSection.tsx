@@ -43,24 +43,25 @@ export function StatsSection() {
   const totalHours = projects.reduce((acc, p) => acc + p.estimatedHours, 0);
 
   const stats = [
-    { label: "Full-Stack Builds", value: totalProjects, suffix: "" },
-    { label: "Step-by-Step Phases", value: totalPhases, suffix: "" },
-    { label: "Guided Engineering", value: totalHours, suffix: "h" },
-    { label: "Free & Self-Paced", value: 100, suffix: "%" },
+    { label: "Production Builds", sub: "Engineered from scratch", value: totalProjects, suffix: "+" },
+    { label: "Step-by-Step Phases", sub: "With strict checkpoints", value: totalPhases, suffix: "+" },
+    { label: "Curriculum Blueprints", sub: "Architecture roadmaps", value: totalHours, suffix: "h" },
+    { label: "Free Forever", sub: "Zero paywalls or trials", value: 100, suffix: "%" },
   ];
 
   return (
-    <section className="mb-20">
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-[#24211b] bg-[#1d1a16] shadow-xl md:grid-cols-4">
-        {stats.map(({ label, value, suffix }) => (
+    <section className="mb-10 sm:mb-12">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+        {stats.map(({ label, sub, value, suffix }) => (
           <div
             key={label}
-            className="flex flex-col items-center justify-center bg-[#0e0d0b] p-6 text-center transition-colors hover:bg-[#12100d]"
+            className="group relative flex flex-col items-center justify-center rounded-xl border border-[#201d18] bg-[#11100e] p-3.5 sm:p-4 text-center shadow-sm transition-all duration-200 hover:border-[#332e26] hover:bg-[#14120f]"
           >
-            <div className="mb-1.5 font-serif text-3xl font-bold tracking-tight text-[#f0eae1] sm:text-4xl">
+            <div className="mb-0.5 font-mono text-xl font-bold tracking-tight text-[#e4ddd3] sm:text-2xl group-hover:text-[#c9a96e] transition-colors">
               <Counter target={value} suffix={suffix} />
             </div>
-            <div className="text-xs font-medium text-[#8a8178]">{label}</div>
+            <div className="text-[11px] font-semibold text-[#d4cbbd]">{label}</div>
+            <div className="text-[9px] text-[#6b6256] mt-0.5">{sub}</div>
           </div>
         ))}
       </div>

@@ -35,6 +35,78 @@ interface TechStyle {
 }
 
 export const TECH_STYLES: Record<string, TechStyle> = {
+  "Web Development": {
+    text: "text-orange-400",
+    bg: "bg-orange-950/40",
+    border: "border-orange-800/60 hover:border-orange-600",
+    icon: Globe,
+  },
+  "Full-Stack SpringBoot": {
+    text: "text-emerald-400",
+    bg: "bg-emerald-950/50",
+    border: "border-emerald-800/60 hover:border-emerald-600",
+    icon: Server,
+  },
+  "Spring Boot": {
+    text: "text-emerald-400",
+    bg: "bg-emerald-950/50",
+    border: "border-emerald-800/60 hover:border-emerald-600",
+    icon: Server,
+  },
+  "Machine Learning": {
+    text: "text-purple-300",
+    bg: "bg-purple-950/40",
+    border: "border-purple-800/60 hover:border-purple-600",
+    icon: Sparkles,
+  },
+  "React & Node.js": {
+    text: "text-cyan-300",
+    bg: "bg-cyan-950/50",
+    border: "border-cyan-800/60 hover:border-cyan-600",
+    icon: Layers,
+  },
+  "C++": {
+    text: "text-blue-400",
+    bg: "bg-blue-950/40",
+    border: "border-blue-800/60 hover:border-blue-600",
+    icon: Binary,
+  },
+  "Ethereum dApps": {
+    text: "text-violet-300",
+    bg: "bg-violet-950/40",
+    border: "border-violet-800/60 hover:border-violet-600",
+    icon: Boxes,
+  },
+  Rust: {
+    text: "text-orange-300",
+    bg: "bg-orange-950/40",
+    border: "border-orange-800/60 hover:border-orange-600",
+    icon: Cpu,
+  },
+  Golang: {
+    text: "text-cyan-300",
+    bg: "bg-cyan-950/50",
+    border: "border-cyan-800/60 hover:border-cyan-600",
+    icon: Zap,
+  },
+  Java: {
+    text: "text-rose-400",
+    bg: "bg-rose-950/40",
+    border: "border-rose-800/60 hover:border-rose-600",
+    icon: FileCode2,
+  },
+  "C Language": {
+    text: "text-sky-300",
+    bg: "bg-sky-950/40",
+    border: "border-sky-800/60 hover:border-sky-600",
+    icon: FileCode2,
+  },
+  "C#": {
+    text: "text-fuchsia-300",
+    bg: "bg-fuchsia-950/40",
+    border: "border-fuchsia-800/60 hover:border-fuchsia-600",
+    icon: Code2,
+  },
   "Next.js": {
     text: "text-zinc-100",
     bg: "bg-zinc-900/90",
