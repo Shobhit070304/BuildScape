@@ -33,8 +33,7 @@ export function getProjectBySlug(slug: string): Project | undefined {
   return localProjects.find((p) => p.slug === slug);
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
-
+const API_BASE = process.env.API_URL;
 /**
  * Fetch all projects from MongoDB API with automatic fallback to local data.
  */

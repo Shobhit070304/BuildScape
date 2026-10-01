@@ -44,7 +44,7 @@ GOOGLE_CLIENT_ID=your_google_client_id
 
 **`frontend/.env`**
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:4000
+API_URL=http://localhost:4000
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
 ```
 
