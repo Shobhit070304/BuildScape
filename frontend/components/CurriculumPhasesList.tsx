@@ -51,8 +51,6 @@ export function CurriculumPhasesList({ project }: CurriculumPhasesListProps) {
     }
   };
 
-  const totalTasks = project.phases.reduce((sum, p) => sum + (p.tasksCount ?? 8), 0);
-
   const onStepClick = (e: React.MouseEvent, phaseId: string, phaseIndex: number) => {
     if (!isEnrolled) {
       handlePhaseClick(e, phaseId, phaseIndex);
@@ -84,7 +82,7 @@ export function CurriculumPhasesList({ project }: CurriculumPhasesListProps) {
           <div className="h-px w-12 bg-zinc-800 hidden sm:block" />
         </div>
         <span className="font-mono text-xs text-zinc-500">
-          {project.phases.length} steps · {totalTasks} tasks
+          {project.phases.length} steps
         </span>
       </div>
 
@@ -96,7 +94,6 @@ export function CurriculumPhasesList({ project }: CurriculumPhasesListProps) {
         <div className="space-y-7">
           {project.phases.map((phase, idx) => {
             const stepNum = String(idx + 1).padStart(2, "0");
-            const tasksCount = phase.tasksCount ?? (7 + (idx % 4));
             const description = getPhaseDescription(phase);
 
             return (
@@ -120,11 +117,6 @@ export function CurriculumPhasesList({ project }: CurriculumPhasesListProps) {
                       {phase.title}
                     </h3>
                   </div>
-
-                  {/* Tasks count on the right */}
-                  <span className="font-mono text-[11px] sm:text-xs text-zinc-500 shrink-0 whitespace-nowrap">
-                    {tasksCount} tasks
-                  </span>
                 </div>
 
                 {/* Step Description */}

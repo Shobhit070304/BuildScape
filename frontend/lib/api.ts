@@ -94,6 +94,8 @@ export interface ApiProject {
   slug: string;
   title: string;
   tagline: string;
+  description?: string;
+  whatYouWillLearn?: string[];
   track: string;
   difficulty: string;
   estimatedHours: number;
@@ -105,7 +107,7 @@ export interface ApiPhase {
   id: string;
   orderIndex: number;
   title: string;
-  content: string;
+  content?: string;
 }
 
 export interface ProgressResponse {

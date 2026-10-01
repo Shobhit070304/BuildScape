@@ -5,7 +5,6 @@ export interface Phase {
   orderIndex: number;
   title: string;
   content: string;
-  tasksCount?: number;
 }
 
 export type ProjectDifficulty = "Entry" | "Basic" | "Intermediate" | "Advanced" | "Expert" | "Beginner";

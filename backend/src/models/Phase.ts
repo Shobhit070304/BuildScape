@@ -5,7 +5,6 @@ export interface IPhase {
   orderIndex: number;
   title: string;
   content: string; // Markdown
-  tasksCount?: number;
 }
 
 export const PhaseSchema = new Schema<IPhase>(
@@ -14,7 +13,6 @@ export const PhaseSchema = new Schema<IPhase>(
     orderIndex: { type: Number, required: true },
     title: { type: String, required: true },
     content: { type: String, required: true },
-    tasksCount: { type: Number, default: 8 },
   },
   { _id: false }
 );
