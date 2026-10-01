@@ -26,7 +26,7 @@ export function WorkspaceEnrollmentGuard({
   children,
 }: WorkspaceEnrollmentGuardProps) {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [checking, setChecking] = useState(true);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [deniedReason, setDeniedReason] = useState<string | null>(null);
@@ -78,7 +78,7 @@ export function WorkspaceEnrollmentGuard({
 
   if (authLoading || checking) {
     return (
-      <div className="flex h-screen w-screen flex-col items-center justify-center bg-[#0a0a0a] text-stone-300">
+      <div className="flex h-screen w-screen flex-col items-center justify-center bg-bg text-stone-300">
         <Loader2 className="h-6 w-6 animate-spin text-amber-500 mb-3" />
         <p className="text-xs text-stone-400">Verifying project enrollment status...</p>
       </div>
@@ -87,7 +87,7 @@ export function WorkspaceEnrollmentGuard({
 
   if (!isEnrolled) {
     return (
-      <div className="flex h-screen w-screen flex-col items-center justify-center bg-[#0a0a0a] px-4 text-center">
+      <div className="flex h-screen w-screen flex-col items-center justify-center bg-bg px-4 text-center">
         <div className="max-w-md rounded-xl border border-amber-900/50 bg-[#12100d] p-6 shadow-2xl">
           <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-amber-950/80 border border-amber-800/60 text-amber-400">
             <Lock className="h-5 w-5" />
