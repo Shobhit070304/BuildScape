@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { GoogleLogin } from "@react-oauth/google";
 import {
@@ -25,40 +25,22 @@ interface ProjectEnrollmentBoxProps {
 
 export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
   const { user, login } = useAuth();
-  const { completed } = useProgress(project.slug);
+  // enrolled, currentPhaseIndex, and completed all come from a single shared API call.
+  const { enrolled: isEnrolled, completed, hydrated, togglePhase: _t } = useProgress(project.slug);
 
-  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [localEnrolled, setLocalEnrolled] = useState(false);
   const [loadingEnrollment, setLoadingEnrollment] = useState(false);
-  const [checkingStatus, setCheckingStatus] = useState(true);
 
-  // Check enrollment status when user changes
-  useEffect(() => {
-    if (!user) {
-      setIsEnrolled(false);
-      setCheckingStatus(false);
-      return;
-    }
-
-    setCheckingStatus(true);
-    api
-      .getProgress(project.slug)
-      .then((data) => {
-        setIsEnrolled(data.enrolled);
-      })
-      .catch(() => {
-        setIsEnrolled(false);
-      })
-      .finally(() => {
-        setCheckingStatus(false);
-      });
-  }, [user, project.slug]);
+  // Derive effective enrollment: useProgress hydrates from backend; localEnrolled handles
+  // optimistic state right after the user clicks "Enroll" before the next re-hydration.
+  const effectivelyEnrolled = isEnrolled || localEnrolled;
 
   const handleEnroll = async () => {
     if (!user) return;
     setLoadingEnrollment(true);
     try {
       await api.enrollProject(project.slug);
-      setIsEnrolled(true);
+      setLocalEnrolled(true);
     } catch (err) {
       console.error("Failed to enroll:", err);
     } finally {
@@ -72,6 +54,17 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
     totalPhases > 0 ? Math.round((completedCount / totalPhases) * 100) : 0;
   const hasStarted = completedCount > 0;
 
+  // Show a loading skeleton until useProgress has hydrated.
+  if (!hydrated) {
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-[#0e0e0e] p-4 sm:p-5 shadow-xl">
+        <div className="flex h-48 items-center justify-center">
+          <Loader2 className="h-5 w-5 animate-spin text-[#c9a96e]" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div id="enrollment-box" className="rounded-xl border border-zinc-800 bg-[#0e0e0e] p-4 sm:p-5 shadow-xl">
       {/* Box Header */}
@@ -79,7 +72,7 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
         <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
           Project Access
         </span>
-        {isEnrolled ? (
+        {effectivelyEnrolled ? (
           <span className="inline-flex items-center gap-1 rounded-full border border-emerald-800/40 bg-emerald-950/40 px-2.5 py-0.5 text-[0.7rem] font-medium text-emerald-400">
             <CheckCircle2 className="h-3 w-3" />
             Enrolled
@@ -129,7 +122,7 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
       </div>
 
       {/* Progress or Enrollment Status */}
-      {isEnrolled ? (
+      {effectivelyEnrolled ? (
         <div className="mb-6 rounded-lg border border-[#24211b] bg-[#161411] p-3.5">
           <div className="mb-2 flex items-center justify-between text-xs">
             <span className="text-[#8a8178]">Your Progress</span>
@@ -149,7 +142,7 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
           <p className="font-medium text-[#c4bbb0]">Includes with enrollment:</p>
           <ul className="space-y-1 text-[0.75rem]">
             <li className="flex items-center gap-1.5">
-              <span className="text-emerald-400">✓</span> Complete code walkthroughs & explanation
+              <span className="text-emerald-400">✓</span> Complete code walkthroughs &amp; explanation
             </li>
             <li className="flex items-center gap-1.5">
               <span className="text-emerald-400">✓</span> Step-by-step phase checklists
@@ -163,12 +156,7 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
 
       {/* Action CTA */}
       <div className="space-y-3">
-        {checkingStatus ? (
-          <div className="flex h-10 w-full items-center justify-center rounded-lg border border-[#2a2a2a] bg-[#141414] text-xs text-[#8a8178]">
-            <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-            Loading status...
-          </div>
-        ) : isEnrolled ? (
+        {effectivelyEnrolled ? (
           <Link
             href={`/projects/${project.slug}/workspace`}
             className="group flex w-full items-center justify-center gap-2 rounded-lg border border-amber-600/50 bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700 px-4 py-2.5 text-sm font-semibold text-stone-950 shadow-md transition-all hover:opacity-95 hover:shadow-amber-900/20 active:scale-[0.99]"
@@ -228,7 +216,7 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
           </div>
         )}
 
-        {isEnrolled && (
+        {effectivelyEnrolled && (
           <p className="text-center text-[0.7rem] text-[#6b6256]">
             Enrolled with {user?.email}. Progress syncs automatically.
           </p>

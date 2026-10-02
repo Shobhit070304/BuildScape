@@ -3,13 +3,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Layers, LogOut } from "lucide-react";
+import { Layers, LogOut, AlertCircle } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
 import { useAuth } from "@/context/AuthContext";
 
 export function Navbar() {
   const { user, isLoading, login, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [loginError, setLoginError] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -99,17 +100,26 @@ export function Navbar() {
               </button>
             </div>
           ) : (
-            <div className="scale-[0.8] origin-right">
-              <GoogleLogin
-                onSuccess={(res) => {
-                  if (res.credential) login(res.credential);
-                }}
-                onError={() => console.error("Google login failed")}
-                size="medium"
-                shape="pill"
-                theme="filled_black"
-                text="signin_with"
-              />
+            <div className="flex flex-col items-end gap-1">
+              <div className="scale-[0.8] origin-right">
+                <GoogleLogin
+                  onSuccess={(res) => {
+                    setLoginError(false);
+                    if (res.credential) login(res.credential);
+                  }}
+                  onError={() => setLoginError(true)}
+                  size="medium"
+                  shape="pill"
+                  theme="filled_black"
+                  text="signin_with"
+                />
+              </div>
+              {loginError && (
+                <span className="flex items-center gap-1 text-[10px] text-rose-400">
+                  <AlertCircle className="h-2.5 w-2.5" />
+                  Sign-in failed. Please try again.
+                </span>
+              )}
             </div>
           )}
         </div>

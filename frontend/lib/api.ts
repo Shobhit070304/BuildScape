@@ -1,3 +1,5 @@
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+
 function getToken() {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("bs_token");
@@ -8,7 +10,7 @@ async function request<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const token = getToken();
-  const res = await fetch(`${process.env.API_URL}${path}`, {
+  const res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -18,8 +20,8 @@ async function request<T>(
   });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error ?? "Request failed");
+    const err = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(err.message ?? err.error ?? "Request failed");
   }
 
   return res.json() as Promise<T>;

@@ -21,10 +21,10 @@ router.get("/my/enrolled", authenticate, getEnrolledProjects);
 router.get("/", listProjects);
 router.get("/:slug", getProject);
 
-// Project management: add, update, delete
-router.post("/", createProject);
-router.put("/:slug", updateProject);
-router.delete("/:slug", deleteProject);
+// Project management: requires authentication
+router.post("/", authenticate, createProject);
+router.put("/:slug", authenticate, updateProject);
+router.delete("/:slug", authenticate, deleteProject);
 
 // Protected student actions
 router.post("/:slug/enroll", authenticate, enrollProject);
@@ -32,4 +32,3 @@ router.post("/:slug/phases/:phaseId/complete", authenticate, completePhase);
 router.get("/:slug/progress", authenticate, getProgress);
 
 export default router;
-

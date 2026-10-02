@@ -21,13 +21,14 @@ export function ScrollSectionTracker() {
 
   useEffect(() => {
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + window.innerHeight * 0.35;
+      // getBoundingClientRect() is reliable across scroll containers and CSS transforms.
+      const threshold = window.innerHeight * 0.35;
 
       for (let i = SECTIONS.length - 1; i >= 0; i--) {
         const el = document.getElementById(SECTIONS[i].id);
         if (el) {
-          const top = el.offsetTop;
-          if (scrollPosition >= top) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= threshold) {
             setActiveSection(SECTIONS[i].id);
             break;
           }
@@ -84,9 +85,8 @@ export function ScrollSectionTracker() {
                   {sec.name}
                 </span>
 
-                {/* Node icon matching Image 3 */}
                 {isActive ? (
-                  /* Active half-filled purple circle icon */
+                  /* Active half-filled purple circle */
                   <svg
                     className="h-3.5 w-3.5 text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.7)] animate-pulse"
                     viewBox="0 0 24 24"
@@ -105,7 +105,7 @@ export function ScrollSectionTracker() {
                     />
                   </svg>
                 ) : (
-                  /* Inactive hollow circle matching Image 3 */
+                  /* Inactive hollow circle */
                   <div className="h-2 w-2 rounded-full border border-zinc-600 bg-[#0a0a0a] transition-all group-hover:border-zinc-400 group-hover:scale-125" />
                 )}
               </button>

@@ -23,8 +23,12 @@ export const projectsService = {
     const project = await this.getBySlug(slug);
     const phase = project.phases.find((item) => item.id === phaseId);
     if (!phase) throw new HttpError(404, "Phase not found");
+
     await progressRepository.markPhaseComplete(userId, project._id, phaseId);
-    await progressRepository.setCurrentPhase(userId, project._id, phase.orderIndex);
+
+    // Advance to the NEXT phase index (not the completed one).
+    const nextPhaseIndex = phase.orderIndex + 1;
+    await progressRepository.setCurrentPhase(userId, project._id, nextPhaseIndex);
   },
 
   async getProgress(userId: string, slug: string) {
@@ -67,7 +71,10 @@ export const projectsService = {
   },
 
   create: (values: Partial<IProject>) => projectRepository.create(values),
+
+  // updateBySlug now throws HttpError(404) internally if slug not found.
   update: (slug: string, values: Partial<IProject>) => projectRepository.updateBySlug(slug, values),
+
   delete: async (slug: string) => {
     const project = await projectRepository.deleteBySlug(slug);
     if (!project) throw new HttpError(404, "Project not found");

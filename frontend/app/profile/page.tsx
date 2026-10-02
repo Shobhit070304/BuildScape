@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { GoogleLogin } from "@react-oauth/google";
@@ -23,10 +23,6 @@ export default function ProfilePage() {
   const { user, isLoading: authLoading, login, logout } = useAuth();
   const [enrollments, setEnrollments] = useState<EnrolledProjectItem[]>([]);
   const [loadingEnrollments, setLoadingEnrollments] = useState(false);
-
-  useEffect(() => {
-    document.title = "My Profile | BuildScape";
-  }, []);
 
   useEffect(() => {
     if (!user) return;
