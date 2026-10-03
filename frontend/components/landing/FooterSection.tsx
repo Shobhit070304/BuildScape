@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Layers } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 const NAV = [
   { label: "Projects", href: "/projects" },
@@ -12,12 +12,7 @@ export function FooterSection() {
     <footer className="border-t border-[#1e1e1c] py-10">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-5 px-6 sm:px-8 lg:px-12">
         {/* Brand */}
-        <div className="flex items-center gap-2">
-          <div className="flex h-5 w-5 items-center justify-center rounded border border-[#2a2620] bg-[#161411]">
-            <Layers className="h-3 w-3 text-[#c9a96e]" />
-          </div>
-          <span className="font-serif text-sm font-semibold text-[#5a5450]">BuildScape</span>
-        </div>
+        <Logo size="sm" />
 
         {/* Nav */}
         <nav className="flex gap-7">

@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Layers, LogOut, AlertCircle } from "lucide-react";
+import { LogOut, AlertCircle } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
 import { useAuth } from "@/context/AuthContext";
+import { Logo } from "@/components/Logo";
 
 export function Navbar() {
   const { user, isLoading, login, logout } = useAuth();
@@ -31,18 +32,7 @@ export function Navbar() {
     >
       <div className="mx-auto flex h-11 sm:h-12 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
-        <Link
-          href="/"
-          className="flex items-center gap-2 transition-opacity hover:opacity-90"
-          aria-label="BuildScape home"
-        >
-          <div className="flex h-5 w-5 items-center justify-center rounded border border-[#3a3226] bg-[#161411] shadow-xs">
-            <Layers className="h-3 w-3 text-[#c9a96e]" />
-          </div>
-          <span className="font-serif text-sm font-bold tracking-tight text-[#e4ddd3]">
-            BuildScape
-          </span>
-        </Link>
+        <Logo size="md" />
 
         {/* Right side navigation & user actions */}
         <div className="flex items-center gap-2 sm:gap-3">
