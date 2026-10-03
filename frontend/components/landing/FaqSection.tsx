@@ -18,12 +18,12 @@ function FAQItem({ q, a }: FAQItemProps) {
         className="flex w-full cursor-pointer items-center justify-between gap-3 py-3 text-left group"
         aria-expanded={open}
       >
-        <span className="text-xs sm:text-sm font-medium text-[#d4cbbd] transition-colors group-hover:text-[#c9a96e]">
+        <span className="text-xs sm:text-sm font-medium text-[#d4cbbd] transition-colors group-hover:text-accent">
           {q}
         </span>
         <ChevronDown
-          className={`h-3.5 w-3.5 shrink-0 text-[#6b6256] transition-transform duration-200 group-hover:text-[#c9a96e] ${
-            open ? "rotate-180 text-[#c9a96e]" : ""
+          className={`h-3.5 w-3.5 shrink-0 text-[#6b6256] transition-transform duration-200 group-hover:text-accent ${
+            open ? "rotate-180 text-accent" : ""
           }`}
         />
       </button>
@@ -65,14 +65,14 @@ export function FaqSection() {
   ];
 
   return (
-    <section id="faq" className="mb-10 sm:mb-12 scroll-mt-20">
+    <section id="faq" className="mb-20 sm:mb-28 lg:mb-32 scroll-mt-24">
       <div className="rounded-xl border border-[#201d18] bg-[#11100e] p-4 sm:p-6 shadow-sm">
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_1.6fr] lg:gap-8">
           {/* Left Title */}
           <div>
             <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full border border-amber-800/40 bg-amber-950/30 px-2.5 py-0.5">
-              <HelpCircle className="h-3 w-3 text-[#c9a96e]" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#c9a96e]">
+              <HelpCircle className="h-3 w-3 text-accent" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-accent">
                 FAQ
               </span>
             </div>
@@ -86,7 +86,7 @@ export function FaqSection() {
             <div className="mt-4">
               <Link
                 href="/projects"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-[#c9a96e] hover:text-[#d4b577] transition-colors"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:text-accent-hover transition-colors"
               >
                 <span>Browse All Projects</span>
                 <ArrowRight className="h-3 w-3" />

@@ -10,7 +10,7 @@ export interface IProject {
   description?: string;
   whatYouWillLearn?: string[];
   track: string;
-  difficulty: "Entry" | "Basic" | "Intermediate" | "Advanced" | "Expert" | "Beginner";
+  difficulty: "Entry" | "Basic" | "Intermediate" | "Advanced" | "Expert";
   estimatedHours: number;
   techStack: string[];
   phases: IPhase[];
@@ -27,7 +27,7 @@ const ProjectSchema = new Schema<IProject>(
     track: { type: String, required: true },
     difficulty: {
       type: String,
-      enum: ["Entry", "Basic", "Intermediate", "Advanced", "Expert", "Beginner"],
+      enum: ["Entry", "Basic", "Intermediate", "Advanced", "Expert"],
       required: true,
     },
     estimatedHours: { type: Number, required: true },

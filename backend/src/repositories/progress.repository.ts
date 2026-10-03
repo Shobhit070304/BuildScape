@@ -11,7 +11,7 @@ export const progressRepository = {
       { userId: asObjectId(userId), projectId },
       // $setOnInsert preserves currentPhaseIndex on re-enroll; only runs on first insert.
       { $setOnInsert: { userId: asObjectId(userId), projectId, currentPhaseIndex: 0 } },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: "after" }
     ),
 
   findEnrollment: (userId: string, projectId: Types.ObjectId) =>
@@ -24,14 +24,14 @@ export const progressRepository = {
     UserTaskProgress.findOneAndUpdate(
       { userId: asObjectId(userId), projectId, phaseId },
       { userId: asObjectId(userId), projectId, phaseId, completedAt: new Date() },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: "after" }
     ),
 
   setCurrentPhase: (userId: string, projectId: Types.ObjectId, currentPhaseIndex: number) =>
     UserProjectEnrollment.findOneAndUpdate(
       { userId: asObjectId(userId), projectId },
       { currentPhaseIndex },
-      { new: true }
+      { returnDocument: "after" }
     ),
 
   listCompletedPhases: (userId: string, projectId: Types.ObjectId) =>

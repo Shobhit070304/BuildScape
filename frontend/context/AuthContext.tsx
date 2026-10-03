@@ -45,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .catch(() => {
         localStorage.removeItem("bs_token");
         setToken(null);
+        setUser(null);
       })
       .finally(() => setIsLoading(false));
   }, []);

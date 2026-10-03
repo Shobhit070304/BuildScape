@@ -52,12 +52,12 @@ export function ComparisonSection() {
   ];
 
   return (
-    <section id="comparison" className="mb-10 sm:mb-12 scroll-mt-20">
+    <section id="comparison" className="mb-20 sm:mb-28 lg:mb-32 scroll-mt-24">
       {/* Section Header */}
       <div className="mb-6 text-center">
         <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full border border-amber-800/40 bg-amber-950/30 px-2.5 py-0.5">
-          <Sparkles className="h-3 w-3 text-[#c9a96e]" />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#c9a96e]">
+          <Sparkles className="h-3 w-3 text-accent" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-accent">
             The Difference
           </span>
         </div>

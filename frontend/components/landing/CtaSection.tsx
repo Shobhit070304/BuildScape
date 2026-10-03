@@ -3,53 +3,50 @@ import { ArrowRight, Sparkles } from "lucide-react";
 
 export function CtaSection() {
   return (
-    <section className="mb-12 sm:mb-14">
-      <div className="relative overflow-hidden rounded-2xl border border-[#26221c] bg-gradient-to-b from-[#14120f] to-[#0e0d0b] p-6 text-center sm:p-10 shadow-lg">
-        {/* Subtle ambient glow */}
+    <section className="mb-20 sm:mb-28 lg:mb-32">
+      <div className="relative overflow-hidden rounded-2xl border border-border-subtle bg-linear-to-b from-[#131210] to-[#0c0c0b] px-6 py-10 text-center sm:px-12 sm:py-14 shadow-xl">
+        {/* Ambient glow */}
         <div
-          className="pointer-events-none absolute left-1/2 top-1/2 h-[220px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse,_#c9a96e,_transparent_65%)] opacity-10 blur-[80px]"
+          className="pointer-events-none absolute left-1/2 top-1/2 h-70 w-125 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse,#c9a96e,transparent_60%)] opacity-[0.08] blur-[90px]"
           aria-hidden="true"
         />
 
         <div className="relative">
-          <div className="mb-3 inline-flex">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-800/40 bg-amber-950/30 px-3 py-0.5 text-[11px] font-medium text-[#c9a96e]">
-              <Sparkles className="h-3 w-3 text-[#c9a96e]" />
-              <span>Ready to level up your engineering skills?</span>
+          <div className="mb-4 inline-flex">
+            <span className="pill-amber">
+              <Sparkles className="h-2.5 w-2.5" />
+              Ready to level up your engineering skills?
             </span>
           </div>
 
-          <h2 className="mb-2 font-serif text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-[#e4ddd3]">
+          <h2 className="mb-3 font-serif text-2xl font-semibold tracking-tight text-text sm:text-3xl lg:text-4xl">
             Stop watching tutorials.
             <br />
-            <span className="italic font-normal text-[#c9a96e]">
+            <span className="italic font-normal text-accent">
               Start building real systems.
             </span>
           </h2>
 
-          <p className="mx-auto mb-5 max-w-md text-xs leading-relaxed text-[#8a8178]">
-            Pick a production build, work through the guided phases at your own pace, and ship a real application to your developer portfolio.
+          <p className="mx-auto mb-7 max-w-md text-[0.8125rem] leading-relaxed text-text-muted">
+            Pick a production build, work through the guided phases at your own pace, and ship a
+            real application to your developer portfolio.
           </p>
 
-          <div className="flex flex-wrap justify-center items-center gap-2.5">
-            <Link
-              href="/projects"
-              className="inline-flex items-center gap-1.5 rounded border border-amber-600/50 bg-[#d97706] hover:bg-[#b45309] px-4 py-2 text-xs font-semibold text-stone-950 transition-all shadow-xs active:scale-[0.98]"
-            >
-              <span>Explore All Projects</span>
-              <ArrowRight className="h-3.5 w-3.5" />
+          <div className="flex flex-wrap justify-center items-center gap-3">
+            <Link href="/projects" className="btn-primary px-6! py-2.5! text-[0.8125rem]!">
+              Explore All Projects
+              <ArrowRight className="h-4 w-4" />
             </Link>
-
             <Link
-              href="/projects/springboot-kafka-ecommerce-microservices"
-              className="inline-flex items-center gap-1.5 rounded border border-[#2a2620] bg-[#14120f] px-3.5 py-2 text-xs font-medium text-[#d4cbbd] transition-all hover:border-[#3a352c] hover:text-white"
+              href="/projects/spring-kafka-banking-ledger"
+              className="btn-secondary px-5! py-2.5! text-[0.8125rem]!"
             >
-              <span>Featured: Spring Boot Kafka Microservices →</span>
+              Featured: Spring Kafka Banking Ledger →
             </Link>
           </div>
 
-          <p className="mt-4 font-mono text-[10px] text-[#6b6256]">
-            100% Free & Open Curriculum • Self-Paced • Production Roadmaps
+          <p className="mt-6 font-mono text-[10px] text-text-faint">
+            100% Free & Open Curriculum · Self-Paced · Production Roadmaps
           </p>
         </div>
       </div>

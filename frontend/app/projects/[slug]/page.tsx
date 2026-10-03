@@ -10,7 +10,6 @@ import {
   FileCode2,
 } from "lucide-react";
 import {
-  getAllProjects,
   fetchProjectBySlugFromDb,
   DIFFICULTY_COLORS,
 } from "@/lib/projects";
@@ -25,7 +24,7 @@ interface PageProps {
 }
 
 export function generateStaticParams() {
-  return getAllProjects().map((p) => ({ slug: p.slug }));
+  return [];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -54,7 +53,7 @@ export default async function ProjectOverviewPage({ params, searchParams }: Page
       <main className="min-h-screen w-full bg-[#0a0a0a] pb-20 pt-6">
         <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
           {/* Breadcrumb */}
-          <div className="mb-5 flex items-center gap-2 text-xs text-[#7a7168]">
+          <div className="mb-5 flex items-center gap-2 text-xs text-text-muted">
             <Link
               href="/projects"
               className="flex items-center gap-1 transition-colors hover:text-[#e4ddd3]"
@@ -96,17 +95,17 @@ export default async function ProjectOverviewPage({ params, searchParams }: Page
               </span>
             </div>
 
-            <h1 className="mb-2 text-xl font-bold tracking-tight text-white sm:text-2xl">
+            <h1 className="mb-2 font-serif text-2xl sm:text-3xl font-bold tracking-tight text-text">
               {project.title}
             </h1>
 
-            <p className="max-w-3xl text-xs sm:text-sm leading-relaxed text-zinc-400 mb-4">
+            <p className="max-w-3xl text-xs sm:text-sm leading-relaxed text-[#a0978c] mb-4">
               {project.tagline}
             </p>
 
             {/* Tech stack */}
             <div className="flex flex-wrap items-center gap-1.5 pt-3 border-t border-zinc-800/80">
-              <span className="text-[0.72rem] text-zinc-500 mr-1">Stack:</span>
+              <span className="text-[0.72rem] text-[#6b6256] mr-1">Stack:</span>
               {project.techStack.map((tech) => (
                 <TechBadge key={tech} name={tech} size="xs" showIcon={true} />
               ))}
@@ -119,11 +118,11 @@ export default async function ProjectOverviewPage({ params, searchParams }: Page
             <div className="lg:col-span-8 space-y-6">
               {/* Project Description */}
               {project.description && (
-                <div className="rounded-xl border border-zinc-800/80 bg-[#0d0d0d] p-4 sm:p-5">
-                  <h3 className="text-xs font-mono uppercase tracking-widest text-[#a855f7] mb-2 font-semibold">
+                <div className="rounded-xl border border-[#221f1a] bg-[#100e0c] p-4 sm:p-5">
+                  <h3 className="text-xs font-mono uppercase tracking-widest text-accent mb-2 font-semibold">
                     PROJECT OVERVIEW
                   </h3>
-                  <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-[#c4bbb0] leading-relaxed">
                     {project.description}
                   </p>
                 </div>
@@ -131,14 +130,14 @@ export default async function ProjectOverviewPage({ params, searchParams }: Page
 
               {/* What You Will Learn */}
               {project.whatYouWillLearn && project.whatYouWillLearn.length > 0 && (
-                <div className="rounded-xl border border-zinc-800/80 bg-[#0d0d0d] p-4 sm:p-5">
-                  <h3 className="text-xs font-mono uppercase tracking-widest text-[#a855f7] mb-3 font-semibold">
+                <div className="rounded-xl border border-[#221f1a] bg-[#100e0c] p-4 sm:p-5">
+                  <h3 className="text-xs font-mono uppercase tracking-widest text-accent mb-3 font-semibold">
                     WHAT YOU WILL LEARN
                   </h3>
                   <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                     {project.whatYouWillLearn.map((item, i) => (
-                      <div key={i} className="flex items-start gap-2.5 text-xs text-zinc-300">
-                        <CheckCircle className="h-3.5 w-3.5 shrink-0 text-[#a855f7] mt-0.5" />
+                      <div key={i} className="flex items-start gap-2.5 text-xs text-[#c4bbb0]">
+                        <CheckCircle className="h-3.5 w-3.5 shrink-0 text-accent mt-0.5" />
                         <span className="leading-snug">{item}</span>
                       </div>
                     ))}

@@ -1,5 +1,4 @@
 import type { ApiProject } from "@/lib/api";
-import projectsData from "@/data/projects.json";
 
 export interface Phase {
   id: string;
@@ -24,20 +23,10 @@ export interface Project {
   phases: Phase[];
 }
 
-const localProjects = projectsData as Project[];
-
-export function getAllProjects(): Project[] {
-  return localProjects;
-}
-
-export function getProjectBySlug(slug: string): Project | undefined {
-  return localProjects.find((p) => p.slug === slug);
-}
-
 /**
  * Map a raw API project document to the local Project shape.
  */
-function mapApiProject(p: ApiProject): Project {
+export function mapApiProject(p: ApiProject): Project {
   return {
     id: p._id ?? p.slug,
     slug: p.slug,
@@ -53,12 +42,14 @@ function mapApiProject(p: ApiProject): Project {
   };
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
 /**
- * Fetch all projects from MongoDB API with automatic fallback to local data.
+ * Fetch all projects from MongoDB API.
  */
 export async function fetchProjectsFromDb(): Promise<Project[]> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects`, {
+    const res = await fetch(`${API_URL}/api/projects`, {
       cache: "no-store",
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -67,17 +58,17 @@ export async function fetchProjectsFromDb(): Promise<Project[]> {
       return (data.projects as ApiProject[]).map(mapApiProject);
     }
   } catch (err) {
-    console.warn("⚠️ [BuildScape] Could not load projects from DB API, using local fallback.", err);
+    console.warn("⚠️ [BuildScape] Could not load projects from DB API.", err);
   }
-  return getAllProjects();
+  return [];
 }
 
 /**
- * Fetch a single project with full phase content from MongoDB API with automatic fallback.
+ * Fetch a single project with full phase content from MongoDB API.
  */
 export async function fetchProjectBySlugFromDb(slug: string): Promise<Project | undefined> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${slug}`, {
+    const res = await fetch(`${API_URL}/api/projects/${slug}`, {
       cache: "no-store",
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -86,13 +77,13 @@ export async function fetchProjectBySlugFromDb(slug: string): Promise<Project | 
       return mapApiProject(data.project as ApiProject);
     }
   } catch (err) {
-    console.warn(`⚠️ [BuildScape] Could not load project "${slug}" from DB API, using local fallback.`, err);
+    console.warn(`⚠️ [BuildScape] Could not load project "${slug}" from DB API.`, err);
   }
-  return getProjectBySlug(slug);
+  return undefined;
 }
 
 export function getAllTracks(): string[] {
-  const primaryTechs = [
+  return [
     "Web Development",
     "Full-Stack SpringBoot",
     "Machine Learning",
@@ -108,8 +99,6 @@ export function getAllTracks(): string[] {
     "C#",
     "Node.js",
   ];
-  const dynamicTracks = Array.from(new Set(localProjects.map((p) => p.track)));
-  return Array.from(new Set([...primaryTechs, ...dynamicTracks]));
 }
 
 export const DIFFICULTY_ORDER: Record<string, number> = {

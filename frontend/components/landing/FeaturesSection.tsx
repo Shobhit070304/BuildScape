@@ -9,12 +9,12 @@ import {
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="mb-10 sm:mb-12 scroll-mt-20">
+    <section id="features" className="mb-20 sm:mb-28 lg:mb-32 scroll-mt-24">
       {/* Section Header */}
       <div className="mb-6 text-center">
         <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full border border-amber-800/40 bg-amber-950/30 px-2.5 py-0.5">
-          <Sparkles className="h-3 w-3 text-[#c9a96e]" />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#c9a96e]">
+          <Sparkles className="h-3 w-3 text-accent" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-accent">
             Engineering Bento
           </span>
         </div>
@@ -31,10 +31,10 @@ export function FeaturesSection() {
         {/* Bento 1: Wide Card (span 2) */}
         <div className="group relative overflow-hidden rounded-xl border border-[#201d18] bg-[#11100e] p-4 md:col-span-2 transition-all duration-200 hover:border-[#332e26] hover:bg-[#14120f]">
           <div className="mb-3 flex items-center justify-between">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#2a2620] bg-[#161411] text-[#c9a96e]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#2a2620] bg-[#161411] text-accent">
               <Code2 className="h-4 w-4" />
             </div>
-            <span className="rounded border border-amber-800/40 bg-amber-950/40 px-2 py-0.2 font-mono text-[9px] font-semibold text-[#c9a96e]">
+            <span className="rounded border border-amber-800/40 bg-amber-950/40 px-2 py-0.2 font-mono text-[9px] font-semibold text-accent">
               Architecture First
             </span>
           </div>
@@ -48,7 +48,7 @@ export function FeaturesSection() {
 
           {/* Mini Interactive Architecture Preview */}
           <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-[#1e1c18] bg-[#090807] p-2 text-[10px] font-mono text-[#a0978c]">
-            <span className="rounded bg-[#14120f] border border-[#221f1a] px-1.5 py-0.5 text-[#c9a96e]">
+            <span className="rounded bg-[#14120f] border border-[#221f1a] px-1.5 py-0.5 text-accent">
               [Client Request]
             </span>
             <span className="text-[#6b6256]">➔</span>
@@ -112,7 +112,7 @@ export function FeaturesSection() {
         {/* Bento 4: Real SaaS Architectures (span 1) */}
         <div className="group relative flex flex-col justify-between rounded-xl border border-[#201d18] bg-[#11100e] p-4 transition-all duration-200 hover:border-[#332e26] hover:bg-[#14120f]">
           <div>
-            <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg border border-[#2a2620] bg-[#161411] text-[#c9a96e]">
+            <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg border border-[#2a2620] bg-[#161411] text-accent">
               <GitBranch className="h-4 w-4" />
             </div>
             <h3 className="mb-1 font-serif text-sm font-semibold text-[#e4ddd3] group-hover:text-white transition-colors">
@@ -139,7 +139,7 @@ export function FeaturesSection() {
         {/* Bento 5: Instant Guest & Cloud Sync (span 1) */}
         <div className="group relative flex flex-col justify-between rounded-xl border border-[#201d18] bg-[#11100e] p-4 transition-all duration-200 hover:border-[#332e26] hover:bg-[#14120f]">
           <div>
-            <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg border border-[#2a2620] bg-[#161411] text-[#c9a96e]">
+            <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg border border-[#2a2620] bg-[#161411] text-accent">
               <Cloud className="h-4 w-4" />
             </div>
             <h3 className="mb-1 font-serif text-sm font-semibold text-[#e4ddd3] group-hover:text-white transition-colors">

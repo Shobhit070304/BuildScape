@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronLeft, Clock, Layers, ArrowLeft } from "lucide-react";
-import { getAllProjects, fetchProjectBySlugFromDb } from "@/lib/projects";
+import { Clock, ArrowLeft } from "lucide-react";
+import { fetchProjectBySlugFromDb } from "@/lib/projects";
 import { PhaseViewer } from "@/components/PhaseViewer";
 import { TechBadge } from "@/components/TechBadge";
 import { WorkspaceEnrollmentGuard } from "@/components/WorkspaceEnrollmentGuard";
@@ -13,7 +13,7 @@ interface PageProps {
 }
 
 export function generateStaticParams() {
-  return getAllProjects().map((p) => ({ slug: p.slug }));
+  return [];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -27,9 +27,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 const DIFFICULTY_CLASSES: Record<string, string> = {
-  Beginner: "text-emerald-400 bg-emerald-950/30 border-emerald-900/50",
+  Entry:        "text-sky-400 bg-sky-950/30 border-sky-900/50",
+  Basic:        "text-emerald-400 bg-emerald-950/30 border-emerald-900/50",
   Intermediate: "text-amber-400 bg-amber-950/30 border-amber-800/50",
-  Advanced: "text-rose-400 bg-rose-950/30 border-rose-900/50",
+  Advanced:     "text-rose-400 bg-rose-950/30 border-rose-900/50",
+  Expert:       "text-purple-400 bg-purple-950/30 border-purple-900/50",
 };
 
 export default async function ProjectWorkspacePage({ params, searchParams }: PageProps) {
@@ -49,7 +51,7 @@ export default async function ProjectWorkspacePage({ params, searchParams }: Pag
         <div className="flex h-11 shrink-0 items-center gap-3 overflow-hidden border-b border-[#1a1a1a] bg-[#0a0a0a] px-4">
           <Link
             href={`/projects/${project.slug}`}
-            className="flex shrink-0 items-center gap-1 text-xs text-[#c9a96e] transition-colors hover:text-[#d4b577]"
+            className="flex shrink-0 items-center gap-1 text-xs text-accent transition-colors hover:text-accent-hover"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             Project Overview
@@ -59,7 +61,7 @@ export default async function ProjectWorkspacePage({ params, searchParams }: Pag
 
           <Link
             href="/projects"
-            className="hidden shrink-0 items-center gap-1 text-xs text-[#7a7168] transition-colors hover:text-[#e4ddd3] sm:flex"
+            className="hidden shrink-0 items-center gap-1 text-xs text-text-muted transition-colors hover:text-[#e4ddd3] sm:flex"
           >
             All projects
           </Link>
@@ -79,7 +81,7 @@ export default async function ProjectWorkspacePage({ params, searchParams }: Pag
             </span>
           </div>
 
-          <div className="ml-auto flex shrink-0 items-center gap-1.5 text-xs text-[#7a7168]">
+          <div className="ml-auto flex shrink-0 items-center gap-1.5 text-xs text-text-muted">
             <Clock className="h-3 w-3" />
             {project.estimatedHours}h estimated
           </div>

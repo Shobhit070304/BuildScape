@@ -63,7 +63,7 @@ export function ScrollSectionTracker() {
               {index > 0 && (
                 <div
                   className={`w-[1px] h-6 sm:h-7 transition-colors duration-300 ${
-                    isActive ? "bg-purple-500/80" : "bg-zinc-800"
+                    isActive ? "bg-[#c9a96e]/70" : "bg-[#201d18]"
                   }`}
                 />
               )}
@@ -78,17 +78,17 @@ export function ScrollSectionTracker() {
                 <span
                   className={`pointer-events-none absolute right-6 font-mono text-[9px] tracking-wider whitespace-nowrap rounded px-1.5 py-0.5 border transition-all duration-200 ${
                     isActive
-                      ? "opacity-100 translate-x-0 border-purple-800/60 bg-[#161411] text-purple-300 shadow-md"
-                      : "opacity-0 translate-x-1 border-[#2a2620] bg-[#12100d] text-zinc-400 group-hover:opacity-100 group-hover:translate-x-0"
+                      ? "opacity-100 translate-x-0 border-amber-800/60 bg-[#161411] text-[#c9a96e] shadow-md"
+                      : "opacity-0 translate-x-1 border-[#2a2620] bg-[#12100d] text-[#8a8178] group-hover:opacity-100 group-hover:translate-x-0"
                   }`}
                 >
                   {sec.name}
                 </span>
 
                 {isActive ? (
-                  /* Active half-filled purple circle */
+                  /* Active half-filled gold/amber circle */
                   <svg
-                    className="h-3.5 w-3.5 text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.7)] animate-pulse"
+                    className="h-3.5 w-3.5 text-[#c9a96e] drop-shadow-[0_0_8px_rgba(201,169,110,0.6)] animate-pulse"
                     viewBox="0 0 24 24"
                     fill="none"
                   >
@@ -106,7 +106,7 @@ export function ScrollSectionTracker() {
                   </svg>
                 ) : (
                   /* Inactive hollow circle */
-                  <div className="h-2 w-2 rounded-full border border-zinc-600 bg-[#0a0a0a] transition-all group-hover:border-zinc-400 group-hover:scale-125" />
+                  <div className="h-2 w-2 rounded-full border border-[#3a352c] bg-[#0a0a0a] transition-all group-hover:border-[#c9a96e] group-hover:scale-125" />
                 )}
               </button>
             </div>

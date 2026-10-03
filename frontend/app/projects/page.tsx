@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { ProjectCard } from "@/components/ProjectCard";
-import { getAllProjects, getAllTracks } from "@/lib/projects";
+import { getAllTracks, mapApiProject } from "@/lib/projects";
 import { api } from "@/lib/api";
 import type { Project } from "@/lib/projects";
 
@@ -225,13 +225,11 @@ const COMING_SOON_TRACKS: Record<
 };
 
 export default function ProjectsPage() {
-  const initialProjects = getAllProjects();
-  const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [isFromDb, setIsFromDb] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedTrack, setSelectedTrack] = useState<string | null>(null);
   const [selectedLevelLabel, setSelectedLevelLabel] = useState<string | null>(null);
-  const [isFreeOnly, setIsFreeOnly] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
   const [notifiedTracks, setNotifiedTracks] = useState<string[]>([]);
 
@@ -242,20 +240,7 @@ export default function ProjectsPage() {
       .getProjects()
       .then((data) => {
         if (isMounted && data?.projects && data.projects.length > 0) {
-          const dbProjects: Project[] = data.projects.map((p) => ({
-            id: p._id || p.slug,
-            slug: p.slug,
-            title: p.title,
-            tagline: p.tagline,
-            description: p.description,
-            whatYouWillLearn: p.whatYouWillLearn,
-            track: p.track,
-            difficulty: p.difficulty as any,
-            estimatedHours: p.estimatedHours,
-            techStack: p.techStack || [],
-            phases: (p.phases as any) || [],
-          }));
-          setProjects(dbProjects);
+          setProjects(data.projects.map(mapApiProject));
           setIsFromDb(true);
         }
       })
@@ -276,31 +261,23 @@ export default function ProjectsPage() {
         p.title.toLowerCase().includes(q) ||
         p.tagline.toLowerCase().includes(q) ||
         p.techStack.some((t) => t.toLowerCase().includes(q));
-
-      // Technology filter: checks track or techStack
       const matchTrack =
         !selectedTrack ||
         p.track.toLowerCase().includes(selectedTrack.toLowerCase()) ||
         selectedTrack.toLowerCase().includes(p.track.toLowerCase()) ||
         p.techStack.some((t) => t.toLowerCase() === selectedTrack.toLowerCase());
-
-      // Level filter: exact 1-to-1 match with the 5 discrete difficulty levels
-      let matchLevel = true;
-      if (selectedLevelLabel) {
-        matchLevel = p.difficulty.toLowerCase() === selectedLevelLabel.toLowerCase();
-      }
-
+      const matchLevel = !selectedLevelLabel ||
+        p.difficulty.toLowerCase() === selectedLevelLabel.toLowerCase();
       return matchSearch && matchTrack && matchLevel;
     });
   }, [projects, search, selectedTrack, selectedLevelLabel]);
 
-  const hasFilters = !!(search || selectedTrack || selectedLevelLabel || isFreeOnly);
+  const hasFilters = !!(search || selectedTrack || selectedLevelLabel);
 
   function clearFilters() {
     setSearch("");
     setSelectedTrack(null);
     setSelectedLevelLabel(null);
-    setIsFreeOnly(false);
   }
 
   // Slice tracks for Image 1 toggle
@@ -313,7 +290,7 @@ export default function ProjectsPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-7">
           {/* Top Category Label (Image 1) */}
           <div className="flex items-center gap-2 mb-1.5">
-            <p className="text-xs font-mono font-bold tracking-widest text-[#a855f7] uppercase">
+            <p className="text-xs font-mono font-bold tracking-widest text-accent uppercase">
               LIBRARY
             </p>
             {isFromDb && (
@@ -324,8 +301,8 @@ export default function ProjectsPage() {
             )}
           </div>
 
-          {/* Heading (Image 1) */}
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-6">
+          {/* Heading */}
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-text mb-6">
             Curated projects across every track.
           </h1>
 
@@ -342,8 +319,8 @@ export default function ProjectsPage() {
                   onClick={() => setSelectedTrack(null)}
                   className={`rounded-full px-3 py-1 text-xs font-medium cursor-pointer transition-all ${
                     selectedTrack === null
-                      ? "bg-[#2e1065] text-[#d8b4fe] border border-[#7e22ce]"
-                      : "bg-[#141414] text-zinc-400 border border-zinc-800 hover:text-zinc-200 hover:border-zinc-700"
+                      ? "bg-amber-950/70 text-[#ecd39e] border border-amber-600/70 shadow-xs"
+                      : "bg-[#14120f] text-[#8a8178] border border-[#24211b] hover:text-[#e4ddd3] hover:border-[#38332a]"
                   }`}
                 >
                   All
@@ -358,8 +335,8 @@ export default function ProjectsPage() {
                       onClick={() => setSelectedTrack(isSelected ? null : track)}
                       className={`group flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium cursor-pointer transition-all ${
                         isSelected
-                          ? "bg-[#2e1065] text-[#d8b4fe] border border-[#7e22ce]"
-                          : "bg-[#141414] text-zinc-300 border border-zinc-800 hover:border-zinc-700 hover:text-white"
+                          ? "bg-amber-950/70 text-[#ecd39e] border border-amber-600/70 shadow-xs"
+                          : "bg-[#14120f] text-[#c4bbb0] border border-[#24211b] hover:border-[#38332a] hover:text-white"
                       }`}
                     >
                       {renderTrackIcon(track)}
@@ -371,7 +348,7 @@ export default function ProjectsPage() {
                 {/* ^ Less / v More button */}
                 <button
                   onClick={() => setIsExpanded((prev) => !prev)}
-                  className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-zinc-400 border border-zinc-800 bg-[#141414] hover:text-zinc-200 hover:border-zinc-700 transition-all cursor-pointer"
+                  className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-[#8a8178] border border-[#24211b] bg-[#14120f] hover:text-[#e4ddd3] hover:border-[#38332a] transition-all cursor-pointer"
                 >
                   {isExpanded ? (
                     <>
@@ -390,7 +367,7 @@ export default function ProjectsPage() {
 
             {/* Row 2: LEVEL */}
             <div className="flex items-start gap-3 sm:gap-4">
-              <span className="w-12 sm:w-14 shrink-0 pt-1 text-[11px] font-mono tracking-widest text-zinc-500 uppercase">
+              <span className="w-12 sm:w-14 shrink-0 pt-1 text-[11px] font-mono tracking-widest text-text-muted uppercase">
                 LEVEL
               </span>
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 flex-1">
@@ -399,8 +376,8 @@ export default function ProjectsPage() {
                   onClick={() => setSelectedLevelLabel(null)}
                   className={`rounded-full px-3 py-1 text-xs font-medium cursor-pointer transition-all ${
                     selectedLevelLabel === null
-                      ? "bg-[#2e1065] text-[#d8b4fe] border border-[#7e22ce]"
-                      : "bg-[#141414] text-zinc-400 border border-zinc-800 hover:text-zinc-200 hover:border-zinc-700"
+                      ? "bg-amber-950/70 text-[#ecd39e] border border-amber-600/70 shadow-xs"
+                      : "bg-[#14120f] text-[#8a8178] border border-[#24211b] hover:text-[#e4ddd3] hover:border-[#38332a]"
                   }`}
                 >
                   All
@@ -417,8 +394,8 @@ export default function ProjectsPage() {
                       }
                       className={`rounded-full px-3 py-1 text-xs font-medium cursor-pointer transition-all ${
                         isSelected
-                          ? "bg-[#2e1065] text-[#d8b4fe] border border-[#7e22ce]"
-                          : "bg-[#141414] text-zinc-400 border border-zinc-800 hover:text-zinc-200 hover:border-zinc-700"
+                          ? "bg-amber-950/70 text-[#ecd39e] border border-amber-600/70 shadow-xs"
+                          : "bg-[#14120f] text-[#8a8178] border border-[#24211b] hover:text-[#e4ddd3] hover:border-[#38332a]"
                       }`}
                     >
                       {lvl.label}
@@ -426,25 +403,10 @@ export default function ProjectsPage() {
                   );
                 })}
 
-                <span className="text-zinc-600 px-0.5">·</span>
-
-                {/* Free Pill */}
-                <button
-                  onClick={() => setIsFreeOnly((prev) => !prev)}
-                  className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium cursor-pointer transition-all ${
-                    isFreeOnly
-                      ? "bg-[#2e1065] text-[#d8b4fe] border border-[#7e22ce]"
-                      : "bg-[#141414] text-zinc-400 border border-zinc-800 hover:text-zinc-200 hover:border-zinc-700"
-                  }`}
-                >
-                  <span>🎁</span>
-                  <span>Free</span>
-                </button>
-
                 {hasFilters && (
                   <button
                     onClick={clearFilters}
-                    className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-zinc-800 bg-[#141414] px-2.5 py-1 text-xs text-zinc-400 hover:text-white transition-all ml-auto"
+                    className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-[#24211b] bg-[#14120f] px-2.5 py-1 text-xs text-[#8a8178] hover:text-[#e4ddd3] transition-all ml-auto"
                   >
                     <X className="h-3 w-3" />
                     <span>Reset</span>
@@ -487,29 +449,29 @@ export default function ProjectsPage() {
           {/* Results Grid or Coming Soon Component */}
           {filtered.length === 0 ? (
             selectedTrack && COMING_SOON_TRACKS[selectedTrack] ? (
-              <div className="rounded-2xl border border-purple-800/40 bg-gradient-to-b from-[#161024] via-[#0e0e0e] to-[#0a0a0a] p-6 sm:p-8 shadow-2xl">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-5 mb-6">
+              <div className="rounded-2xl border border-amber-900/40 bg-linear-to-b from-[#18130e] via-[#100e0c] to-[#0a0a0a] p-6 sm:p-8 shadow-2xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#24211b] pb-5 mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-purple-700/60 bg-purple-950/60 shadow-md">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-700/50 bg-amber-950/50 shadow-md">
                       {renderTrackIcon(selectedTrack)}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h2 className="text-base sm:text-lg font-bold text-white">
+                        <h2 className="font-serif text-base sm:text-lg font-bold text-[#f0eae1]">
                           {selectedTrack} Curriculum
                         </h2>
-                        <span className="inline-flex items-center rounded-full border border-purple-700/60 bg-purple-950/60 px-2.5 py-0.5 text-[10px] font-semibold text-purple-300 animate-pulse">
+                        <span className="inline-flex items-center rounded-full border border-amber-700/50 bg-amber-950/50 px-2.5 py-0.5 text-[10px] font-semibold text-accent">
                           ✦ In Active Development
                         </span>
                       </div>
-                      <p className="text-xs text-zinc-400 mt-0.5">
+                      <p className="text-xs text-[#8a8178] mt-0.5">
                         {COMING_SOON_TRACKS[selectedTrack].desc}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-zinc-500">
+                    <span className="font-mono text-xs text-text-muted">
                       Target: {COMING_SOON_TRACKS[selectedTrack].quarter}
                     </span>
                   </div>
@@ -517,7 +479,7 @@ export default function ProjectsPage() {
 
                 {/* Planned Builds Roadmap Preview */}
                 <div className="mb-6">
-                  <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-purple-400 mb-3">
+                  <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-accent mb-3">
                     Upcoming Production Builds In This Track
                   </h3>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -525,17 +487,17 @@ export default function ProjectsPage() {
                       (buildTitle, idx) => (
                         <div
                           key={buildTitle}
-                          className="flex items-start gap-3 rounded-xl border border-zinc-800/80 bg-[#121212] p-3.5"
+                          className="flex items-start gap-3 rounded-xl border border-[#221f1a] bg-[#12100d] p-3.5"
                         >
-                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-800/80 font-mono text-[10px] font-bold text-zinc-400">
+                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-[#2e2a24] bg-[#181613] font-mono text-[10px] font-bold text-[#a0978c]">
                             0{idx + 1}
                           </div>
                           <div>
-                            <h4 className="text-xs sm:text-sm font-semibold text-zinc-200">
+                            <h4 className="text-xs sm:text-sm font-semibold text-[#e4ddd3]">
                               {buildTitle}
                             </h4>
-                            <span className="mt-1 inline-block text-[10px] font-mono text-purple-400">
-                              Phase breakdown & blueprints in progress
+                            <span className="mt-1 inline-block text-[10px] font-mono text-accent">
+                              Phase breakdown &amp; blueprints in progress
                             </span>
                           </div>
                         </div>
@@ -555,7 +517,7 @@ export default function ProjectsPage() {
                     className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-semibold transition-all cursor-pointer ${
                       notifiedTracks.includes(selectedTrack)
                         ? "bg-emerald-950 border border-emerald-700 text-emerald-300"
-                        : "bg-[#2e1065] border border-purple-600/70 text-purple-200 hover:bg-[#3b0764] hover:text-white"
+                        : "bg-linear-to-r from-amber-700 to-amber-600 text-stone-950 border border-amber-500/50 hover:brightness-105"
                     }`}
                   >
                     <span>
@@ -567,20 +529,20 @@ export default function ProjectsPage() {
 
                   <button
                     onClick={() => setSelectedTrack(null)}
-                    className="rounded-lg border border-zinc-800 bg-zinc-900/80 px-4 py-2 text-xs font-medium text-zinc-300 hover:text-white hover:border-zinc-700 transition-all cursor-pointer"
+                    className="rounded-lg border border-[#262420] bg-[#14120f] px-4 py-2 text-xs font-medium text-[#a0978c] hover:text-[#e4ddd3] hover:border-[#3a352c] transition-all cursor-pointer"
                   >
                     Browse Live Tracks (Spring Boot, Go, Rust, Next.js, Python, Node)
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="py-14 text-center rounded-xl border border-dashed border-zinc-800/80 bg-[#0d0d0d]">
-                <p className="mb-2 text-xs text-zinc-400">
+              <div className="py-14 text-center rounded-xl border border-dashed border-[#24211b] bg-[#0e0d0b]">
+                <p className="mb-2 text-xs text-[#8a8178]">
                   No projects matched your criteria.
                 </p>
                 <button
                   onClick={clearFilters}
-                  className="cursor-pointer text-xs text-purple-400 hover:underline"
+                  className="cursor-pointer text-xs text-accent hover:text-accent-hover hover:underline"
                 >
                   Clear all filters
                 </button>

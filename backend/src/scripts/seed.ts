@@ -33,7 +33,7 @@ async function seed() {
     await Project.findOneAndUpdate(
       { slug: p.slug },
       { $set: p },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: "after" }
     );
     console.log(`  ✔ [${p.track}] ${p.title} (${p.phases?.length || 0} phases)`);
   }

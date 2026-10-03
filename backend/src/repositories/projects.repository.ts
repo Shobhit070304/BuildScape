@@ -8,7 +8,7 @@ export const projectRepository = {
   findPhasesBySlug: (slug: string) => Project.findOne({ slug }, { phases: 1 }),
   create: (values: Partial<IProject>) => Project.create(values),
   updateBySlug: async (slug: string, values: Partial<IProject>) => {
-    const project = await Project.findOneAndUpdate({ slug }, values, { new: true });
+    const project = await Project.findOneAndUpdate({ slug }, values, { returnDocument: "after" });
     if (!project) throw new HttpError(404, "Project not found");
     return project;
   },
