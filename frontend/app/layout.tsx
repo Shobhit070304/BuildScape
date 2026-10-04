@@ -40,7 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${inter.variable} ${cormorant.variable}`}
       suppressHydrationWarning
     >
-      <body className="bg-[#09090b] text-stone-100 font-sans antialiased selection:bg-amber-900/50 selection:text-amber-200">
+      <body className="bg-bg text-stone-100 font-sans antialiased selection:bg-amber-900/50 selection:text-amber-200">
         {/* Subtle film grain */}
         <div
           className="pointer-events-none fixed inset-0 z-50 opacity-[0.015] bg-grain"

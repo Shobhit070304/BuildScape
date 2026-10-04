@@ -15,7 +15,7 @@ export function Logo({ size = "md" }: { size?: "sm" | "md" }) {
         priority
       />
       <span
-        className={`font-serif font-bold tracking-tight text-[#f0ede8] transition-colors group-hover:text-white ${
+        className={`font-serif font-bold tracking-tight text-text transition-colors group-hover:text-white ${
           isSm ? "text-sm" : "text-[1.0625rem]"
         }`}
       >

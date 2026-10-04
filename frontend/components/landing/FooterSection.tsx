@@ -9,7 +9,7 @@ const NAV = [
 
 export function FooterSection() {
   return (
-    <footer className="border-t border-[#1e1e1c] py-10">
+    <footer className="border-t border-border py-10">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-5 px-6 sm:px-8 lg:px-12">
         {/* Brand */}
         <Logo size="sm" />

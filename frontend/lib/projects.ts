@@ -42,14 +42,13 @@ export function mapApiProject(p: ApiProject): Project {
   };
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-
 /**
  * Fetch all projects from MongoDB API.
  */
 export async function fetchProjectsFromDb(): Promise<Project[]> {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
   try {
-    const res = await fetch(`${API_URL}/api/projects`, {
+    const res = await fetch(`${apiUrl}/api/projects`, {
       cache: "no-store",
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -67,8 +66,9 @@ export async function fetchProjectsFromDb(): Promise<Project[]> {
  * Fetch a single project with full phase content from MongoDB API.
  */
 export async function fetchProjectBySlugFromDb(slug: string): Promise<Project | undefined> {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
   try {
-    const res = await fetch(`${API_URL}/api/projects/${slug}`, {
+    const res = await fetch(`${apiUrl}/api/projects/${slug}`, {
       cache: "no-store",
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);

@@ -74,7 +74,7 @@ export function Navbar() {
                     {user.name[0]?.toUpperCase()}
                   </div>
                 )}
-                <span className="text-[11px] font-medium text-[#d4cbbd] max-w-[80px] truncate">
+                <span className="text-[11px] font-medium text-[#d4cbbd] max-w-20 truncate">
                   {user.name.split(" ")[0]}
                 </span>
               </Link>
@@ -85,7 +85,7 @@ export function Navbar() {
                 className="flex items-center gap-1 rounded border border-[#2a2620] bg-[#14120f] px-2 py-0.5 text-[11px] font-medium text-[#a0978c] transition-all hover:border-[#3a342c] hover:bg-[#1c1915] hover:text-[#e4ddd3] cursor-pointer"
                 title="Log out of your account"
               >
-                <LogOut className="h-2.5 w-2.5 text-[#7a7168]" />
+                <LogOut className="h-2.5 w-2.5 text-text-muted" />
                 <span>Log out</span>
               </button>
             </div>
