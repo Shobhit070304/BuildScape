@@ -1,4 +1,5 @@
 import type { ApiProject } from "@/lib/api";
+import { getApiUrl } from "@/lib/api";
 
 export interface Phase {
   id: string;
@@ -46,7 +47,7 @@ export function mapApiProject(p: ApiProject): Project {
  * Fetch all projects from MongoDB API.
  */
 export async function fetchProjectsFromDb(): Promise<Project[]> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+  const apiUrl = getApiUrl();
   try {
     const res = await fetch(`${apiUrl}/api/projects`, {
       cache: "no-store",
@@ -66,7 +67,7 @@ export async function fetchProjectsFromDb(): Promise<Project[]> {
  * Fetch a single project with full phase content from MongoDB API.
  */
 export async function fetchProjectBySlugFromDb(slug: string): Promise<Project | undefined> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+  const apiUrl = getApiUrl();
   try {
     const res = await fetch(`${apiUrl}/api/projects/${slug}`, {
       cache: "no-store",

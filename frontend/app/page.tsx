@@ -10,6 +10,8 @@ import { CtaSection } from "@/components/landing/CtaSection";
 import { FooterSection } from "@/components/landing/FooterSection";
 import { ScrollSectionTracker } from "@/components/landing/ScrollSectionTracker";
 
+export const dynamic = "force-dynamic";
+
 export default function HomePage() {
   return (
     <>

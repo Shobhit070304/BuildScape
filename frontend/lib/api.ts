@@ -1,4 +1,10 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+export function getApiUrl(): string {
+  // Changed from process.env.API_URL to process.env.NEXT_PUBLIC_API_URL
+  const url =
+    process.env.NEXT_PUBLIC_API_URL ||
+    "http://localhost:4000";
+  return url.replace(/\/+$/, "");
+}
 
 function getToken() {
   if (typeof window === "undefined") return null;
@@ -9,8 +15,10 @@ async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
+  const apiUrl = getApiUrl();
   const token = getToken();
-  const res = await fetch(`${API_URL}${path}`, {
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  const res = await fetch(`${apiUrl}${cleanPath}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
