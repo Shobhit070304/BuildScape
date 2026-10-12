@@ -105,8 +105,14 @@ export default function ProfilePage() {
                         <h1 className="font-serif text-lg font-bold text-[#e4ddd3]">
                           {user.name}
                         </h1>
-                        <span className="rounded-full border border-amber-800/40 bg-amber-950/40 px-2 py-0.2 text-[0.62rem] font-medium text-accent">
-                          Learner
+                        <span
+                          className={`rounded-full border px-2 py-0.2 text-[0.62rem] font-medium ${
+                            user.role === "admin"
+                              ? "border-purple-800/50 bg-purple-950/50 text-purple-300"
+                              : "border-amber-800/40 bg-amber-950/40 text-accent"
+                          }`}
+                        >
+                          {user.role === "admin" ? "Admin" : "Learner"}
                         </span>
                       </div>
                       <p className="text-[11px] text-[#8a8178]">{user.email}</p>

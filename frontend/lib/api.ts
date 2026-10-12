@@ -6,23 +6,17 @@ export function getApiUrl(): string {
   return url.replace(/\/+$/, "");
 }
 
-function getToken() {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("bs_token");
-}
-
 async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
   const apiUrl = getApiUrl();
-  const token = getToken();
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
   const res = await fetch(`${apiUrl}${cleanPath}`, {
     ...options,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   });
@@ -41,6 +35,11 @@ export const api = {
     request<{ token: string; user: AuthUser }>("/api/auth/google", {
       method: "POST",
       body: JSON.stringify({ credential }),
+    }),
+
+  logout: () =>
+    request<{ success: boolean; message: string }>("/api/auth/logout", {
+      method: "POST",
     }),
 
   getMe: () => request<{ user: AuthUser }>("/api/auth/me"),
@@ -66,6 +65,12 @@ export const api = {
       { method: "POST" }
     ),
 
+  uncompletePhase: (slug: string, phaseId: string) =>
+    request<{ success: boolean }>(
+      `/api/projects/${slug}/phases/${phaseId}/complete`,
+      { method: "DELETE" }
+    ),
+
   getEnrolledProjects: () =>
     request<{ enrollments: EnrolledProjectItem[] }>("/api/projects/my/enrolled"),
 };
@@ -76,6 +81,7 @@ export interface AuthUser {
   email: string;
   name: string;
   avatar?: string;
+  role?: "user" | "admin";
 }
 
 export interface EnrolledProjectItem {

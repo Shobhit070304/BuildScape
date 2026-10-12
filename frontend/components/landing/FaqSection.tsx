@@ -44,7 +44,7 @@ export function FaqSection() {
     },
     {
       q: "Do I need to sign up to start building?",
-      a: "No! You can browse and build immediately as a guest. Your phase progress is automatically saved to your browser's local storage. You can also sign in with Google anytime to sync your progress across devices.",
+      a: "You can browse all project overviews and curricula freely. To enter the interactive step-by-step workspace and save your phase completions, sign in with Google in one click to persist your progress directly to the database.",
     },
     {
       q: "What skill level do I need?",

@@ -59,7 +59,7 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
     return (
       <div className="rounded-xl border border-zinc-800 bg-[#0e0e0e] p-4 sm:p-5 shadow-xl">
         <div className="flex h-48 items-center justify-center">
-          <Loader2 className="h-5 w-5 animate-spin text-[#c9a96e]" />
+          <Loader2 className="h-5 w-5 animate-spin text-accent" />
         </div>
       </div>
     );
@@ -78,7 +78,7 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
             Enrolled
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 rounded-full border border-amber-800/30 bg-amber-950/30 px-2.5 py-0.5 text-[0.7rem] font-medium text-[#c9a96e]">
+          <span className="inline-flex items-center gap-1 rounded-full border border-amber-800/30 bg-amber-950/30 px-2.5 py-0.5 text-[0.7rem] font-medium text-accent">
             <Sparkles className="h-3 w-3" />
             Free Curriculum
           </span>
@@ -126,13 +126,13 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
         <div className="mb-6 rounded-lg border border-[#24211b] bg-[#161411] p-3.5">
           <div className="mb-2 flex items-center justify-between text-xs">
             <span className="text-[#8a8178]">Your Progress</span>
-            <span className="font-semibold text-[#c9a96e]">
+            <span className="font-semibold text-accent">
               {completedCount}/{totalPhases} completed ({progressPercent}%)
             </span>
           </div>
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#24211b]">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-amber-700 to-[#c9a96e] transition-all duration-300"
+              className="h-full rounded-full bg-linear-to-r from-amber-700 to-accent transition-all duration-300"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -159,7 +159,7 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
         {effectivelyEnrolled ? (
           <Link
             href={`/projects/${project.slug}/workspace`}
-            className="group flex w-full items-center justify-center gap-2 rounded-lg border border-amber-600/50 bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700 px-4 py-2.5 text-sm font-semibold text-stone-950 shadow-md transition-all hover:opacity-95 hover:shadow-amber-900/20 active:scale-[0.99]"
+            className="group flex w-full items-center justify-center gap-2 rounded-lg border border-amber-600/50 bg-linear-to-r from-amber-700 via-amber-600 to-amber-700 px-4 py-2.5 text-sm font-semibold text-stone-950 shadow-md transition-all hover:opacity-95 hover:shadow-amber-900/20 active:scale-[0.99]"
           >
             <PlayCircle className="h-4 w-4 transition-transform group-hover:scale-110" />
             <span>{hasStarted ? "Continue Project" : "Start this Project"}</span>
@@ -173,12 +173,12 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
           >
             {loadingEnrollment ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin text-[#c9a96e]" />
+                <Loader2 className="h-4 w-4 animate-spin text-accent" />
                 <span>Enrolling...</span>
               </>
             ) : (
               <>
-                <Sparkles className="h-4 w-4 text-[#c9a96e]" />
+                <Sparkles className="h-4 w-4 text-accent" />
                 <span>Enroll in Project</span>
               </>
             )}
@@ -200,19 +200,6 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
                 size="medium"
               />
             </div>
-            <div className="relative my-2 flex items-center justify-center">
-              <div className="w-full border-t border-[#221f1a]" />
-              <span className="absolute bg-[#11100e] px-2 text-[0.65rem] text-[#5c5449]">
-                OR
-              </span>
-            </div>
-            <Link
-              href={`/projects/${project.slug}/workspace`}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#262420] bg-transparent py-2 text-xs text-[#8a8178] transition-colors hover:border-[#3a352c] hover:text-[#e4ddd3]"
-            >
-              <span>Explore as Guest</span>
-              <ArrowRight className="h-3 w-3" />
-            </Link>
           </div>
         )}
 

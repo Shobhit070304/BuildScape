@@ -27,10 +27,20 @@ export const progressRepository = {
       { upsert: true, returnDocument: "after" }
     ),
 
+  unmarkPhaseComplete: (userId: string, projectId: Types.ObjectId, phaseId: string) =>
+    UserTaskProgress.findOneAndDelete({ userId: asObjectId(userId), projectId, phaseId }),
+
   setCurrentPhase: (userId: string, projectId: Types.ObjectId, currentPhaseIndex: number) =>
     UserProjectEnrollment.findOneAndUpdate(
       { userId: asObjectId(userId), projectId },
       { currentPhaseIndex },
+      { returnDocument: "after" }
+    ),
+
+  setProjectCompleted: (userId: string, projectId: Types.ObjectId, completedAt: Date | null) =>
+    UserProjectEnrollment.findOneAndUpdate(
+      { userId: asObjectId(userId), projectId },
+      { completedAt: completedAt ?? undefined },
       { returnDocument: "after" }
     ),
 

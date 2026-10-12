@@ -83,10 +83,21 @@ export async function FeaturedProjectsSection() {
         </Link>
       </div>
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {projects.map((p) => {
-          if (!p) return null;
+      {/* Grid or Fallback */}
+      {projects.length === 0 ? (
+        <div className="rounded-2xl border border-zinc-800/80 bg-[#100e0c] p-8 text-center">
+          <p className="text-xs text-[#8a8178] mb-3">
+            Curriculum database connecting. Explore our complete library of production systems.
+          </p>
+          <Link href="/projects" className="btn-primary text-xs">
+            <span>Explore All Projects</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {projects.map((p) => {
+            if (!p) return null;
           const diffColor =
             DIFFICULTY_COLORS[p.difficulty] ?? "text-amber-400 bg-amber-950/50 border-amber-800/60";
 
@@ -156,6 +167,7 @@ export async function FeaturedProjectsSection() {
           );
         })}
       </div>
+      )}
 
       {/* More tracks banner */}
       <div className="mt-4 flex flex-col items-center justify-between gap-2 rounded-xl border border-border bg-surface-card px-5 py-3 text-center sm:flex-row sm:text-left">

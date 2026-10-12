@@ -5,6 +5,7 @@ export const env = {
   MONGODB_URI: process.env.MONGODB_URI ?? "",
   JWT_SECRET: process.env.JWT_SECRET || "buildscape-session-secret-change-in-production",
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? "",
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL ?? ""
 };
 
 // Log diagnostics on startup

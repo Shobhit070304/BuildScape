@@ -20,6 +20,11 @@ export const completePhase = asyncHandler(async (req, res) => {
   res.json({ success: true });
 });
 
+export const uncompletePhase = asyncHandler(async (req, res) => {
+  await projectsService.uncompletePhase(req.user!.userId, String(req.params.slug), String(req.params.phaseId));
+  res.json({ success: true });
+});
+
 export const getProgress = asyncHandler(async (req, res) => {
   res.json({ ...await projectsService.getProgress(req.user!.userId, String(req.params.slug)) });
 });

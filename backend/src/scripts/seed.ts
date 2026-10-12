@@ -12,10 +12,7 @@ async function seed() {
     process.exit(1);
   }
 
-  // Prefer backend/data/projects.json, fallback to frontend/data/projects.json
-  const backendJsonPath = path.resolve(__dirname, "../../data/projects.json");
-  const frontendJsonPath = path.resolve(__dirname, "../../../frontend/data/projects.json");
-  const jsonPath = fs.existsSync(backendJsonPath) ? backendJsonPath : frontendJsonPath;
+  const jsonPath = path.resolve(__dirname, "../../data/projects.json");
 
   if (!fs.existsSync(jsonPath)) {
     console.error("❌ projects.json not found at:", jsonPath);

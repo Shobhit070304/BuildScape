@@ -21,14 +21,34 @@ export const projectsService = {
 
   async completePhase(userId: string, slug: string, phaseId: string) {
     const project = await this.getBySlug(slug);
-    const phase = project.phases.find((item) => item.id === phaseId);
-    if (!phase) throw new HttpError(404, "Phase not found");
+    const phaseIndex = project.phases.findIndex((item) => item.id === phaseId);
+    if (phaseIndex === -1) throw new HttpError(404, "Phase not found");
 
     await progressRepository.markPhaseComplete(userId, project._id, phaseId);
 
-    // Advance to the NEXT phase index (not the completed one).
-    const nextPhaseIndex = phase.orderIndex + 1;
+    // 0-based progression: advance to next phase index if user was on or behind this phase
+    const enrollment = await progressRepository.findEnrollment(userId, project._id);
+    const currentIdx = enrollment?.currentPhaseIndex ?? 0;
+    const nextPhaseIndex = Math.min(
+      Math.max(0, project.phases.length - 1),
+      Math.max(currentIdx, phaseIndex + 1)
+    );
     await progressRepository.setCurrentPhase(userId, project._id, nextPhaseIndex);
+
+    // Check if all phases are completed
+    const completedPhases = await progressRepository.listCompletedPhases(userId, project._id);
+    if (completedPhases.length >= project.phases.length && project.phases.length > 0) {
+      await progressRepository.setProjectCompleted(userId, project._id, new Date());
+    }
+  },
+
+  async uncompletePhase(userId: string, slug: string, phaseId: string) {
+    const project = await this.getBySlug(slug);
+    const phase = project.phases.find((item) => item.id === phaseId);
+    if (!phase) throw new HttpError(404, "Phase not found");
+
+    await progressRepository.unmarkPhaseComplete(userId, project._id, phaseId);
+    await progressRepository.setProjectCompleted(userId, project._id, null);
   },
 
   async getProgress(userId: string, slug: string) {

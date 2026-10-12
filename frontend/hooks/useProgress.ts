@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
 
@@ -12,10 +12,6 @@ interface ProgressState {
 }
 
 export function useProgress(projectSlug: string) {
-  const storageKey = useMemo(
-    () => `buildscape_progress_${projectSlug}`,
-    [projectSlug]
-  );
   const { user } = useAuth();
 
   const [state, setState] = useState<ProgressState>({
@@ -25,65 +21,74 @@ export function useProgress(projectSlug: string) {
     hydrated: false,
   });
 
-  // Hydrate: backend when logged in, localStorage when not.
-  useEffect(() => {
-    if (user) {
-      api
-        .getProgress(projectSlug)
-        .then((data) => {
-          setState({
-            enrolled: data.enrolled,
-            currentPhaseIndex: data.currentPhaseIndex,
-            completed: data.completedPhases.map((p) => p.phaseId),
-            hydrated: true,
-          });
-        })
-        .catch(() =>
-          setState({ enrolled: false, currentPhaseIndex: 0, completed: [], hydrated: true })
-        );
-    } else {
-      setState(() => {
-        try {
-          const stored = localStorage.getItem(storageKey);
-          return {
-            enrolled: false,
-            currentPhaseIndex: 0,
-            completed: stored ? (JSON.parse(stored) as string[]) : [],
-            hydrated: true,
-          };
-        } catch {
-          return { enrolled: false, currentPhaseIndex: 0, completed: [], hydrated: true };
-        }
+  const fetchDbProgress = useCallback(async () => {
+    if (!user) {
+      setState({
+        enrolled: false,
+        currentPhaseIndex: 0,
+        completed: [],
+        hydrated: true,
+      });
+      return;
+    }
+
+    try {
+      const data = await api.getProgress(projectSlug);
+      setState({
+        enrolled: data.enrolled,
+        currentPhaseIndex: data.currentPhaseIndex,
+        completed: data.completedPhases.map((p) => p.phaseId),
+        hydrated: true,
+      });
+    } catch {
+      setState({
+        enrolled: false,
+        currentPhaseIndex: 0,
+        completed: [],
+        hydrated: true,
       });
     }
-  }, [projectSlug, storageKey, user]);
+  }, [projectSlug, user]);
+
+  useEffect(() => {
+    fetchDbProgress();
+  }, [fetchDbProgress]);
 
   const togglePhase = useCallback(
-    (phaseId: string) => {
+    async (phaseId: string) => {
+      if (!user) return;
+
       const isNowCompleting = !state.completed.includes(phaseId);
 
-      setState((prev) => {
-        const updated = prev.completed.includes(phaseId)
-          ? prev.completed.filter((id) => id !== phaseId)
-          : [...prev.completed, phaseId];
+      // Optimistic update
+      const previousCompleted = state.completed;
+      const updated = isNowCompleting
+        ? [...previousCompleted, phaseId]
+        : previousCompleted.filter((id) => id !== phaseId);
 
-        try {
-          localStorage.setItem(storageKey, JSON.stringify(updated));
-        } catch {
-          /* ignore */
+      setState((prev) => ({ ...prev, completed: updated }));
+
+      try {
+        if (isNowCompleting) {
+          await api.completePhase(projectSlug, phaseId);
+        } else {
+          await api.uncompletePhase(projectSlug, phaseId);
         }
-
-        return { ...prev, completed: updated };
-      });
-
-      // Sync to backend if logged in and marking complete (no un-complete API).
-      if (user && isNowCompleting) {
-        api.completePhase(projectSlug, phaseId).catch(() => {
-          /* fail silently — localStorage already saved */
+        // Refresh accurate DB progress state (including currentPhaseIndex)
+        const fresh = await api.getProgress(projectSlug);
+        setState({
+          enrolled: fresh.enrolled,
+          currentPhaseIndex: fresh.currentPhaseIndex,
+          completed: fresh.completedPhases.map((p) => p.phaseId),
+          hydrated: true,
         });
+      } catch (err) {
+        console.error("Failed to update phase progress in DB:", err);
+        // Rollback on failure
+        setState((prev) => ({ ...prev, completed: previousCompleted }));
       }
     },
-    [state.completed, storageKey, user, projectSlug]
+    [state.completed, user, projectSlug]
   );
 
   const isCompleted = useCallback(
@@ -91,14 +96,15 @@ export function useProgress(projectSlug: string) {
     [state.completed]
   );
 
-  const clearProgress = useCallback(() => {
-    setState((prev) => ({ ...prev, completed: [] }));
+  const clearProgress = useCallback(async () => {
+    if (!user || state.completed.length === 0) return;
     try {
-      localStorage.removeItem(storageKey);
-    } catch {
-      /* ignore */
+      await Promise.all(state.completed.map((phaseId) => api.uncompletePhase(projectSlug, phaseId)));
+      await fetchDbProgress();
+    } catch (err) {
+      console.error("Failed to reset progress in DB:", err);
     }
-  }, [storageKey]);
+  }, [user, state.completed, projectSlug, fetchDbProgress]);
 
   return {
     enrolled: state.enrolled,
@@ -108,5 +114,6 @@ export function useProgress(projectSlug: string) {
     togglePhase,
     isCompleted,
     clearProgress,
+    refreshProgress: fetchDbProgress,
   };
 }

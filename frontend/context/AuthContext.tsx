@@ -12,59 +12,58 @@ import { api, AuthUser } from "@/lib/api";
 
 interface AuthContextValue {
   user: AuthUser | null;
-  token: string | null;
   isLoading: boolean;
   login: (credential: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
   user: null,
-  token: null,
   isLoading: true,
   login: async () => {},
-  logout: () => {},
+  logout: async () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Restore session from localStorage on mount
+  // Restore session via cookie from backend on mount
   useEffect(() => {
-    const stored = localStorage.getItem("bs_token");
-    if (!stored) {
-      setIsLoading(false);
-      return;
-    }
-    setToken(stored);
+    let isMounted = true;
     api
       .getMe()
-      .then(({ user }) => setUser(user))
-      .catch(() => {
-        localStorage.removeItem("bs_token");
-        setToken(null);
-        setUser(null);
+      .then(({ user: me }) => {
+        if (isMounted) setUser(me);
       })
-      .finally(() => setIsLoading(false));
+      .catch(() => {
+        if (isMounted) setUser(null);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const login = useCallback(async (credential: string) => {
-    const { token: jwt, user: me } = await api.googleLogin(credential);
-    localStorage.setItem("bs_token", jwt);
-    setToken(jwt);
+    const { user: me } = await api.googleLogin(credential);
     setUser(me);
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem("bs_token");
-    setToken(null);
+  const logout = useCallback(async () => {
+    try {
+      await api.logout();
+    } catch {
+      /* ignore */
+    }
     setUser(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

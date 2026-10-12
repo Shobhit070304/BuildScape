@@ -136,23 +136,23 @@ export function FeaturesSection() {
           </div>
         </div>
 
-        {/* Bento 5: Instant Guest & Cloud Sync (span 1) */}
+        {/* Bento 5: Instant Database & Cloud Sync (span 1) */}
         <div className="group relative flex flex-col justify-between rounded-xl border border-[#201d18] bg-[#11100e] p-4 transition-all duration-200 hover:border-[#332e26] hover:bg-[#14120f]">
           <div>
             <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg border border-[#2a2620] bg-[#161411] text-accent">
               <Cloud className="h-4 w-4" />
             </div>
             <h3 className="mb-1 font-serif text-sm font-semibold text-[#e4ddd3] group-hover:text-white transition-colors">
-              Zero signup wall
+              Seamless Cloud Sync
             </h3>
             <p className="mb-3 text-[11px] leading-relaxed text-[#8a8178]">
-              Start building right now as a guest with instant local storage saving, or sign in to sync.
+              Sign in with Google to automatically track phase completions and persist your journey in the cloud.
             </p>
           </div>
 
           <div className="flex items-center gap-1.5 rounded border border-[#1e1c18] bg-[#090807] p-2 text-[10px] text-[#a0978c]">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Instant Access • 100% Free</span>
+            <span>Database Synced • 100% Free</span>
           </div>
         </div>
       </div>

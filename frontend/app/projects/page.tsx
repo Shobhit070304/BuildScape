@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import {
   Search,
   X,
@@ -8,6 +8,9 @@ import {
   Layers,
   ChevronDown,
   ChevronUp,
+  AlertTriangle,
+  RefreshCw,
+  Loader2,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { ProjectCard } from "@/components/ProjectCard";
@@ -226,6 +229,8 @@ const COMING_SOON_TRACKS: Record<
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isFromDb, setIsFromDb] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedTrack, setSelectedTrack] = useState<string | null>(null);
@@ -233,25 +238,32 @@ export default function ProjectsPage() {
   const [isExpanded, setIsExpanded] = useState(true);
   const [notifiedTracks, setNotifiedTracks] = useState<string[]>([]);
 
-  // Fetch dynamic projects from DB API on mount
-  useEffect(() => {
-    let isMounted = true;
+  const loadProjects = useCallback(() => {
+    setIsLoading(true);
+    setLoadError(null);
     api
       .getProjects()
       .then((data) => {
-        if (isMounted && data?.projects && data.projects.length > 0) {
+        if (data?.projects && data.projects.length > 0) {
           setProjects(data.projects.map(mapApiProject));
           setIsFromDb(true);
+        } else {
+          setProjects([]);
+          setLoadError("No projects currently available in the curriculum database.");
         }
       })
       .catch((err) => {
-        console.info("Using local fallback projects data:", err.message);
+        setProjects([]);
+        setLoadError(err.message ?? "Database connection failed. Please ensure backend is running.");
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-
-    return () => {
-      isMounted = false;
-    };
   }, []);
+
+  useEffect(() => {
+    loadProjects();
+  }, [loadProjects]);
 
   const filtered = useMemo(() => {
     return projects.filter((p: Project) => {
@@ -447,7 +459,31 @@ export default function ProjectsPage() {
           </div>
 
           {/* Results Grid or Coming Soon Component */}
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-3">
+              <Loader2 className="h-7 w-7 animate-spin text-accent" />
+              <p className="font-mono text-xs text-[#8a8178]">Connecting to database & loading curriculum...</p>
+            </div>
+          ) : loadError && projects.length === 0 ? (
+            <div className="mx-auto my-8 max-w-lg rounded-2xl border border-rose-900/50 bg-linear-to-b from-[#18110e] to-[#0d0b09] p-7 text-center shadow-2xl">
+              <div className="mx-auto mb-3.5 flex h-12 w-12 items-center justify-center rounded-xl border border-rose-800/40 bg-rose-950/40 text-rose-400">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <h2 className="font-serif text-lg font-bold text-[#f0eae1] mb-1.5">
+                Database Offline or Unreachable
+              </h2>
+              <p className="text-xs text-[#9a9187] leading-relaxed mb-5">
+                {loadError}
+              </p>
+              <button
+                onClick={loadProjects}
+                className="inline-flex items-center gap-2 rounded-lg bg-amber-600 hover:bg-amber-500 px-4 py-2 text-xs font-semibold text-white transition-all shadow-md cursor-pointer"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                <span>Retry Connection</span>
+              </button>
+            </div>
+          ) : filtered.length === 0 ? (
             selectedTrack && COMING_SOON_TRACKS[selectedTrack] ? (
               <div className="rounded-2xl border border-amber-900/40 bg-linear-to-b from-[#18130e] via-[#100e0c] to-[#0a0a0a] p-6 sm:p-8 shadow-2xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#24211b] pb-5 mb-6">

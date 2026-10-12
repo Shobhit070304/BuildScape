@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { googleAuth, getMe } from "../controllers/auth.controller";
+import { googleAuth, getMe, logout } from "../controllers/auth.controller";
 import { authenticate } from "../middleware/authenticate";
 import rateLimit from "express-rate-limit";
 
@@ -15,6 +15,9 @@ const router = Router();
 
 // POST /api/auth/google
 router.post("/google", authLimiter, googleAuth);
+
+// POST /api/auth/logout
+router.post("/logout", logout);
 
 // GET /api/auth/me (protected)
 router.get("/me", authenticate, getMe);

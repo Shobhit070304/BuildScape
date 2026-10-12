@@ -6,6 +6,7 @@ export interface AuthPayload {
   userId: string;
   email: string;
   name: string;
+  role?: "user" | "admin";
 }
 
 // Extend Express Request
@@ -18,8 +19,9 @@ declare global {
 }
 
 export function authenticate(req: Request, res: Response, next: NextFunction) {
-  const header = req.headers.authorization;
-  const token = header?.startsWith("Bearer ") ? header.slice(7) : null;
+  const token =
+    req.cookies?.bs_token ||
+    (req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.slice(7) : null);
 
   if (!token) {
     res.status(401).json({ error: "Authentication required" });
