@@ -329,11 +329,10 @@ export default function ProjectsPage() {
                 {/* All Track Pill */}
                 <button
                   onClick={() => setSelectedTrack(null)}
-                  className={`rounded-full px-3 py-1 text-xs font-medium cursor-pointer transition-all ${
-                    selectedTrack === null
+                  className={`rounded-full px-3 py-1 text-xs font-medium cursor-pointer transition-all ${selectedTrack === null
                       ? "bg-amber-950/70 text-[#ecd39e] border border-amber-600/70 shadow-xs"
                       : "bg-[#14120f] text-[#8a8178] border border-[#24211b] hover:text-[#e4ddd3] hover:border-[#38332a]"
-                  }`}
+                    }`}
                 >
                   All
                 </button>
@@ -345,11 +344,10 @@ export default function ProjectsPage() {
                     <button
                       key={track}
                       onClick={() => setSelectedTrack(isSelected ? null : track)}
-                      className={`group flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium cursor-pointer transition-all ${
-                        isSelected
+                      className={`group flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium cursor-pointer transition-all ${isSelected
                           ? "bg-amber-950/70 text-[#ecd39e] border border-amber-600/70 shadow-xs"
                           : "bg-[#14120f] text-[#c4bbb0] border border-[#24211b] hover:border-[#38332a] hover:text-white"
-                      }`}
+                        }`}
                     >
                       {renderTrackIcon(track)}
                       <span>{track}</span>
@@ -386,11 +384,10 @@ export default function ProjectsPage() {
                 {/* All Level Pill */}
                 <button
                   onClick={() => setSelectedLevelLabel(null)}
-                  className={`rounded-full px-3 py-1 text-xs font-medium cursor-pointer transition-all ${
-                    selectedLevelLabel === null
+                  className={`rounded-full px-3 py-1 text-xs font-medium cursor-pointer transition-all ${selectedLevelLabel === null
                       ? "bg-amber-950/70 text-[#ecd39e] border border-amber-600/70 shadow-xs"
                       : "bg-[#14120f] text-[#8a8178] border border-[#24211b] hover:text-[#e4ddd3] hover:border-[#38332a]"
-                  }`}
+                    }`}
                 >
                   All
                 </button>
@@ -404,11 +401,10 @@ export default function ProjectsPage() {
                       onClick={() =>
                         setSelectedLevelLabel(isSelected ? null : lvl.label)
                       }
-                      className={`rounded-full px-3 py-1 text-xs font-medium cursor-pointer transition-all ${
-                        isSelected
+                      className={`rounded-full px-3 py-1 text-xs font-medium cursor-pointer transition-all ${isSelected
                           ? "bg-amber-950/70 text-[#ecd39e] border border-amber-600/70 shadow-xs"
                           : "bg-[#14120f] text-[#8a8178] border border-[#24211b] hover:text-[#e4ddd3] hover:border-[#38332a]"
-                      }`}
+                        }`}
                     >
                       {lvl.label}
                     </button>
@@ -550,11 +546,10 @@ export default function ProjectsPage() {
                         setNotifiedTracks([...notifiedTracks, selectedTrack]);
                       }
                     }}
-                    className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-semibold transition-all cursor-pointer ${
-                      notifiedTracks.includes(selectedTrack)
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-semibold transition-all cursor-pointer ${notifiedTracks.includes(selectedTrack)
                         ? "bg-emerald-950 border border-emerald-700 text-emerald-300"
                         : "bg-linear-to-r from-amber-700 to-amber-600 text-stone-950 border border-amber-500/50 hover:brightness-105"
-                    }`}
+                      }`}
                   >
                     <span>
                       {notifiedTracks.includes(selectedTrack)

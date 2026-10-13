@@ -33,6 +33,15 @@ export const getEnrolledProjects = asyncHandler(async (req, res) => {
   res.json({ enrollments: await projectsService.getEnrolled(req.user!.userId) });
 });
 
+export const verifyProject = asyncHandler(async (req, res) => {
+  const result = await projectsService.verifyProject(
+    req.user!.userId,
+    String(req.params.slug),
+    req.body
+  );
+  res.json({ success: true, verification: result });
+});
+
 export const createProject = asyncHandler(async (req, res) => {
   const project = await projectsService.create(req.body);
   res.status(201).json({ success: true, project });

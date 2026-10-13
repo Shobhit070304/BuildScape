@@ -62,7 +62,79 @@ export const projectsService = {
       enrolled: Boolean(enrollment),
       currentPhaseIndex: enrollment?.currentPhaseIndex ?? 0,
       completedPhases: completedPhases.map(({ phaseId, completedAt }) => ({ phaseId, completedAt })),
+      isVerified: Boolean(enrollment?.isVerified),
+      githubRepoUrl: enrollment?.githubRepoUrl,
+      liveDemoUrl: enrollment?.liveDemoUrl,
+      verifiedAt: enrollment?.verifiedAt,
     };
+  },
+
+  async verifyProject(
+    userId: string,
+    slug: string,
+    data: { githubRepoUrl: string; liveDemoUrl?: string }
+  ) {
+    if (!data.githubRepoUrl) {
+      throw new HttpError(400, "GitHub repository URL is required");
+    }
+
+    const githubRegex = /^https:\/\/github\.com\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+?)(\/|\.git)?$/;
+    const match = data.githubRepoUrl.trim().match(githubRegex);
+    if (!match) {
+      throw new HttpError(
+        400,
+        "Please provide a valid GitHub repository URL (e.g. https://github.com/username/project)"
+      );
+    }
+
+    const owner = match[1];
+    const repo = match[2].replace(/\.git$/, "");
+
+    // Verify existence via GitHub API
+    try {
+      const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+        headers: {
+          "User-Agent": "BuildScape-Verifier",
+          Accept: "application/vnd.github.v3+json",
+        },
+      });
+
+      if (response.status === 404) {
+        throw new HttpError(
+          400,
+          "GitHub repository was not found or is private. Please ensure the repository is public."
+        );
+      }
+    } catch (err: unknown) {
+      if (err instanceof HttpError) throw err;
+      console.warn("GitHub verification check skipped due to API/network response:", err);
+    }
+
+    const project = await this.getBySlug(slug);
+    const enrollment = await progressRepository.findEnrollment(userId, project._id);
+    if (!enrollment) {
+      throw new HttpError(400, "You must be enrolled in this project to verify proof of work");
+    }
+
+    const completed = await progressRepository.listCompletedPhases(userId, project._id);
+    const totalPhases = project.phases?.length ?? 0;
+    if (completed.length < totalPhases && totalPhases > 0) {
+      throw new HttpError(
+        400,
+        `All phases must be completed before claiming verification (${completed.length}/${totalPhases} completed)`
+      );
+    }
+
+    const now = new Date();
+    await progressRepository.setProjectCompleted(userId, project._id, now);
+    const updated = await progressRepository.updateVerification(userId, project._id, {
+      githubRepoUrl: `https://github.com/${owner}/${repo}`,
+      liveDemoUrl: data.liveDemoUrl?.trim() || undefined,
+      isVerified: true,
+      verifiedAt: now,
+    });
+
+    return updated;
   },
 
   async getEnrolled(userId: string) {
@@ -81,6 +153,10 @@ export const projectsService = {
         completedCount: completed.length,
         totalPhases: project.phases?.length ?? 0,
         completedPhases: completed.map(({ phaseId }) => phaseId),
+        isVerified: Boolean(enrollment.isVerified),
+        githubRepoUrl: enrollment.githubRepoUrl,
+        liveDemoUrl: enrollment.liveDemoUrl,
+        verifiedAt: enrollment.verifiedAt,
         project: {
           _id: project._id, slug: project.slug, title: project.title, tagline: project.tagline,
           track: project.track, difficulty: project.difficulty,

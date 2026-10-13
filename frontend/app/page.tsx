@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { StatsSection } from "@/components/landing/StatsSection";
@@ -11,6 +12,15 @@ import { FooterSection } from "@/components/landing/FooterSection";
 import { ScrollSectionTracker } from "@/components/landing/ScrollSectionTracker";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "BuildScape — Build Real Production Software | Escape Tutorial Hell",
+  description:
+    "Stop watching tutorials. Build real-world distributed architectures, cache engines, and streaming systems with phase-by-phase blueprints and verifiable proof-of-work.",
+  alternates: {
+    canonical: "/",
+  },
+};
 
 export default function HomePage() {
   return (

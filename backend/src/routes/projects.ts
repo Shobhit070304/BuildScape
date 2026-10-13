@@ -7,6 +7,7 @@ import {
   uncompletePhase,
   getProgress,
   getEnrolledProjects,
+  verifyProject,
   createProject,
   updateProject,
   deleteProject,
@@ -32,6 +33,7 @@ router.delete("/:slug", authenticate, requireAdmin, deleteProject);
 router.post("/:slug/enroll", authenticate, enrollProject);
 router.post("/:slug/phases/:phaseId/complete", authenticate, completePhase);
 router.delete("/:slug/phases/:phaseId/complete", authenticate, uncompletePhase);
+router.post("/:slug/verify", authenticate, verifyProject);
 router.get("/:slug/progress", authenticate, getProgress);
 
 export default router;

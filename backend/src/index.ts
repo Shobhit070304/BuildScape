@@ -11,11 +11,17 @@ import { notFound } from "./middleware/notFound";
 import healthRouter from "./routes/health";
 import authRouter from "./routes/auth";
 import projectsRouter from "./routes/projects";
+import usersRouter from "./routes/users";
+import badgesRouter from "./routes/badges";
 
 const app = express();
 
 // Core middleware
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(cookieParser());
 
@@ -27,6 +33,8 @@ app.use(requestLogger);
 app.use("/health", healthRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/projects", projectsRouter);
+app.use("/api/users", usersRouter);
+app.use("/api/badges", badgesRouter);
 
 // Error handling (must be last)
 app.use(notFound);

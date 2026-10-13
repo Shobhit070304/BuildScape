@@ -9,6 +9,10 @@ interface ProgressState {
   currentPhaseIndex: number;
   completed: string[];
   hydrated: boolean;
+  isVerified: boolean;
+  githubRepoUrl?: string;
+  liveDemoUrl?: string;
+  verifiedAt?: string;
 }
 
 export function useProgress(projectSlug: string) {
@@ -19,6 +23,7 @@ export function useProgress(projectSlug: string) {
     currentPhaseIndex: 0,
     completed: [],
     hydrated: false,
+    isVerified: false,
   });
 
   const fetchDbProgress = useCallback(async () => {
@@ -28,6 +33,7 @@ export function useProgress(projectSlug: string) {
         currentPhaseIndex: 0,
         completed: [],
         hydrated: true,
+        isVerified: false,
       });
       return;
     }
@@ -39,6 +45,10 @@ export function useProgress(projectSlug: string) {
         currentPhaseIndex: data.currentPhaseIndex,
         completed: data.completedPhases.map((p) => p.phaseId),
         hydrated: true,
+        isVerified: Boolean(data.isVerified),
+        githubRepoUrl: data.githubRepoUrl,
+        liveDemoUrl: data.liveDemoUrl,
+        verifiedAt: data.verifiedAt,
       });
     } catch {
       setState({
@@ -46,6 +56,7 @@ export function useProgress(projectSlug: string) {
         currentPhaseIndex: 0,
         completed: [],
         hydrated: true,
+        isVerified: false,
       });
     }
   }, [projectSlug, user]);
@@ -81,6 +92,10 @@ export function useProgress(projectSlug: string) {
           currentPhaseIndex: fresh.currentPhaseIndex,
           completed: fresh.completedPhases.map((p) => p.phaseId),
           hydrated: true,
+          isVerified: Boolean(fresh.isVerified),
+          githubRepoUrl: fresh.githubRepoUrl,
+          liveDemoUrl: fresh.liveDemoUrl,
+          verifiedAt: fresh.verifiedAt,
         });
       } catch (err) {
         console.error("Failed to update phase progress in DB:", err);
@@ -111,6 +126,10 @@ export function useProgress(projectSlug: string) {
     currentPhaseIndex: state.currentPhaseIndex,
     completed: state.completed,
     hydrated: state.hydrated,
+    isVerified: state.isVerified,
+    githubRepoUrl: state.githubRepoUrl,
+    liveDemoUrl: state.liveDemoUrl,
+    verifiedAt: state.verifiedAt,
     togglePhase,
     isCompleted,
     clearProgress,

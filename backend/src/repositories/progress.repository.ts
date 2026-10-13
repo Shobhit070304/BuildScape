@@ -44,6 +44,17 @@ export const progressRepository = {
       { returnDocument: "after" }
     ),
 
+  updateVerification: (
+    userId: string,
+    projectId: Types.ObjectId,
+    data: { githubRepoUrl: string; liveDemoUrl?: string; isVerified: boolean; verifiedAt: Date }
+  ) =>
+    UserProjectEnrollment.findOneAndUpdate(
+      { userId: asObjectId(userId), projectId },
+      { $set: data },
+      { returnDocument: "after" }
+    ),
+
   listCompletedPhases: (userId: string, projectId: Types.ObjectId) =>
     UserTaskProgress.find({ userId: asObjectId(userId), projectId }).select("phaseId completedAt"),
 };

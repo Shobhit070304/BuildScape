@@ -73,6 +73,15 @@ export const api = {
 
   getEnrolledProjects: () =>
     request<{ enrollments: EnrolledProjectItem[] }>("/api/projects/my/enrolled"),
+
+  verifyProject: (slug: string, data: { githubRepoUrl: string; liveDemoUrl?: string }) =>
+    request<{ success: boolean; verification: unknown }>(`/api/projects/${slug}/verify`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  getPublicProfile: (username: string) =>
+    request<PublicUserProfile>(`/api/users/${username}`),
 };
 
 // Shared types
@@ -80,6 +89,7 @@ export interface AuthUser {
   id: string;
   email: string;
   name: string;
+  username?: string;
   avatar?: string;
   role?: "user" | "admin";
 }
@@ -91,6 +101,10 @@ export interface EnrolledProjectItem {
   completedCount: number;
   totalPhases: number;
   completedPhases: string[];
+  isVerified?: boolean;
+  githubRepoUrl?: string;
+  liveDemoUrl?: string;
+  verifiedAt?: string;
   project: {
     _id: string;
     slug: string;
@@ -128,4 +142,36 @@ export interface ProgressResponse {
   enrolled: boolean;
   currentPhaseIndex: number;
   completedPhases: { phaseId: string; completedAt: string }[];
+  isVerified?: boolean;
+  githubRepoUrl?: string;
+  liveDemoUrl?: string;
+  verifiedAt?: string;
+}
+
+export interface PublicVerifiedProject {
+  slug: string;
+  title: string;
+  tagline: string;
+  track: string;
+  difficulty: string;
+  estimatedHours: number;
+  techStack: string[];
+  githubRepoUrl?: string;
+  liveDemoUrl?: string;
+  verifiedAt?: string;
+}
+
+export interface PublicUserProfile {
+  user: {
+    name: string;
+    username: string;
+    avatar?: string;
+    createdAt?: string;
+  };
+  stats: {
+    verifiedBuildsCount: number;
+    totalEngineeringHours: number;
+    masteredTechStack: string[];
+  };
+  verifiedProjects: PublicVerifiedProject[];
 }

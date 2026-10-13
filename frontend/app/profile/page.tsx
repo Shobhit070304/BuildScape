@@ -13,16 +13,20 @@ import {
   FolderOpen,
   Clock,
   CheckCircle2,
+  ShieldCheck,
+  ExternalLink,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
 import { api, EnrolledProjectItem } from "@/lib/api";
 import { DIFFICULTY_COLORS, getTrackColor } from "@/lib/projects";
+import { VerificationModal } from "@/components/VerificationModal";
 
 export default function ProfilePage() {
   const { user, isLoading: authLoading, login, logout } = useAuth();
   const [enrollments, setEnrollments] = useState<EnrolledProjectItem[]>([]);
   const [loadingEnrollments, setLoadingEnrollments] = useState(false);
+  const [selectedVerifyProject, setSelectedVerifyProject] = useState<EnrolledProjectItem | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -119,8 +123,20 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  {/* Clear Logout button */}
-                  <div>
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-2">
+                    {user.username && (
+                      <Link
+                        href={`/u/${user.username}`}
+                        target="_blank"
+                        className="flex items-center gap-1.5 rounded border border-amber-800/40 bg-amber-950/30 px-3 py-1.5 text-xs font-medium text-accent transition-all hover:border-amber-700/60 hover:bg-amber-900/40 cursor-pointer"
+                        title="View your public developer profile"
+                      >
+                        <ShieldCheck className="h-3.5 w-3.5 text-accent" />
+                        <span>Public Portfolio</span>
+                        <ExternalLink className="h-2.5 w-2.5 opacity-70" />
+                      </Link>
+                    )}
                     <button
                       onClick={logout}
                       className="flex items-center gap-1.5 rounded border border-[#2a2620] bg-[#14120f] px-3 py-1.5 text-xs font-medium text-[#a0978c] transition-all hover:border-[#3a342c] hover:bg-[#1a1814] hover:text-[#e4ddd3] cursor-pointer"
@@ -133,7 +149,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Stats Bar */}
-                <div className="mt-5 grid grid-cols-2 gap-3 border-t border-[#1e1c18] pt-4 sm:grid-cols-3">
+                <div className="mt-5 grid grid-cols-2 gap-3 border-t border-[#1e1c18] pt-4 sm:grid-cols-4">
                   <div className="rounded-lg border border-[#221f1a] bg-[#11100e] p-3">
                     <span className="text-[0.62rem] uppercase tracking-wider text-[#6b6256] font-mono">
                       Enrolled Projects
@@ -150,7 +166,15 @@ export default function ProfilePage() {
                       {totalCompletedPhases}
                     </p>
                   </div>
-                  <div className="col-span-2 sm:col-span-1 rounded-lg border border-[#221f1a] bg-[#11100e] p-3">
+                  <div className="rounded-lg border border-[#221f1a] bg-[#11100e] p-3">
+                    <span className="text-[0.62rem] uppercase tracking-wider text-[#6b6256] font-mono">
+                      Verified Builds
+                    </span>
+                    <p className="mt-0.5 font-mono text-lg font-bold text-emerald-400">
+                      {enrollments.filter((item) => item.isVerified).length}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-[#221f1a] bg-[#11100e] p-3">
                     <span className="text-[0.62rem] uppercase tracking-wider text-[#6b6256] font-mono">
                       Learning Status
                     </span>
@@ -284,6 +308,22 @@ export default function ProfilePage() {
                                 />
                               </div>
                             </div>
+                            {/* Verification Proof-of-Work Status */}
+                            {isComplete && (
+                              <div className="mb-3 flex items-center justify-between rounded-lg border border-emerald-900/40 bg-emerald-950/20 px-3 py-1.5 text-xs">
+                                <span className="flex items-center gap-1.5 font-medium text-emerald-400">
+                                  <ShieldCheck className="h-3.5 w-3.5" />
+                                  {item.isVerified ? "Verified Proof-of-Work" : "Completion Ready"}
+                                </span>
+                                <button
+                                  onClick={() => setSelectedVerifyProject(item)}
+                                  className="flex items-center gap-1 font-semibold text-accent hover:underline cursor-pointer"
+                                >
+                                  <span>{item.isVerified ? "Badge & Links" : "Verify Build"}</span>
+                                  <ArrowRight className="h-2.5 w-2.5" />
+                                </button>
+                              </div>
+                            )}
                           </div>
 
                           {/* Action Buttons matching Image 5 */}
@@ -313,6 +353,26 @@ export default function ProfilePage() {
           )}
         </div>
       </main>
+
+      {/* Verification Modal for Profile Page */}
+      {selectedVerifyProject && user && (
+        <VerificationModal
+          isOpen={Boolean(selectedVerifyProject)}
+          onClose={() => setSelectedVerifyProject(null)}
+          projectSlug={selectedVerifyProject.project.slug}
+          projectTitle={selectedVerifyProject.project.title}
+          isVerified={selectedVerifyProject.isVerified}
+          verifiedAt={selectedVerifyProject.verifiedAt}
+          initialGithubUrl={selectedVerifyProject.githubRepoUrl}
+          initialDemoUrl={selectedVerifyProject.liveDemoUrl}
+          username={user.username}
+          onVerifiedSuccess={() => {
+            api.getEnrolledProjects().then((data) => {
+              setEnrollments(data.enrollments ?? []);
+            });
+          }}
+        />
+      )}
     </>
   );
 }
