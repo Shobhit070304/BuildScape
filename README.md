@@ -88,7 +88,7 @@ npm run seed
 
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/health` | Health and liveness probe | Public |
+| `GET` | `/health` | API and MongoDB readiness probe | Public |
 | `GET` | `/api/projects` | List all curated production builds | Public |
 | `GET` | `/api/projects/:slug` | Full project details and phase blueprints | Public |
 | `POST` | `/api/auth/google` | Google OAuth login and session JWT issuance | Public |
@@ -96,4 +96,8 @@ npm run seed
 | `GET` | `/api/projects/my/enrolled` | List current user's enrolled projects | Required |
 | `POST` | `/api/projects/:slug/enroll` | Enroll in a project | Required |
 | `GET` | `/api/projects/:slug/progress` | Get phase completion status | Required |
-| `POST` | `/api/projects/:slug/phases/:id/complete` | Mark a phase completed and grant XP | Required |
+| `POST` | `/api/projects/:slug/phases/:id/complete` | Mark a phase completed (requires enrollment) | Required |
+| `POST` | `/api/projects/:slug/verification-challenge` | Issue or retrieve the repository control challenge | Required |
+| `POST` | `/api/projects/:slug/verify` | Verify a completed project and public repository challenge | Required |
+
+For a verified badge, add the unique challenge shown in the workspace to a root-level file named `.buildscape-verification`. Verification checks that the repository is public and contains the current user's challenge, proving the user can update that repository. `JWT_SECRET` must be a non-placeholder secret with at least 32 characters in production, and the API will not start without `MONGODB_URI`.

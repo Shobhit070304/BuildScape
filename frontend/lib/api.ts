@@ -80,6 +80,11 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  getVerificationChallenge: (slug: string) =>
+    request<{ challenge: string; fileName: string }>(`/api/projects/${slug}/verification-challenge`, {
+      method: "POST",
+    }),
+
   getPublicProfile: (username: string) =>
     request<PublicUserProfile>(`/api/users/${username}`),
 };
@@ -170,7 +175,7 @@ export interface PublicUserProfile {
   };
   stats: {
     verifiedBuildsCount: number;
-    totalEngineeringHours: number;
+    totalEstimatedProjectHours: number;
     masteredTechStack: string[];
   };
   verifiedProjects: PublicVerifiedProject[];

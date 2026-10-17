@@ -313,7 +313,7 @@ export default function ProfilePage() {
                               <div className="mb-3 flex items-center justify-between rounded-lg border border-emerald-900/40 bg-emerald-950/20 px-3 py-1.5 text-xs">
                                 <span className="flex items-center gap-1.5 font-medium text-emerald-400">
                                   <ShieldCheck className="h-3.5 w-3.5" />
-                                  {item.isVerified ? "Verified Proof-of-Work" : "Completion Ready"}
+                                  {item.isVerified ? "Phases & Repository Verified" : "Completion Ready"}
                                 </span>
                                 <button
                                   onClick={() => setSelectedVerifyProject(item)}

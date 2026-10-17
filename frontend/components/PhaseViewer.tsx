@@ -221,7 +221,7 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
                 className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-emerald-700/60 bg-emerald-950/40 px-3 py-1.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-900/50 transition-all shadow-xs"
               >
                 <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-                <span>{isVerified ? "Proof-of-Work" : "Verify Build"}</span>
+                <span>{isVerified ? "Phases & Repo" : "Verify Project"}</span>
               </button>
             )}
 
@@ -273,8 +273,8 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
                     </div>
                     <p className="text-xs text-[#a0978c] mt-0.5">
                       {isVerified
-                        ? "Your build is verified! Embed the badge in your repository or view your public portfolio."
-                        : "Claim your Verified Proof-of-Work badge by linking your public GitHub repository."}
+                        ? "Your phase completion and repository access are verified. Embed the badge or view your public profile."
+                        : "Verify completed phases and prove access to a public GitHub repository."}
                     </p>
                   </div>
                 </div>
@@ -284,7 +284,7 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
                   className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-emerald-600/50 bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-xs font-semibold text-stone-950 transition-all cursor-pointer shadow-xs"
                 >
                   <ShieldCheck className="h-4 w-4" />
-                  <span>{isVerified ? "View Badge & Links" : "Verify Proof-of-Work"}</span>
+                  <span>{isVerified ? "View Badge & Links" : "Verify Project & Repository"}</span>
                 </button>
               </div>
             )}

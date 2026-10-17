@@ -10,6 +10,7 @@ export interface IUserProjectEnrollment {
   liveDemoUrl?: string;
   isVerified?: boolean;
   verifiedAt?: Date;
+  verificationChallenge?: string;
 }
 
 const EnrollmentSchema = new Schema<IUserProjectEnrollment>(
@@ -22,6 +23,7 @@ const EnrollmentSchema = new Schema<IUserProjectEnrollment>(
     liveDemoUrl: { type: String, trim: true },
     isVerified: { type: Boolean, default: false },
     verifiedAt: { type: Date },
+    verificationChallenge: { type: String, select: false },
   },
   { timestamps: { createdAt: "enrolledAt", updatedAt: false } }
 );

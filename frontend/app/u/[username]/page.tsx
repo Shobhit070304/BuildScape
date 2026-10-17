@@ -56,7 +56,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const title = `${profile.user.name} (@${profile.user.username}) • Verified Builds | BuildScape`;
-  const description = `Explore verified production-grade builds and engineering proof-of-work by ${profile.user.name} on BuildScape. ${profile.stats.verifiedBuildsCount} verified projects, ${profile.stats.totalEngineeringHours} engineering hours completed.`;
+  const description = `Explore projects with completed BuildScape phases and confirmed public repository access by ${profile.user.name}. ${profile.stats.verifiedBuildsCount} projects recorded, ${profile.stats.totalEstimatedProjectHours} estimated project hours.`;
 
   return {
     title,
@@ -105,7 +105,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
       name: user.name,
       alternateName: `@${user.username}`,
       image: user.avatar,
-      description: `Software developer with ${stats.verifiedBuildsCount} verified builds and ${stats.totalEngineeringHours} engineering hours completed on BuildScape.`,
+      description: `Software developer with ${stats.verifiedBuildsCount} projects with completed phases and confirmed repository access on BuildScape.`,
       knowsAbout: stats.masteredTechStack,
     },
   };
@@ -137,7 +137,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                       height={68}
                       className="rounded-full border-2 border-amber-600/40 shadow-md"
                     />
-                    <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-[#0a0a09] bg-emerald-500 text-stone-950 shadow-xs" title="Verified Proof-of-Work Builder">
+                    <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-[#0a0a09] bg-emerald-500 text-stone-950 shadow-xs" title="Completed Phases & Repository Access Verified">
                       <ShieldCheck className="h-3.5 w-3.5" />
                     </div>
                   </div>
@@ -197,10 +197,10 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
               <div className="rounded-xl border border-[#221f1a] bg-[#11100e]/80 p-3.5">
                 <span className="text-[10px] uppercase tracking-wider text-[#6b6256] font-mono">
-                  Engineering Hours
+                  Estimated Project Hours
                 </span>
                 <p className="mt-1 font-mono text-2xl font-bold text-accent">
-                  {stats.totalEngineeringHours}h
+                  {stats.totalEstimatedProjectHours}h
                 </p>
               </div>
 
@@ -236,10 +236,10 @@ export default async function PublicProfilePage({ params }: PageProps) {
               <div>
                 <h2 className="font-serif text-lg font-bold text-[#f4eee6] flex items-center gap-2">
                   <Award className="h-5 w-5 text-accent" />
-                  <span>Verified Proof-of-Work Projects</span>
+                  <span>Projects with Verified Phases & Repository Access</span>
                 </h2>
                 <p className="text-xs text-[#8a8178] mt-0.5">
-                  Production-grade systems built and verified end-to-end.
+                  Project phases completed and public repository access confirmed.
                 </p>
               </div>
             </div>
@@ -316,7 +316,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                           <div className="flex items-center justify-between text-[11px]">
                             <span className="flex items-center gap-1.5 font-medium text-emerald-400">
                               <ShieldCheck className="h-3.5 w-3.5" />
-                              Proof-of-Work Verified
+                              Phases & Repository Verified
                             </span>
                             {project.verifiedAt && (
                               <span className="text-[#6b6256] font-mono text-[10px]">

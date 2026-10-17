@@ -3,8 +3,7 @@ import { env } from "./env";
 
 export async function connectDB() {
   if (!env.MONGODB_URI) {
-    console.warn("⚠️  MONGODB_URI not set — skipping DB connection");
-    return;
+    throw new Error("MONGODB_URI must be configured before the API can start");
   }
 
   try {
@@ -12,6 +11,6 @@ export async function connectDB() {
     console.log("✅ MongoDB connected");
   } catch (err) {
     console.error("❌ MongoDB connection failed:", err);
-    process.exit(1);
+    throw err;
   }
 }

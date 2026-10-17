@@ -68,6 +68,6 @@ export const getProjectBadge = asyncHandler(async (req: Request, res: Response) 
 </svg>`;
 
   res.setHeader("Content-Type", "image/svg+xml");
-  res.setHeader("Cache-Control", "public, max-age=120, s-maxage=300");
+  res.setHeader("Cache-Control", "public, max-age=0, s-maxage=30, must-revalidate");
   res.send(svg);
 });

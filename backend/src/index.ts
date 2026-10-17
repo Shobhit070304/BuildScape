@@ -7,6 +7,7 @@ import { env } from "./config/env";
 import { connectDB } from "./config/db";
 import { requestLogger } from "./middleware/requestLogger";
 import { errorHandler } from "./middleware/errorHandler";
+import { protectAgainstCrossSiteWrites } from "./middleware/csrfProtection";
 import { notFound } from "./middleware/notFound";
 import healthRouter from "./routes/health";
 import authRouter from "./routes/auth";
@@ -28,6 +29,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
+app.use(protectAgainstCrossSiteWrites);
 
 // Routes
 app.use("/health", healthRouter);
@@ -49,7 +51,7 @@ connectDB()
   })
   .catch((error) => {
     console.error("Server startup failed:", error);
-    process.exitCode = 1;
+    process.exit(1);
   });
 
 export default app;

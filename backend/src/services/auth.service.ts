@@ -107,7 +107,7 @@ export async function getPublicProfile(username: string) {
     })
     .filter(Boolean);
 
-  const totalEngineeringHours = verifiedProjects.reduce(
+  const totalEstimatedProjectHours = verifiedProjects.reduce(
     (sum, p) => sum + (p?.estimatedHours || 0),
     0
   );
@@ -125,7 +125,7 @@ export async function getPublicProfile(username: string) {
     },
     stats: {
       verifiedBuildsCount: verifiedProjects.length,
-      totalEngineeringHours,
+      totalEstimatedProjectHours,
       masteredTechStack: Array.from(techStackSet),
     },
     verifiedProjects,

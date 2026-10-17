@@ -1,9 +1,15 @@
 import { Request, Response } from "express";
+import mongoose from "mongoose";
 
 /**
  * GET /health
- * Returns a simple liveness check payload.
+ * Returns API readiness, including MongoDB connectivity.
  */
 export function getHealth(_req: Request, res: Response): void {
-    res.json({ success: true, status: "ok", timestamp: new Date().toISOString() });
+    const ready = mongoose.connection.readyState === 1;
+    res.status(ready ? 200 : 503).json({
+        success: ready,
+        status: ready ? "ok" : "database_unavailable",
+        timestamp: new Date().toISOString(),
+    });
 }

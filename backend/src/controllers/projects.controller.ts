@@ -42,6 +42,10 @@ export const verifyProject = asyncHandler(async (req, res) => {
   res.json({ success: true, verification: result });
 });
 
+export const getVerificationChallenge = asyncHandler(async (req, res) => {
+  res.json(await projectsService.getVerificationChallenge(req.user!.userId, String(req.params.slug)));
+});
+
 export const createProject = asyncHandler(async (req, res) => {
   const project = await projectsService.create(req.body);
   res.status(201).json({ success: true, project });

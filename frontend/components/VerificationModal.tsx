@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ShieldCheck,
@@ -58,6 +58,28 @@ export function VerificationModal({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [justVerified, setJustVerified] = useState(false);
+  const [challenge, setChallenge] = useState<string | null>(null);
+  const [challengeError, setChallengeError] = useState<string | null>(null);
+  const [challengeLoading, setChallengeLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let active = true;
+    setChallenge(null);
+    setChallengeLoading(true);
+    setChallengeError(null);
+    api.getVerificationChallenge(projectSlug)
+      .then(({ challenge: value }) => {
+        if (active) setChallenge(value);
+      })
+      .catch((err: unknown) => {
+        if (active) setChallengeError(err instanceof Error ? err.message : "Could not load repository challenge");
+      })
+      .finally(() => {
+        if (active) setChallengeLoading(false);
+      });
+    return () => { active = false; };
+  }, [isOpen, projectSlug]);
 
   if (!isOpen) return null;
 
@@ -74,11 +96,6 @@ export function VerificationModal({
     const trimmedGithub = githubUrl.trim();
     if (!trimmedGithub) {
       setError("Please enter your GitHub repository URL");
-      return;
-    }
-
-    if (!trimmedGithub.includes("github.com/")) {
-      setError("URL must be a public GitHub repository (e.g., https://github.com/username/repo)");
       return;
     }
 
@@ -127,7 +144,7 @@ export function VerificationModal({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-serif text-lg font-bold text-[#e4ddd3]">
-                Verified Proof-of-Work
+                Phase & Repository Verification
               </h2>
               {currentVerified && (
                 <span className="rounded-full border border-emerald-700/50 bg-emerald-950/60 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
@@ -147,10 +164,10 @@ export function VerificationModal({
             <div className="rounded-xl border border-emerald-900/40 bg-emerald-950/20 p-4">
               <div className="flex items-center gap-2 text-xs font-medium text-emerald-400 mb-1">
                 <Sparkles className="h-4 w-4" />
-                <span>Proof-of-Work Successfully Verified!</span>
+                <span>Project Progress & Repository Verified</span>
               </div>
               <p className="text-xs text-[#a0978c] leading-relaxed">
-                Your build has been verified and permanently linked to your public developer portfolio. Add your live badge to your GitHub repository README.
+                BuildScape confirmed your completed phases and access to this public repository. Source code quality is not automatically reviewed. Add the badge to your GitHub README.
               </p>
               {verifiedAt && (
                 <p className="mt-2 text-[11px] text-[#6b6256] font-mono">
@@ -212,8 +229,24 @@ export function VerificationModal({
           /* Submission Form */
           <form onSubmit={handleVerify} className="space-y-4">
             <p className="text-xs text-[#8a8178] leading-relaxed">
-              Submit your project repository to verify your proof-of-work. We will validate that your repository is accessible and issue a verified badge for your public profile and GitHub README.
+              Link a public repository you can edit. We check your completed phases and confirm the repository contains your unique BuildScape challenge; we do not automatically review its source code.
             </p>
+
+            <div className="rounded-lg border border-amber-900/40 bg-amber-950/20 p-3 text-xs text-[#c4bbb0]">
+              <p className="mb-2 font-medium text-amber-300">Prove repository access</p>
+              <p className="mb-2 text-[11px] leading-relaxed text-[#a0978c]">
+                Create <code className="text-amber-200">.buildscape-verification</code> in the repository root and paste this exact line into it:
+              </p>
+              {challengeLoading ? (
+                <p className="font-mono text-[11px] text-[#8a8178]">Loading your unique challenge…</p>
+              ) : challenge ? (
+                <code className="block break-all rounded border border-[#2a2620] bg-[#11100e] p-2 font-mono text-[11px] text-emerald-300">
+                  {challenge}
+                </code>
+              ) : (
+                <p className="text-[11px] text-red-300">{challengeError ?? "Challenge unavailable"}</p>
+              )}
+            </div>
 
             {error && (
               <div className="rounded-lg border border-red-900/50 bg-red-950/30 p-2.5 text-xs text-red-300">
@@ -260,7 +293,7 @@ export function VerificationModal({
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={loading}
+              disabled={loading || challengeLoading || !challenge}
                 className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-amber-600/50 bg-[#d97706] hover:bg-[#b45309] px-4 py-2.5 text-xs font-semibold text-stone-950 transition-all shadow-xs cursor-pointer disabled:opacity-50"
               >
                 {loading ? (
@@ -271,7 +304,7 @@ export function VerificationModal({
                 ) : (
                   <>
                     <ShieldCheck className="h-4 w-4" />
-                    <span>Verify & Claim Proof-of-Work</span>
+                    <span>Verify Phases & Repository</span>
                   </>
                 )}
               </button>

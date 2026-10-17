@@ -40,9 +40,27 @@ export const progressRepository = {
   setProjectCompleted: (userId: string, projectId: Types.ObjectId, completedAt: Date | null) =>
     UserProjectEnrollment.findOneAndUpdate(
       { userId: asObjectId(userId), projectId },
-      { completedAt: completedAt ?? undefined },
+      completedAt ? { $set: { completedAt } } : { $unset: { completedAt: 1 } },
       { returnDocument: "after" }
     ),
+
+  clearVerification: (userId: string, projectId: Types.ObjectId) =>
+    UserProjectEnrollment.findOneAndUpdate(
+      { userId: asObjectId(userId), projectId },
+      { $set: { isVerified: false }, $unset: { verifiedAt: 1, completedAt: 1 } },
+      { returnDocument: "after" }
+    ),
+
+  setVerificationChallenge: (userId: string, projectId: Types.ObjectId, challenge: string) =>
+    UserProjectEnrollment.findOneAndUpdate(
+      { userId: asObjectId(userId), projectId },
+      { $set: { verificationChallenge: challenge } },
+      { returnDocument: "after" }
+    ).select("+verificationChallenge"),
+
+  findEnrollmentWithChallenge: (userId: string, projectId: Types.ObjectId) =>
+    UserProjectEnrollment.findOne({ userId: asObjectId(userId), projectId })
+      .select("+verificationChallenge"),
 
   updateVerification: (
     userId: string,
