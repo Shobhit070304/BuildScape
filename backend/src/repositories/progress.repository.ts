@@ -2,7 +2,8 @@ import { Types } from "mongoose";
 import { UserProjectEnrollment } from "../models/UserProjectEnrollment";
 import { UserTaskProgress } from "../models/UserTaskProgress";
 
-const asObjectId = (value: string) => new Types.ObjectId(value);
+const asObjectId = (value: string | Types.ObjectId) =>
+  typeof value === "string" ? new Types.ObjectId(value) : value;
 
 export const progressRepository = {
   enroll: (userId: string, projectId: Types.ObjectId) =>
@@ -18,8 +19,8 @@ export const progressRepository = {
   listEnrollments: (userId: string) =>
     UserProjectEnrollment.find({ userId: asObjectId(userId) }).populate("projectId"),
 
-  countEnrollments: (projectId: Types.ObjectId) =>
-    UserProjectEnrollment.countDocuments({ projectId }),
+  countEnrollments: (projectId: Types.ObjectId | string) =>
+    UserProjectEnrollment.countDocuments({ projectId: asObjectId(projectId) }),
 
   markPhaseComplete: (userId: string, projectId: Types.ObjectId, phaseId: string) =>
     UserTaskProgress.findOneAndUpdate(

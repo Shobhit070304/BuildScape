@@ -11,8 +11,10 @@ export const projectsService = {
     return projectRepository.list();
   },
 
-  countEnrolled(projectId: string) {
-    return progressRepository.countEnrollments(projectId);
+  countEnrolled(projectId: string | Types.ObjectId) {
+    return progressRepository.countEnrollments(
+      typeof projectId === "string" ? new Types.ObjectId(projectId) : projectId
+    );
   },
 
   async getBySlug(slug: string) {
