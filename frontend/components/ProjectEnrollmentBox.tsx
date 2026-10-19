@@ -30,6 +30,8 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
 
   const [localEnrolled, setLocalEnrolled] = useState(false);
   const [loadingEnrollment, setLoadingEnrollment] = useState(false);
+  const [enrollmentError, setEnrollmentError] = useState<string | null>(null);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   // Derive effective enrollment: useProgress hydrates from backend; localEnrolled handles
   // optimistic state right after the user clicks "Enroll" before the next re-hydration.
@@ -38,11 +40,13 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
   const handleEnroll = async () => {
     if (!user) return;
     setLoadingEnrollment(true);
+    setEnrollmentError(null);
     try {
       await api.enrollProject(project.slug);
       setLocalEnrolled(true);
     } catch (err) {
       console.error("Failed to enroll:", err);
+      setEnrollmentError(err instanceof Error ? err.message : "Enrollment failed. Please try again.");
     } finally {
       setLoadingEnrollment(false);
     }
@@ -145,7 +149,7 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
               <span className="text-emerald-400">✓</span> Complete code walkthroughs &amp; explanation
             </li>
             <li className="flex items-center gap-1.5">
-              <span className="text-emerald-400">✓</span> Step-by-step phase checklists
+              <span className="text-emerald-400">✓</span> Phase-by-phase build guidance
             </li>
             <li className="flex items-center gap-1.5">
               <span className="text-emerald-400">✓</span> Cloud progress saved to your profile
@@ -156,6 +160,7 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
 
       {/* Action CTA */}
       <div className="space-y-3">
+        {enrollmentError && <p role="alert" className="rounded-md border border-rose-900/50 bg-rose-950/30 px-3 py-2 text-xs text-rose-300">{enrollmentError}</p>}
         {effectivelyEnrolled ? (
           <Link
             href={`/projects/${project.slug}/workspace`}
@@ -191,15 +196,17 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
             <div className="flex justify-center scale-95 origin-center">
               <GoogleLogin
                 onSuccess={(res) => {
-                  if (res.credential) login(res.credential);
+                  setLoginError(null);
+                  if (res.credential) login(res.credential).catch((err) => setLoginError(err instanceof Error ? err.message : "Sign-in failed. Please try again."));
                 }}
-                onError={() => console.error("Google sign in failed")}
+                onError={() => setLoginError("Google sign-in failed. Please try again.")}
                 shape="rectangular"
                 theme="filled_black"
                 text="signin_with"
                 size="medium"
               />
             </div>
+            {loginError && <p role="alert" className="text-center text-xs text-rose-300">{loginError}</p>}
           </div>
         )}
 
@@ -209,6 +216,10 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
           </p>
         )}
       </div>
+
+      <p className="mt-4 border-t border-zinc-800/80 pt-3 text-center text-[11px] text-[#8a8178]">
+        {project.enrolledUsersCount.toLocaleString("en-US")} enrolled {project.enrolledUsersCount === 1 ? "builder" : "builders"}
+      </p>
     </div>
   );
 }

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
-import { getSiteUrl, SITE_CONFIG } from "@/lib/site";
+import { getSiteUrl, serializeJsonLd, SITE_CONFIG } from "@/lib/site";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -71,7 +71,6 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
-      { url: "/favicon.ico", sizes: "any" },
     ],
     apple: [{ url: "/icon.svg" }],
   },
@@ -110,9 +109,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <head>
+        <script dangerouslySetInnerHTML={{ __html: `(()=>{try{const s=localStorage.getItem('buildscape-theme');const t=s==='light'||s==='dark'?s:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.dataset.theme=t}catch{document.documentElement.dataset.theme='dark'}})()` }} />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(rootJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(rootJsonLd) }}
         />
       </head>
       <body className="bg-bg text-stone-100 font-sans antialiased selection:bg-amber-900/50 selection:text-amber-200">

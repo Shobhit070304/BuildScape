@@ -32,7 +32,7 @@ async function request<T>(
 export const api = {
   // Auth
   googleLogin: (credential: string) =>
-    request<{ token: string; user: AuthUser }>("/api/auth/google", {
+    request<{ user: AuthUser }>("/api/auth/google", {
       method: "POST",
       body: JSON.stringify({ credential }),
     }),
@@ -46,57 +46,44 @@ export const api = {
 
   // Projects
   getProjects: () =>
-    request<{ projects: ApiProject[] }>("/api/projects"),
+    request<{ projects: ApiProject[] }>("/api/projects", { cache: "force-cache" }),
 
   getProject: (slug: string) =>
-    request<{ project: ApiProject }>(`/api/projects/${slug}`),
+    request<{ project: ApiProject }>(`/api/projects/${encodeURIComponent(slug)}`),
 
   enrollProject: (slug: string) =>
-    request<{ enrollment: unknown }>(`/api/projects/${slug}/enroll`, {
+    request<{ enrollment: unknown }>(`/api/projects/${encodeURIComponent(slug)}/enroll`, {
       method: "POST",
     }),
 
   getProgress: (slug: string) =>
-    request<ProgressResponse>(`/api/projects/${slug}/progress`),
+    request<ProgressResponse>(`/api/projects/${encodeURIComponent(slug)}/progress`),
 
   completePhase: (slug: string, phaseId: string) =>
     request<{ success: boolean }>(
-      `/api/projects/${slug}/phases/${phaseId}/complete`,
+      `/api/projects/${encodeURIComponent(slug)}/phases/${encodeURIComponent(phaseId)}/complete`,
       { method: "POST" }
     ),
 
   uncompletePhase: (slug: string, phaseId: string) =>
     request<{ success: boolean }>(
-      `/api/projects/${slug}/phases/${phaseId}/complete`,
+      `/api/projects/${encodeURIComponent(slug)}/phases/${encodeURIComponent(phaseId)}/complete`,
       { method: "DELETE" }
     ),
 
   getEnrolledProjects: () =>
     request<{ enrollments: EnrolledProjectItem[] }>("/api/projects/my/enrolled"),
 
-  verifyProject: (slug: string, data: { githubRepoUrl: string; liveDemoUrl?: string }) =>
-    request<{ success: boolean; verification: unknown }>(`/api/projects/${slug}/verify`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-
-  getVerificationChallenge: (slug: string) =>
-    request<{ challenge: string; fileName: string }>(`/api/projects/${slug}/verification-challenge`, {
-      method: "POST",
-    }),
-
-  getPublicProfile: (username: string) =>
-    request<PublicUserProfile>(`/api/users/${username}`),
 };
 
 // Shared types
+export type ProjectDifficulty = "Beginner" | "Intermediate" | "Expert";
+
 export interface AuthUser {
   id: string;
   email: string;
   name: string;
-  username?: string;
   avatar?: string;
-  role?: "user" | "admin";
 }
 
 export interface EnrolledProjectItem {
@@ -106,17 +93,13 @@ export interface EnrolledProjectItem {
   completedCount: number;
   totalPhases: number;
   completedPhases: string[];
-  isVerified?: boolean;
-  githubRepoUrl?: string;
-  liveDemoUrl?: string;
-  verifiedAt?: string;
   project: {
     _id: string;
     slug: string;
     title: string;
     tagline: string;
     track: string;
-    difficulty: string;
+    difficulty: ProjectDifficulty;
     estimatedHours: number;
     techStack: string[];
   };
@@ -130,10 +113,11 @@ export interface ApiProject {
   description?: string;
   whatYouWillLearn?: string[];
   track: string;
-  difficulty: string;
+  difficulty: ProjectDifficulty;
   estimatedHours: number;
   techStack: string[];
   phases?: ApiPhase[];
+  enrolledUsersCount?: number;
 }
 
 export interface ApiPhase {
@@ -147,36 +131,4 @@ export interface ProgressResponse {
   enrolled: boolean;
   currentPhaseIndex: number;
   completedPhases: { phaseId: string; completedAt: string }[];
-  isVerified?: boolean;
-  githubRepoUrl?: string;
-  liveDemoUrl?: string;
-  verifiedAt?: string;
-}
-
-export interface PublicVerifiedProject {
-  slug: string;
-  title: string;
-  tagline: string;
-  track: string;
-  difficulty: string;
-  estimatedHours: number;
-  techStack: string[];
-  githubRepoUrl?: string;
-  liveDemoUrl?: string;
-  verifiedAt?: string;
-}
-
-export interface PublicUserProfile {
-  user: {
-    name: string;
-    username: string;
-    avatar?: string;
-    createdAt?: string;
-  };
-  stats: {
-    verifiedBuildsCount: number;
-    totalEstimatedProjectHours: number;
-    masteredTechStack: string[];
-  };
-  verifiedProjects: PublicVerifiedProject[];
 }

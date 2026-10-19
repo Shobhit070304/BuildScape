@@ -22,7 +22,7 @@ export function FeaturesSection() {
           Designed for developers who learn by building
         </h2>
         <p className="mx-auto max-w-md text-xs leading-relaxed text-[#8a8178]">
-          Clean architecture blueprints, verified commands, and structured phase checklists ensure you never get stuck.
+          Clear architecture blueprints and structured phase milestones help you keep moving.
         </p>
       </div>
 

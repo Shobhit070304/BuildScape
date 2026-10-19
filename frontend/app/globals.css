@@ -26,6 +26,68 @@
   --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", ui-monospace, monospace;
 }
 
+:root { color-scheme: dark; }
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-bg: #f4f2ee;
+  --color-surface: #ffffff;
+  --color-surface-raised: #f8f7f4;
+  --color-surface-card: #ffffff;
+  --color-border: #dedbd4;
+  --color-border-subtle: #e7e4dd;
+  --color-border-hover: #c9c4b8;
+  --color-text: #1e1d1a;
+  --color-text-muted: #69665f;
+  --color-text-faint: #8b877f;
+  --color-accent: #9b6b1c;
+  --color-accent-hover: #805616;
+}
+
+:root[data-theme="dark"] { color-scheme: dark; }
+:root[data-theme="light"] body { background-color: var(--color-bg); color: var(--color-text); }
+:root[data-theme="light"] [class*="bg-linear-to"] { background-image: none !important; background-color: var(--color-surface) !important; }
+:root[data-theme="light"] [class*="bg-[#0"] { background-color: var(--color-bg) !important; }
+:root[data-theme="light"] [class*="bg-[#1"] { background-color: var(--color-surface) !important; }
+:root[data-theme="light"] [class*="bg-[#2"] { background-color: var(--color-surface-raised) !important; }
+:root[data-theme="light"] [class*="border-[#"] { border-color: var(--color-border) !important; }
+:root[data-theme="light"] [class*="border-zinc-8"] { border-color: var(--color-border) !important; }
+:root[data-theme="light"] [class*="text-[#e4ddd3]"],
+:root[data-theme="light"] [class*="text-[#f0eae1]"],
+:root[data-theme="light"] [class*="text-[#d4cbbd]"],
+:root[data-theme="light"] [class*="text-zinc-2"],
+:root[data-theme="light"] [class*="text-zinc-3"] { color: var(--color-text) !important; }
+:root[data-theme="light"] [class*="text-[#7a7168]"],
+:root[data-theme="light"] [class*="text-[#8a8178]"],
+:root[data-theme="light"] [class*="text-[#9a9187]"],
+:root[data-theme="light"] [class*="text-[#a0978c]"],
+:root[data-theme="light"] [class*="text-[#a39a8c]"],
+:root[data-theme="light"] [class*="text-[#a89f91]"],
+:root[data-theme="light"] [class*="text-[#c4bbb0]"],
+:root[data-theme="light"] [class*="text-[#c8c0b4]"] { color: var(--color-text-muted) !important; }
+:root[data-theme="light"] [class*="text-[#ecd39e]"],
+:root[data-theme="light"] [class*="text-[#d4b577]"] { color: #805616 !important; }
+:root[data-theme="light"] .pill-amber { color: #805616; background-color: rgba(155, 107, 28, 0.08); }
+:root[data-theme="light"] .prose p,
+:root[data-theme="light"] .prose li,
+:root[data-theme="light"] .prose em,
+:root[data-theme="light"] .prose td { color: #48463f; }
+:root[data-theme="light"] .prose pre { background-color: #f1efeb; }
+:root[data-theme="light"] .prose pre code,
+:root[data-theme="light"] .hljs { color: #292720 !important; }
+:root[data-theme="light"] .hljs-keyword,
+:root[data-theme="light"] .hljs-type { color: #805616 !important; }
+:root[data-theme="light"] .hljs-string { color: #356b3b !important; }
+:root[data-theme="light"] .hljs-comment { color: #77736b !important; }
+:root[data-theme="light"] .hljs-number { color: #3f628d !important; }
+:root[data-theme="light"] .hljs-function,
+:root[data-theme="light"] .hljs-title,
+:root[data-theme="light"] .hljs-attr,
+:root[data-theme="light"] .hljs-attribute { color: #4f5680 !important; }
+:root[data-theme="light"] .hljs-built_in,
+:root[data-theme="light"] .hljs-variable { color: #292720 !important; }
+:root[data-theme="light"] .hljs-punctuation { color: #625e55 !important; }
+
 /* ─── Utility Aliases ────────────────────────────────────────── */
 .font-sans  { font-family: var(--font-sans); }
 .font-serif { font-family: var(--font-serif); }
@@ -101,16 +163,16 @@
   border-radius: 0.5rem;
   font-weight: 500;
   font-size: 0.8125rem;
-  border: 1px solid #252523;
-  background-color: #111110;
-  color: #a8a09a;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface-card);
+  color: var(--color-text-muted);
   text-decoration: none;
   transition: all 0.15s ease;
 }
 .btn-secondary:hover {
-  border-color: #333330;
-  color: #f0ede8;
-  background-color: #161615;
+  border-color: var(--color-border-hover);
+  color: var(--color-text);
+  background-color: var(--color-surface-raised);
 }
 
 /* ─── Base ───────────────────────────────────────────────────── */
@@ -149,6 +211,16 @@ code, pre {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+.hero-grid {
+  background-image: linear-gradient(to right, color-mix(in srgb, var(--color-border) 48%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-border) 48%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, black, transparent 92%);
+}
+
+.hero-console { backdrop-filter: blur(18px); }
+.project-preview:hover { border-color: var(--color-border-hover); transform: translateY(-2px); }
+
 /* ─── Scrollbar ──────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: var(--color-bg); }
@@ -158,7 +230,7 @@ code, pre {
 /* ─── Markdown / Prose ───────────────────────────────────────── */
 .prose {
   color: var(--color-text);
-  max-width: 65ch;
+  max-width: none;
   line-height: 1.8;
 }
 
@@ -229,7 +301,7 @@ code, pre {
 }
 
 .prose pre {
-  background: #0a0a09;
+  background: var(--color-surface-raised);
   border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 1.125rem 1.25rem;
@@ -241,7 +313,7 @@ code, pre {
   background: none;
   border: none;
   padding: 0;
-  color: #d4cfc8;
+  color: var(--color-text);
   font-size: 0.8125rem;
   line-height: 1.75;
 }
@@ -269,7 +341,7 @@ code, pre {
 .prose tr:nth-child(even) td { background: var(--color-surface); }
 
 /* ─── Syntax Highlight ───────────────────────────────────────── */
-.hljs { background: transparent !important; color: #d4cfc8 !important; }
+.hljs { background: transparent !important; color: var(--color-text) !important; }
 .hljs-keyword { color: #c9a96e !important; }
 .hljs-string { color: #7fa867 !important; }
 .hljs-comment { color: #5a5550 !important; font-style: italic; }

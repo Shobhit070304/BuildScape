@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getSiteUrl } from "@/lib/site";
+import { getSiteUrl, serializeJsonLd } from "@/lib/site";
 
 const siteUrl = getSiteUrl();
 
@@ -44,7 +44,7 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(collectionJsonLd) }}
       />
       {children}
     </>

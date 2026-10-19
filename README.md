@@ -47,9 +47,9 @@ npm install
 npm run dev
 ```
 
-### 3. Seed Database (Optional)
+### Project catalog source
 
-To seed or refresh the 17 curated production projects into MongoDB:
+`backend/data/projects.json` is the only project catalog. The API validates and syncs it to MongoDB when the backend starts; MongoDB stores enrollment and phase progress. Keep projects phase-based and use only Beginner, Intermediate, or Expert difficulty. Restart the backend after editing the catalog; the frontend cache refreshes within five minutes. To sync it manually:
 
 ```bash
 cd backend
@@ -91,13 +91,10 @@ npm run seed
 | `GET` | `/health` | API and MongoDB readiness probe | Public |
 | `GET` | `/api/projects` | List all curated production builds | Public |
 | `GET` | `/api/projects/:slug` | Full project details and phase blueprints | Public |
-| `POST` | `/api/auth/google` | Google OAuth login and session JWT issuance | Public |
+| `POST` | `/api/auth/google` | Google OAuth login and HTTP-only session cookie | Public |
 | `GET` | `/api/auth/me` | Fetch authenticated user profile | Required |
 | `GET` | `/api/projects/my/enrolled` | List current user's enrolled projects | Required |
 | `POST` | `/api/projects/:slug/enroll` | Enroll in a project | Required |
 | `GET` | `/api/projects/:slug/progress` | Get phase completion status | Required |
 | `POST` | `/api/projects/:slug/phases/:id/complete` | Mark a phase completed (requires enrollment) | Required |
-| `POST` | `/api/projects/:slug/verification-challenge` | Issue or retrieve the repository control challenge | Required |
-| `POST` | `/api/projects/:slug/verify` | Verify a completed project and public repository challenge | Required |
-
-For a verified badge, add the unique challenge shown in the workspace to a root-level file named `.buildscape-verification`. Verification checks that the repository is public and contains the current user's challenge, proving the user can update that repository. `JWT_SECRET` must be a non-placeholder secret with at least 32 characters in production, and the API will not start without `MONGODB_URI`.
+`JWT_SECRET` must be a non-placeholder secret with at least 32 characters in production. The API requires `MONGODB_URI` and `GOOGLE_CLIENT_ID` in production.

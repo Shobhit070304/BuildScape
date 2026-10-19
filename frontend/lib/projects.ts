@@ -1,5 +1,6 @@
-import type { ApiProject } from "@/lib/api";
+import type { ApiProject, ProjectDifficulty } from "@/lib/api";
 import { getApiUrl } from "@/lib/api";
+export type { ProjectDifficulty } from "@/lib/api";
 
 export interface Phase {
   id: string;
@@ -7,8 +8,6 @@ export interface Phase {
   title: string;
   content: string;
 }
-
-export type ProjectDifficulty = "Entry" | "Basic" | "Intermediate" | "Advanced" | "Expert";
 
 export interface Project {
   id: string;
@@ -22,6 +21,7 @@ export interface Project {
   estimatedHours: number;
   techStack: string[];
   phases: Phase[];
+  enrolledUsersCount: number;
 }
 
 /**
@@ -36,10 +36,11 @@ export function mapApiProject(p: ApiProject): Project {
     description: p.description,
     whatYouWillLearn: p.whatYouWillLearn,
     track: p.track,
-    difficulty: p.difficulty as ProjectDifficulty,
+    difficulty: p.difficulty,
     estimatedHours: p.estimatedHours,
     techStack: p.techStack ?? [],
     phases: (p.phases ?? []) as Phase[],
+    enrolledUsersCount: p.enrolledUsersCount ?? 0,
   };
 }
 
@@ -50,7 +51,8 @@ export async function fetchProjectsFromDb(): Promise<Project[]> {
   const apiUrl = getApiUrl();
   try {
     const res = await fetch(`${apiUrl}/api/projects`, {
-      cache: "no-store",
+      cache: "force-cache",
+      next: { revalidate: 300, tags: ["projects"] },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
@@ -69,8 +71,9 @@ export async function fetchProjectsFromDb(): Promise<Project[]> {
 export async function fetchProjectBySlugFromDb(slug: string): Promise<Project | undefined> {
   const apiUrl = getApiUrl();
   try {
-    const res = await fetch(`${apiUrl}/api/projects/${slug}`, {
-      cache: "no-store",
+    const res = await fetch(`${apiUrl}/api/projects/${encodeURIComponent(slug)}`, {
+      cache: "force-cache",
+      next: { revalidate: 300, tags: [`project:${slug}`] },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
@@ -83,39 +86,16 @@ export async function fetchProjectBySlugFromDb(slug: string): Promise<Project | 
   return undefined;
 }
 
-export function getAllTracks(): string[] {
-  return [
-    "Web Development",
-    "Full-Stack SpringBoot",
-    "Machine Learning",
-    "React & Node.js",
-    "C++",
-    "Python",
-    "Ethereum dApps",
-    "Rust",
-    "Golang",
-    "Java",
-    "C Language",
-    "Next.js",
-    "C#",
-    "Node.js",
-  ];
-}
-
 export const DIFFICULTY_ORDER: Record<string, number> = {
-  Entry: 0,
-  Basic: 1,
-  Intermediate: 2,
-  Advanced: 3,
-  Expert: 4,
+  Beginner: 0,
+  Intermediate: 1,
+  Expert: 2,
 };
 
 export const DIFFICULTY_COLORS: Record<string, string> = {
-  Entry: "text-sky-400 bg-sky-950/50 border-sky-800/60",
-  Basic: "text-emerald-400 bg-emerald-950/50 border-emerald-800/60",
+  Beginner: "text-sky-400 bg-sky-950/50 border-sky-800/60",
   Intermediate: "text-amber-400 bg-amber-950/50 border-amber-800/60",
-  Advanced: "text-rose-400 bg-rose-950/50 border-rose-800/60",
-  Expert: "text-purple-400 bg-purple-950/50 border-purple-800/60",
+  Expert: "text-rose-400 bg-rose-950/50 border-rose-800/60",
 };
 
 export const TRACK_COLORS: Record<string, string> = {
@@ -135,11 +115,13 @@ export function getTrackColor(track: string): string {
 
 export function getPhaseDescription(phase: Phase): string {
   if (!phase.content) return "";
-  const match = phase.content.match(/What You Will Accomplish\s*\n+([\s\S]*?)(?=\n+---|\\n+##|$)/i);
+  const match = phase.content.match(/^##\s*(?:🎯\s*)?(?:What You Will Accomplish|Outcome)\s*\n+([\s\S]*?)(?=\n+##|\n+---|$)/im);
   if (match && match[1]) {
     return match[1]
       .replace(/\*\*([^*]+)\*\*/g, "$1")
       .replace(/`([^`]+)`/g, "$1")
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+      .replace(/^\s*>\s?/gm, "")
       .replace(/\n+/g, " ")
       .trim();
   }

@@ -37,12 +37,6 @@ export function CtaSection() {
               Explore All Projects
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link
-              href="/projects/spring-kafka-banking-ledger"
-              className="btn-secondary px-5! py-2.5! text-[0.8125rem]!"
-            >
-              Featured: Spring Kafka Banking Ledger →
-            </Link>
           </div>
 
           <p className="mt-6 font-mono text-[10px] text-text-faint">

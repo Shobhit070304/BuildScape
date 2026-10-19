@@ -8,12 +8,9 @@ interface ProjectCardProps {
 }
 
 const DIFFICULTY_CLASSES: Record<string, string> = {
-  Entry: "text-sky-400 bg-sky-950/40 border-sky-800/60",
-  Basic: "text-emerald-400 bg-emerald-950/40 border-emerald-800/60",
+  Beginner: "text-sky-400 bg-sky-950/40 border-sky-800/60",
   Intermediate: "text-amber-400 bg-amber-950/40 border-amber-800/60",
-  Advanced: "text-rose-400 bg-rose-950/40 border-rose-800/60",
-  Expert: "text-purple-400 bg-purple-950/40 border-purple-800/60",
-  Beginner: "text-emerald-400 bg-emerald-950/40 border-emerald-800/60",
+  Expert: "text-rose-400 bg-rose-950/40 border-rose-800/60",
 };
 
 export function ProjectCard({ project }: ProjectCardProps) {

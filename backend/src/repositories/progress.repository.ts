@@ -4,14 +4,12 @@ import { UserTaskProgress } from "../models/UserTaskProgress";
 
 const asObjectId = (value: string) => new Types.ObjectId(value);
 
-// Enrollment and phase completion persistence operations.
 export const progressRepository = {
   enroll: (userId: string, projectId: Types.ObjectId) =>
     UserProjectEnrollment.findOneAndUpdate(
       { userId: asObjectId(userId), projectId },
-      // $setOnInsert preserves currentPhaseIndex on re-enroll; only runs on first insert.
       { $setOnInsert: { userId: asObjectId(userId), projectId, currentPhaseIndex: 0 } },
-      { upsert: true, returnDocument: "after" }
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
     ),
 
   findEnrollment: (userId: string, projectId: Types.ObjectId) =>
@@ -20,11 +18,14 @@ export const progressRepository = {
   listEnrollments: (userId: string) =>
     UserProjectEnrollment.find({ userId: asObjectId(userId) }).populate("projectId"),
 
+  countEnrollments: (projectId: Types.ObjectId) =>
+    UserProjectEnrollment.countDocuments({ projectId }),
+
   markPhaseComplete: (userId: string, projectId: Types.ObjectId, phaseId: string) =>
     UserTaskProgress.findOneAndUpdate(
       { userId: asObjectId(userId), projectId, phaseId },
-      { userId: asObjectId(userId), projectId, phaseId, completedAt: new Date() },
-      { upsert: true, returnDocument: "after" }
+      { $setOnInsert: { userId: asObjectId(userId), projectId, phaseId, completedAt: new Date() } },
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
     ),
 
   unmarkPhaseComplete: (userId: string, projectId: Types.ObjectId, phaseId: string) =>
@@ -33,44 +34,8 @@ export const progressRepository = {
   setCurrentPhase: (userId: string, projectId: Types.ObjectId, currentPhaseIndex: number) =>
     UserProjectEnrollment.findOneAndUpdate(
       { userId: asObjectId(userId), projectId },
-      { currentPhaseIndex },
-      { returnDocument: "after" }
-    ),
-
-  setProjectCompleted: (userId: string, projectId: Types.ObjectId, completedAt: Date | null) =>
-    UserProjectEnrollment.findOneAndUpdate(
-      { userId: asObjectId(userId), projectId },
-      completedAt ? { $set: { completedAt } } : { $unset: { completedAt: 1 } },
-      { returnDocument: "after" }
-    ),
-
-  clearVerification: (userId: string, projectId: Types.ObjectId) =>
-    UserProjectEnrollment.findOneAndUpdate(
-      { userId: asObjectId(userId), projectId },
-      { $set: { isVerified: false }, $unset: { verifiedAt: 1, completedAt: 1 } },
-      { returnDocument: "after" }
-    ),
-
-  setVerificationChallenge: (userId: string, projectId: Types.ObjectId, challenge: string) =>
-    UserProjectEnrollment.findOneAndUpdate(
-      { userId: asObjectId(userId), projectId },
-      { $set: { verificationChallenge: challenge } },
-      { returnDocument: "after" }
-    ).select("+verificationChallenge"),
-
-  findEnrollmentWithChallenge: (userId: string, projectId: Types.ObjectId) =>
-    UserProjectEnrollment.findOne({ userId: asObjectId(userId), projectId })
-      .select("+verificationChallenge"),
-
-  updateVerification: (
-    userId: string,
-    projectId: Types.ObjectId,
-    data: { githubRepoUrl: string; liveDemoUrl?: string; isVerified: boolean; verifiedAt: Date }
-  ) =>
-    UserProjectEnrollment.findOneAndUpdate(
-      { userId: asObjectId(userId), projectId },
-      { $set: data },
-      { returnDocument: "after" }
+      { $set: { currentPhaseIndex } },
+      { returnDocument: "after", runValidators: true }
     ),
 
   listCompletedPhases: (userId: string, projectId: Types.ObjectId) =>

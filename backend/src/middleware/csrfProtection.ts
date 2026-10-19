@@ -19,6 +19,10 @@ export function protectAgainstCrossSiteWrites(req: Request, res: Response, next:
   }
 
   const origin = req.get("origin");
+  if (!origin && req.cookies?.bs_token) {
+    res.status(403).json({ error: "Origin header is required for session writes" });
+    return;
+  }
   if (origin && origin !== configuredOrigin()) {
     res.status(403).json({ error: "Cross-origin write rejected" });
     return;

@@ -14,9 +14,12 @@ export const env = {
   CORS_ORIGIN: process.env.CORS_ORIGIN ?? "http://localhost:3000",
   MONGODB_URI: process.env.MONGODB_URI ?? "",
   JWT_SECRET: configuredJwtSecret ?? "buildscape-session-secret-change-in-production",
-  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? "",
-  ADMIN_EMAIL: process.env.ADMIN_EMAIL ?? ""
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? ""
 };
+
+if (env.NODE_ENV === "production" && !env.GOOGLE_CLIENT_ID) {
+  throw new Error("GOOGLE_CLIENT_ID must be configured in production");
+}
 
 // Log diagnostics on startup
 if (env.NODE_ENV === "production") {

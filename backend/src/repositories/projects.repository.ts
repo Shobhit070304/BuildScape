@@ -1,16 +1,12 @@
-import { Project, IProject } from "../models/Project";
-import { HttpError } from "../services/httpError";
+import { Project } from "../models/Project";
+import { loadProjectCatalog } from "../services/projectCatalog.service";
+
+const canonicalSlugs = new Set(loadProjectCatalog().map(({ slug }) => slug));
+const canonicalFilter = { slug: { $in: [...canonicalSlugs] } };
 
 // Project persistence operations.
 export const projectRepository = {
-  list: () => Project.find().select("-phases.content").sort({ createdAt: -1 }),
-  findBySlug: (slug: string) => Project.findOne({ slug }),
-  findPhasesBySlug: (slug: string) => Project.findOne({ slug }, { phases: 1 }),
-  create: (values: Partial<IProject>) => Project.create(values),
-  updateBySlug: async (slug: string, values: Partial<IProject>) => {
-    const project = await Project.findOneAndUpdate({ slug }, values, { returnDocument: "after" });
-    if (!project) throw new HttpError(404, "Project not found");
-    return project;
-  },
-  deleteBySlug: (slug: string) => Project.findOneAndDelete({ slug }),
+  list: () => Project.find(canonicalFilter).select("-phases.content").sort({ createdAt: -1 }),
+  findBySlug: (slug: string) => canonicalSlugs.has(slug) ? Project.findOne({ slug }) : null,
+  findPhasesBySlug: (slug: string) => canonicalSlugs.has(slug) ? Project.findOne({ slug }, { phases: 1 }) : null,
 };

@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { fetchProjectBySlugFromDb } from "@/lib/projects";
 import { ProjectWorkspaceView } from "@/components/ProjectWorkspaceView";
 
-export const dynamic = "force-dynamic";
-
 interface PageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ phase?: string }>;

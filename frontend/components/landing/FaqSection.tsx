@@ -48,7 +48,7 @@ export function FaqSection() {
     },
     {
       q: "What skill level do I need?",
-      a: "Projects are clearly tagged across 5 levels: Entry, Basic, Intermediate, Advanced, and Expert. Entry builds only require basic programming knowledge. Intermediate and Advanced builds cover real-world architectures with detailed explanations.",
+      a: "Projects use three difficulty levels: Beginner, Intermediate, and Expert. Each level includes phase-by-phase guidance and a clear estimate of the work involved.",
     },
     {
       q: "Can I put these projects on my resume?",
@@ -56,7 +56,7 @@ export function FaqSection() {
     },
     {
       q: "How long does a project take?",
-      a: "Basic projects typically take 8–10 hours across structured phases. Advanced distributed systems take 18–24 hours. Everything is self-paced, so you can build at your own speed.",
+      a: "Project duration depends on its scope and estimated hours. Work at your own pace and continue from the last phase you completed.",
     },
     {
       q: "What happens if I get stuck?",
@@ -67,9 +67,9 @@ export function FaqSection() {
   return (
     <section id="faq" className="mb-20 sm:mb-28 lg:mb-32 scroll-mt-24">
       <div className="rounded-xl border border-[#201d18] bg-[#11100e] p-4 sm:p-6 shadow-sm">
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_1.6fr] lg:gap-8">
+        <div className="mx-auto max-w-4xl">
           {/* Left Title */}
-          <div>
+          <div className="mx-auto mb-6 max-w-xl text-center">
             <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full border border-amber-800/40 bg-amber-950/30 px-2.5 py-0.5">
               <HelpCircle className="h-3 w-3 text-accent" />
               <span className="text-[10px] font-bold uppercase tracking-wider text-accent">
@@ -83,7 +83,7 @@ export function FaqSection() {
               Everything you need to know about the platform, projects, and learning workflow.
             </p>
 
-            <div className="mt-4">
+            <div className="mt-4 flex justify-center">
               <Link
                 href="/projects"
                 className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:text-accent-hover transition-colors"
@@ -95,7 +95,7 @@ export function FaqSection() {
           </div>
 
           {/* Right Accordion List */}
-          <div className="rounded-lg border border-[#201d18] bg-[#14120f] p-3 sm:p-4 divide-y divide-[#201d18]">
+          <div className="mx-auto max-w-3xl rounded-lg border border-[#201d18] bg-[#14120f] p-3 sm:p-4 divide-y divide-[#201d18]">
             {faqs.map((item) => (
               <FAQItem key={item.q} q={item.q} a={item.a} />
             ))}

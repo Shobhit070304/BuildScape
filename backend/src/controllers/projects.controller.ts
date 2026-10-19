@@ -3,11 +3,15 @@ import { projectsService } from "../services/projects.service";
 
 // Keep HTTP parsing and response formatting in controllers.
 export const listProjects = asyncHandler(async (_req, res) => {
+  res.set("Cache-Control", "public, max-age=0, s-maxage=300, stale-while-revalidate=600");
   res.json({ projects: await projectsService.list() });
 });
 
 export const getProject = asyncHandler(async (req, res) => {
-  res.json({ project: await projectsService.getBySlug(String(req.params.slug)) });
+  const project = await projectsService.getBySlug(String(req.params.slug));
+  const enrolledUsersCount = await projectsService.countEnrolled(project._id.toString());
+  res.set("Cache-Control", "public, max-age=0, s-maxage=300, stale-while-revalidate=600");
+  res.json({ project: { ...project.toObject(), enrolledUsersCount } });
 });
 
 export const enrollProject = asyncHandler(async (req, res) => {
@@ -26,37 +30,11 @@ export const uncompletePhase = asyncHandler(async (req, res) => {
 });
 
 export const getProgress = asyncHandler(async (req, res) => {
+  res.set("Cache-Control", "private, no-store");
   res.json({ ...await projectsService.getProgress(req.user!.userId, String(req.params.slug)) });
 });
 
 export const getEnrolledProjects = asyncHandler(async (req, res) => {
+  res.set("Cache-Control", "private, no-store");
   res.json({ enrollments: await projectsService.getEnrolled(req.user!.userId) });
-});
-
-export const verifyProject = asyncHandler(async (req, res) => {
-  const result = await projectsService.verifyProject(
-    req.user!.userId,
-    String(req.params.slug),
-    req.body
-  );
-  res.json({ success: true, verification: result });
-});
-
-export const getVerificationChallenge = asyncHandler(async (req, res) => {
-  res.json(await projectsService.getVerificationChallenge(req.user!.userId, String(req.params.slug)));
-});
-
-export const createProject = asyncHandler(async (req, res) => {
-  const project = await projectsService.create(req.body);
-  res.status(201).json({ success: true, project });
-});
-
-export const updateProject = asyncHandler(async (req, res) => {
-  const project = await projectsService.update(String(req.params.slug), req.body);
-  res.json({ success: true, project });
-});
-
-export const deleteProject = asyncHandler(async (req, res) => {
-  await projectsService.delete(String(req.params.slug));
-  res.json({ success: true, message: "Project deleted successfully" });
 });

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/landing/HeroSection";
-import { StatsSection } from "@/components/landing/StatsSection";
 import { FeaturedProjectsSection } from "@/components/landing/FeaturedProjectsSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
@@ -10,19 +9,19 @@ import { FaqSection } from "@/components/landing/FaqSection";
 import { CtaSection } from "@/components/landing/CtaSection";
 import { FooterSection } from "@/components/landing/FooterSection";
 import { ScrollSectionTracker } from "@/components/landing/ScrollSectionTracker";
-
-export const dynamic = "force-dynamic";
+import { fetchProjectsFromDb } from "@/lib/projects";
 
 export const metadata: Metadata = {
   title: "BuildScape — Build Real Production Software | Escape Tutorial Hell",
   description:
-    "Stop watching tutorials. Build real-world distributed architectures, cache engines, and streaming systems with phase-by-phase blueprints and verifiable proof-of-work.",
+    "Stop watching tutorials. Build real-world distributed architectures, cache engines, and streaming systems with phase-by-phase blueprints and saved progress.",
   alternates: {
     canonical: "/",
   },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const projects = (await fetchProjectsFromDb()).slice(0, 2);
   return (
     <>
       <Navbar />
@@ -30,8 +29,7 @@ export default function HomePage() {
       <main className="w-full bg-[#0a0a0a] overflow-x-hidden">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <HeroSection />
-          <StatsSection />
-          <FeaturedProjectsSection />
+          <FeaturedProjectsSection projects={projects} />
           <HowItWorksSection />
           <FeaturesSection />
           <ComparisonSection />

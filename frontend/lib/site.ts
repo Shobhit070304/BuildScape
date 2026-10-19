@@ -11,12 +11,21 @@ export function getSiteUrl(): string {
   return "https://buildscape.vercel.app";
 }
 
+export function serializeJsonLd(value: unknown): string {
+  return JSON.stringify(value)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
 export const SITE_CONFIG = {
   name: "BuildScape",
   title: "BuildScape — Build Real Production Software",
   tagline: "Escape tutorial hell. Build production software through structured, phase-by-phase roadmaps with full code guidance.",
   description:
-    "Build real-world distributed architectures, cache engines, streaming databases, and full-stack systems. Master engineering by doing with phase-by-phase blueprints and verifiable proof-of-work.",
+    "Build real-world distributed architectures, cache engines, streaming databases, and full-stack systems with phase-by-phase blueprints and saved progress.",
   keywords: [
     "system design projects",
     "learn backend engineering",
@@ -28,7 +37,6 @@ export const SITE_CONFIG = {
     "learn go by building",
     "learn rust by building",
     "spring boot architecture",
-    "developer portfolio proof of work",
   ],
   links: {
     github: "https://github.com/Shobhit070304/buildscape",

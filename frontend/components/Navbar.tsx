@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { LogOut, AlertCircle } from "lucide-react";
+import { LogOut, AlertCircle, Sun, Moon } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
 import { useAuth } from "@/context/AuthContext";
 import { Logo } from "@/components/Logo";
@@ -12,6 +12,32 @@ export function Navbar() {
   const { user, isLoading, login, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [loginError, setLoginError] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
+
+  useEffect(() => {
+    let stored: string | null = null;
+    try { stored = localStorage.getItem("buildscape-theme"); } catch { /* storage can be disabled */ }
+    const media = matchMedia("(prefers-color-scheme: light)");
+    const resolved = stored === "light" || stored === "dark" ? stored : (media.matches ? "light" : "dark");
+    document.documentElement.dataset.theme = resolved;
+    setTheme(resolved);
+    if (stored !== "light" && stored !== "dark") {
+      const handleSystemTheme = (event: MediaQueryListEvent) => {
+        const next = event.matches ? "light" : "dark";
+        document.documentElement.dataset.theme = next;
+        setTheme(next);
+      };
+      media.addEventListener("change", handleSystemTheme);
+      return () => media.removeEventListener("change", handleSystemTheme);
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem("buildscape-theme", next); } catch { /* the current session still changes theme */ }
+    setTheme(next);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,12 +56,13 @@ export function Navbar() {
           : "border-transparent bg-[#0a0a0a]/60 backdrop-blur-sm"
       }`}
     >
-      <div className="mx-auto flex h-11 sm:h-12 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Logo size="md" />
 
         {/* Right side navigation & user actions */}
         <div className="flex items-center gap-2 sm:gap-3">
+          <Link href="/" className="hidden sm:block rounded px-2 py-1 text-xs text-[#a0978c] transition-colors hover:text-[#e4ddd3]">Home</Link>
           <Link
             href="/projects"
             className="rounded px-2 py-1 text-xs text-[#a0978c] transition-colors hover:text-[#e4ddd3] hover:bg-[#161411]"
@@ -43,14 +70,10 @@ export function Navbar() {
             Projects
           </Link>
 
-          {user && (
-            <Link
-              href="/profile"
-              className="rounded px-2 py-1 text-xs text-[#a0978c] transition-colors hover:text-[#e4ddd3] hover:bg-[#161411]"
-            >
-              Profile
-            </Link>
-          )}
+          {user && <Link href="/profile" className="rounded px-2 py-1 text-xs text-[#a0978c] transition-colors hover:text-[#e4ddd3] hover:bg-[#161411]">Workspace</Link>}
+          <button onClick={toggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`} title="Toggle theme" className="rounded-full border border-[#2a2620] bg-[#14120f] p-1.5 text-[#d4cbbd] transition-colors hover:border-amber-700/60">
+            {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+          </button>
 
           {isLoading ? (
             <div className="h-5 w-14 animate-pulse rounded bg-stone-900" />
@@ -95,7 +118,7 @@ export function Navbar() {
                 <GoogleLogin
                   onSuccess={(res) => {
                     setLoginError(false);
-                    if (res.credential) login(res.credential);
+                    if (res.credential) login(res.credential).catch(() => setLoginError(true));
                   }}
                   onError={() => setLoginError(true)}
                   size="medium"

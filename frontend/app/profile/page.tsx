@@ -13,20 +13,17 @@ import {
   FolderOpen,
   Clock,
   CheckCircle2,
-  ShieldCheck,
-  ExternalLink,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
 import { api, EnrolledProjectItem } from "@/lib/api";
 import { DIFFICULTY_COLORS, getTrackColor } from "@/lib/projects";
-import { VerificationModal } from "@/components/VerificationModal";
 
 export default function ProfilePage() {
   const { user, isLoading: authLoading, login, logout } = useAuth();
   const [enrollments, setEnrollments] = useState<EnrolledProjectItem[]>([]);
   const [loadingEnrollments, setLoadingEnrollments] = useState(false);
-  const [selectedVerifyProject, setSelectedVerifyProject] = useState<EnrolledProjectItem | null>(null);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -44,10 +41,6 @@ export default function ProfilePage() {
       });
   }, [user]);
 
-  const totalCompletedPhases = enrollments.reduce(
-    (sum, item) => sum + item.completedCount,
-    0
-  );
 
   return (
     <>
@@ -67,21 +60,23 @@ export default function ProfilePage() {
               <h1 className="mb-1.5 font-serif text-xl font-bold text-[#e4ddd3]">
                 Your BuildScape Profile
               </h1>
-              <p className="mb-5 text-xs text-[#8a8178]">
-                Sign in with Google to view your enrolled projects, track your learning progress, and earn completion certificates.
+                <p className="mb-5 text-xs text-[#8a8178]">
+                Sign in with Google to view your enrolled projects and continue where you left off.
               </p>
               <div className="flex justify-center scale-95 origin-center">
                 <GoogleLogin
                   onSuccess={(res) => {
-                    if (res.credential) login(res.credential);
+                    setLoginError(null);
+                    if (res.credential) login(res.credential).catch((err) => setLoginError(err instanceof Error ? err.message : "Sign-in failed. Please try again."));
                   }}
-                  onError={() => console.error("Google sign in failed")}
+                  onError={() => setLoginError("Google sign-in failed. Please try again.")}
                   shape="pill"
                   theme="filled_black"
                   text="signin_with"
                   size="medium"
                 />
               </div>
+              {loginError && <p role="alert" className="mt-3 text-xs text-rose-300">{loginError}</p>}
             </div>
           ) : (
             /* Logged in User Profile (Clean, compact, slightly smaller) */
@@ -109,15 +104,6 @@ export default function ProfilePage() {
                         <h1 className="font-serif text-lg font-bold text-[#e4ddd3]">
                           {user.name}
                         </h1>
-                        <span
-                          className={`rounded-full border px-2 py-0.2 text-[0.62rem] font-medium ${
-                            user.role === "admin"
-                              ? "border-purple-800/50 bg-purple-950/50 text-purple-300"
-                              : "border-amber-800/40 bg-amber-950/40 text-accent"
-                          }`}
-                        >
-                          {user.role === "admin" ? "Admin" : "Learner"}
-                        </span>
                       </div>
                       <p className="text-[11px] text-[#8a8178]">{user.email}</p>
                     </div>
@@ -125,18 +111,6 @@ export default function ProfilePage() {
 
                   {/* Action buttons */}
                   <div className="flex items-center gap-2">
-                    {user.username && (
-                      <Link
-                        href={`/u/${user.username}`}
-                        target="_blank"
-                        className="flex items-center gap-1.5 rounded border border-amber-800/40 bg-amber-950/30 px-3 py-1.5 text-xs font-medium text-accent transition-all hover:border-amber-700/60 hover:bg-amber-900/40 cursor-pointer"
-                        title="View your public developer profile"
-                      >
-                        <ShieldCheck className="h-3.5 w-3.5 text-accent" />
-                        <span>Public Portfolio</span>
-                        <ExternalLink className="h-2.5 w-2.5 opacity-70" />
-                      </Link>
-                    )}
                     <button
                       onClick={logout}
                       className="flex items-center gap-1.5 rounded border border-[#2a2620] bg-[#14120f] px-3 py-1.5 text-xs font-medium text-[#a0978c] transition-all hover:border-[#3a342c] hover:bg-[#1a1814] hover:text-[#e4ddd3] cursor-pointer"
@@ -148,42 +122,6 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Stats Bar */}
-                <div className="mt-5 grid grid-cols-2 gap-3 border-t border-[#1e1c18] pt-4 sm:grid-cols-4">
-                  <div className="rounded-lg border border-[#221f1a] bg-[#11100e] p-3">
-                    <span className="text-[0.62rem] uppercase tracking-wider text-[#6b6256] font-mono">
-                      Enrolled Projects
-                    </span>
-                    <p className="mt-0.5 font-mono text-lg font-bold text-[#e4ddd3]">
-                      {enrollments.length}
-                    </p>
-                  </div>
-                  <div className="rounded-lg border border-[#221f1a] bg-[#11100e] p-3">
-                    <span className="text-[0.62rem] uppercase tracking-wider text-[#6b6256] font-mono">
-                      Completed Phases
-                    </span>
-                    <p className="mt-0.5 font-mono text-lg font-bold text-accent">
-                      {totalCompletedPhases}
-                    </p>
-                  </div>
-                  <div className="rounded-lg border border-[#221f1a] bg-[#11100e] p-3">
-                    <span className="text-[0.62rem] uppercase tracking-wider text-[#6b6256] font-mono">
-                      Verified Builds
-                    </span>
-                    <p className="mt-0.5 font-mono text-lg font-bold text-emerald-400">
-                      {enrollments.filter((item) => item.isVerified).length}
-                    </p>
-                  </div>
-                  <div className="rounded-lg border border-[#221f1a] bg-[#11100e] p-3">
-                    <span className="text-[0.62rem] uppercase tracking-wider text-[#6b6256] font-mono">
-                      Learning Status
-                    </span>
-                    <p className="mt-0.5 font-mono text-sm font-bold text-emerald-400 flex items-center gap-1.5">
-                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      Active
-                    </p>
-                  </div>
-                </div>
               </div>
 
               {/* Enrolled Projects Section */}
@@ -238,9 +176,9 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     {enrollments.map((item) => {
                       const p = item.project;
-                      const total = item.totalPhases || 5;
-                      const percent = Math.round((item.completedCount / total) * 100);
-                      const isComplete = item.completedCount >= total;
+                      const total = item.totalPhases;
+                      const percent = total > 0 ? Math.min(100, Math.round((item.completedCount / total) * 100)) : 0;
+                      const isComplete = total > 0 && item.completedCount >= total;
 
                       const diffColor =
                         DIFFICULTY_COLORS[p.difficulty] ??
@@ -308,22 +246,6 @@ export default function ProfilePage() {
                                 />
                               </div>
                             </div>
-                            {/* Verification Proof-of-Work Status */}
-                            {isComplete && (
-                              <div className="mb-3 flex items-center justify-between rounded-lg border border-emerald-900/40 bg-emerald-950/20 px-3 py-1.5 text-xs">
-                                <span className="flex items-center gap-1.5 font-medium text-emerald-400">
-                                  <ShieldCheck className="h-3.5 w-3.5" />
-                                  {item.isVerified ? "Phases & Repository Verified" : "Completion Ready"}
-                                </span>
-                                <button
-                                  onClick={() => setSelectedVerifyProject(item)}
-                                  className="flex items-center gap-1 font-semibold text-accent hover:underline cursor-pointer"
-                                >
-                                  <span>{item.isVerified ? "Badge & Links" : "Verify Build"}</span>
-                                  <ArrowRight className="h-2.5 w-2.5" />
-                                </button>
-                              </div>
-                            )}
                           </div>
 
                           {/* Action Buttons matching Image 5 */}
@@ -354,25 +276,6 @@ export default function ProfilePage() {
         </div>
       </main>
 
-      {/* Verification Modal for Profile Page */}
-      {selectedVerifyProject && user && (
-        <VerificationModal
-          isOpen={Boolean(selectedVerifyProject)}
-          onClose={() => setSelectedVerifyProject(null)}
-          projectSlug={selectedVerifyProject.project.slug}
-          projectTitle={selectedVerifyProject.project.title}
-          isVerified={selectedVerifyProject.isVerified}
-          verifiedAt={selectedVerifyProject.verifiedAt}
-          initialGithubUrl={selectedVerifyProject.githubRepoUrl}
-          initialDemoUrl={selectedVerifyProject.liveDemoUrl}
-          username={user.username}
-          onVerifiedSuccess={() => {
-            api.getEnrolledProjects().then((data) => {
-              setEnrollments(data.enrollments ?? []);
-            });
-          }}
-        />
-      )}
     </>
   );
 }

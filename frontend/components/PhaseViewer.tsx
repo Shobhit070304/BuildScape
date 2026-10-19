@@ -12,13 +12,9 @@ import {
   ChevronRight,
   RotateCcw,
   BookOpen,
-  Trophy,
-  ShieldCheck,
 } from "lucide-react";
 import type { Project, Phase } from "@/lib/projects";
 import { useProgress } from "@/hooks/useProgress";
-import { useAuth } from "@/context/AuthContext";
-import { VerificationModal } from "./VerificationModal";
 
 const mdComponents: Components = {
   a({ href, children, ...props }) {
@@ -106,19 +102,12 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
   };
 
   const [activeIndex, setActiveIndex] = useState(getInitialIdx);
-  const [modalOpen, setModalOpen] = useState(false);
-  const { user } = useAuth();
   const {
     completed,
     hydrated,
     togglePhase,
     isCompleted,
     clearProgress,
-    isVerified,
-    githubRepoUrl,
-    liveDemoUrl,
-    verifiedAt,
-    refreshProgress,
   } = useProgress(project.slug);
 
   useEffect(() => {
@@ -134,7 +123,9 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
   const totalPhases = project.phases.length;
   const completedCount = completed.length;
   const progressPct = totalPhases > 0 ? (completedCount / totalPhases) * 100 : 0;
-  const allDone = completedCount === totalPhases;
+  if (!activePhase) {
+    return <div className="flex h-[calc(100vh-3rem)] items-center justify-center bg-[#0a0a0a] p-6 text-center text-sm text-text-muted">This project has no phases yet.</div>;
+  }
 
   const goTo = (i: number) => {
     if (i >= 0 && i < totalPhases) setActiveIndex(i);
@@ -215,16 +206,6 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            {allDone && hydrated && (
-              <button
-                onClick={() => setModalOpen(true)}
-                className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-emerald-700/60 bg-emerald-950/40 px-3 py-1.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-900/50 transition-all shadow-xs"
-              >
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-                <span>{isVerified ? "Phases & Repo" : "Verify Project"}</span>
-              </button>
-            )}
-
             {hydrated && (
               <button
                 onClick={() => togglePhase(activePhase.id)}
@@ -253,41 +234,7 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
         {/* Markdown content */}
         <div className="flex-1 overflow-y-auto px-8 py-10">
           {/* Centered content wrapper */}
-          <div className="mx-auto max-w-208">
-            {allDone && hydrated && (
-              <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3.5 rounded-xl border border-emerald-700/40 bg-linear-to-r from-emerald-950/30 to-[#0e1713] p-4 shadow-md">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-700/40 bg-emerald-950/60 text-emerald-400">
-                    <Trophy className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-semibold text-emerald-300">
-                        All Phases Completed!
-                      </h4>
-                      {isVerified && (
-                        <span className="rounded-full border border-emerald-700/50 bg-emerald-950/70 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
-                          Verified
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-[#a0978c] mt-0.5">
-                      {isVerified
-                        ? "Your phase completion and repository access are verified. Embed the badge or view your public profile."
-                        : "Verify completed phases and prove access to a public GitHub repository."}
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setModalOpen(true)}
-                  className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-emerald-600/50 bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-xs font-semibold text-stone-950 transition-all cursor-pointer shadow-xs"
-                >
-                  <ShieldCheck className="h-4 w-4" />
-                  <span>{isVerified ? "View Badge & Links" : "Verify Project & Repository"}</span>
-                </button>
-              </div>
-            )}
+          <div className="mx-auto w-full max-w-6xl">
 
             <div className="prose">
               <ReactMarkdown
@@ -349,21 +296,6 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
         </div>
       </div>
 
-      {/* Proof-of-Work Verification Modal */}
-      <VerificationModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        projectSlug={project.slug}
-        projectTitle={project.title}
-        isVerified={isVerified}
-        verifiedAt={verifiedAt}
-        initialGithubUrl={githubRepoUrl}
-        initialDemoUrl={liveDemoUrl}
-        username={user?.username}
-        onVerifiedSuccess={() => {
-          refreshProgress();
-        }}
-      />
     </div>
   );
 }

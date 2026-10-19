@@ -1,45 +1,18 @@
 import "dotenv/config";
 import mongoose from "mongoose";
-import { Project } from "../models/Project";
-import fs from "fs";
-import path from "path";
+import { syncProjectCatalog } from "../services/projectCatalog.service";
 
-// Explicit seed command; server startup never clears or replaces this collection.
 async function seed() {
   const uri = process.env.MONGODB_URI;
-  if (!uri) {
-    console.error("❌ MONGODB_URI not set in .env");
-    process.exit(1);
-  }
-
-  const jsonPath = path.resolve(__dirname, "../../data/projects.json");
-
-  if (!fs.existsSync(jsonPath)) {
-    console.error("❌ projects.json not found at:", jsonPath);
-    process.exit(1);
-  }
-
-  const projectsData = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
-
+  if (!uri) throw new Error("MONGODB_URI must be configured before seeding");
   await mongoose.connect(uri);
-  console.log("✅ Connected to MongoDB");
-
-  console.log(`\n📦 Seeding ${projectsData.length} projects into MongoDB:`);
-
-  for (const p of projectsData as any[]) {
-    await Project.findOneAndUpdate(
-      { slug: p.slug },
-      { $set: p },
-      { upsert: true, returnDocument: "after" }
-    );
-    console.log(`  ✔ [${p.track}] ${p.title} (${p.phases?.length || 0} phases)`);
-  }
-
-  console.log(`\n✅ Successfully seeded ${projectsData.length} projects!`);
+  const projects = await syncProjectCatalog();
+  console.log(`Synced ${projects.length} canonical projects from projects.json.`);
   await mongoose.disconnect();
 }
 
-seed().catch((err) => {
-  console.error("❌ Seed failed:", err);
-  process.exit(1);
+seed().catch(async (error) => {
+  console.error("Project catalog sync failed:", error);
+  await mongoose.disconnect().catch(() => undefined);
+  process.exitCode = 1;
 });

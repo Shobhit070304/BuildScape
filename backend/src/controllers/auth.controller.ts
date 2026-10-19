@@ -19,7 +19,7 @@ export const googleAuth = asyncHandler(async (req, res) => {
     path: "/",
   });
 
-  res.json(result);
+  res.json({ user: result.user });
 });
 
 export const logout = asyncHandler(async (_req, res) => {
@@ -34,5 +34,6 @@ export const logout = asyncHandler(async (_req, res) => {
 });
 
 export const getMe = asyncHandler(async (req, res) => {
+  res.set("Cache-Control", "private, no-store");
   res.json({ user: await getUserProfile(req.user!.userId) });
 });

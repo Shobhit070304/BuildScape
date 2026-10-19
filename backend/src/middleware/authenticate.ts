@@ -6,7 +6,6 @@ export interface AuthPayload {
   userId: string;
   email: string;
   name: string;
-  role?: "user" | "admin";
 }
 
 // Extend Express Request

@@ -2,24 +2,14 @@ import { MetadataRoute } from "next";
 import { getSiteUrl } from "@/lib/site";
 import { fetchProjectsFromDb } from "@/lib/projects";
 
-// Fallback project slugs to guarantee indexing even if database is warming up during build
-const FALLBACK_PROJECT_SLUGS = [
-  "distributed-task-queue-redis-go",
-  "redis-lite",
-  "kafka-lite-storage-engine",
-  "postgres-sharded-cluster-router",
-  "nextjs-link-in-bio-analytics",
-  "raft-consensus-kv-store",
-];
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteUrl();
 
-  let projectSlugs: string[] = FALLBACK_PROJECT_SLUGS;
+  let projectSlugs: string[] = [];
   try {
     const projects = await fetchProjectsFromDb();
     if (projects && projects.length > 0) {
-      projectSlugs = Array.from(new Set([...projects.map((p) => p.slug), ...FALLBACK_PROJECT_SLUGS]));
+      projectSlugs = projects.map((p) => p.slug);
     }
   } catch (err) {
     console.warn("Sitemap: using fallback project slugs due to DB API error", err);

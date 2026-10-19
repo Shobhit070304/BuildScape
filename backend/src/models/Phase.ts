@@ -10,7 +10,7 @@ export interface IPhase {
 export const PhaseSchema = new Schema<IPhase>(
   {
     id: { type: String, required: true },
-    orderIndex: { type: Number, required: true },
+    orderIndex: { type: Number, required: true, min: 1 },
     title: { type: String, required: true },
     content: { type: String, required: true },
   },

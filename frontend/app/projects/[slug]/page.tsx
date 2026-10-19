@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { fetchProjectBySlugFromDb } from "@/lib/projects";
 import { ProjectOverviewView } from "@/components/ProjectOverviewView";
-import { getSiteUrl } from "@/lib/site";
+import { getSiteUrl, serializeJsonLd } from "@/lib/site";
 
-export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -104,7 +103,7 @@ export default async function ProjectOverviewPage({ params, searchParams }: Page
       {courseJsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(courseJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(courseJsonLd) }}
         />
       )}
       <ProjectOverviewView

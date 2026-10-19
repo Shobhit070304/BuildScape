@@ -11,11 +11,9 @@ import { mapApiProject } from "@/lib/projects";
 import type { Project } from "@/lib/projects";
 
 const DIFFICULTY_CLASSES: Record<string, string> = {
-  Entry: "text-sky-400 bg-sky-950/30 border-sky-900/50",
-  Basic: "text-emerald-400 bg-emerald-950/30 border-emerald-900/50",
+  Beginner: "text-sky-400 bg-sky-950/30 border-sky-900/50",
   Intermediate: "text-amber-400 bg-amber-950/30 border-amber-800/50",
-  Advanced: "text-rose-400 bg-rose-950/30 border-rose-900/50",
-  Expert: "text-purple-400 bg-purple-950/30 border-purple-900/50",
+  Expert: "text-rose-400 bg-rose-950/30 border-rose-900/50",
 };
 
 interface ProjectWorkspaceViewProps {
