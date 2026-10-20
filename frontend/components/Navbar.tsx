@@ -70,7 +70,6 @@ export function Navbar() {
             Projects
           </Link>
 
-          {user && <Link href="/profile" className="rounded px-2 py-1 text-xs text-[#a0978c] transition-colors hover:text-[#e4ddd3] hover:bg-[#161411]">Workspace</Link>}
           <button onClick={toggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`} title="Toggle theme" className="rounded-full border border-[#2a2620] bg-[#14120f] p-1.5 text-[#d4cbbd] transition-colors hover:border-amber-700/60">
             {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
           </button>

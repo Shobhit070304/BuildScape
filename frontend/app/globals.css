@@ -221,6 +221,56 @@ code, pre {
 .hero-console { backdrop-filter: blur(18px); }
 .project-preview:hover { border-color: var(--color-border-hover); transform: translateY(-2px); }
 
+.landing-marquee {
+  position: relative;
+  width: 90%;
+  max-width: 80rem;
+  margin: 3.5rem auto 0;
+  overflow: hidden;
+  border-block: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface-card) 62%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
+}
+.landing-marquee::before,
+.landing-marquee::after {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  bottom: 0;
+  width: clamp(2rem, 8vw, 7rem);
+  content: "";
+  pointer-events: none;
+}
+.landing-marquee::before { left: 0; background: linear-gradient(90deg, var(--color-bg), transparent); }
+.landing-marquee::after { right: 0; background: linear-gradient(270deg, var(--color-bg), transparent); }
+.landing-marquee-track { display: flex; width: max-content; animation: landing-marquee-scroll 52s linear infinite; animation-play-state: running; will-change: transform; }
+.landing-marquee:hover .landing-marquee-track { animation-play-state: paused; }
+.landing-marquee-group { display: flex; flex-shrink: 0; align-items: center; gap: clamp(2rem, 5vw, 4.5rem); padding: 1rem clamp(1.5rem, 3vw, 2.5rem); }
+.landing-marquee-item { --brand-color: var(--color-accent); display: inline-flex; align-items: center; gap: 0.75rem; color: var(--color-text-muted); font-family: var(--font-mono); font-size: 0.7rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; transition: color 220ms ease; }
+.landing-marquee-item:hover { color: var(--color-text); }
+.landing-marquee-icon { display: grid; width: 1.5rem; height: 1.5rem; place-items: center; color: var(--color-text-faint); transition: color 240ms ease, transform 300ms cubic-bezier(.2,.8,.2,1), filter 300ms ease; }
+.landing-marquee-mark { width: 1.35rem; height: 1.35rem; }
+.landing-marquee-mark-ts { --mark-foreground: #fff; }
+.landing-marquee-item:hover .landing-marquee-icon { color: var(--brand-color); transform: translateY(-2px) scale(1.12); filter: drop-shadow(0 0 9px color-mix(in srgb, var(--brand-color) 38%, transparent)); }
+@keyframes landing-marquee-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (max-width: 640px) { .landing-marquee { margin-top: 2.75rem; } }
+@media (prefers-reduced-motion: reduce) { .landing-marquee-icon, .landing-marquee-item { transition: none; } }
+
+.ai-prose { font-size: 0.8125rem; line-height: 1.7; }
+.ai-prose > :first-child { margin-top: 0; }
+.ai-prose > :last-child { margin-bottom: 0; }
+.ai-prose h1, .ai-prose h2, .ai-prose h3 { margin-top: 1rem; margin-bottom: 0.45rem; font-size: 0.95rem; }
+.ai-prose p, .ai-prose li { color: var(--color-text); margin-bottom: 0.55rem; }
+.ai-prose ul, .ai-prose ol { margin: 0.4rem 0 0.7rem 1.2rem; }
+.ai-prose pre { margin: 0; padding: 2.5rem 0.8rem 0.8rem; font-size: 0.7rem; line-height: 1.6; }
+.ai-prose code { font-size: 0.86em; }
+.ai-code-block { position: relative; margin: 0.8rem 0; }
+.ai-code-copy { position: absolute; z-index: 1; top: 0.55rem; right: 0.55rem; display: inline-flex; align-items: center; gap: 0.35rem; border: 1px solid var(--color-border); border-radius: 0.4rem; background: var(--color-surface); padding: 0.3rem 0.5rem; color: var(--color-text-muted); font-size: 0.65rem; transition: color 150ms ease, border-color 150ms ease; }
+.ai-code-copy:hover { border-color: var(--color-border-hover); color: var(--color-text); }
+.ai-typewriter-caret { display: inline-block; width: 0.42rem; height: 1rem; margin-left: 0.12rem; vertical-align: -0.15rem; background: var(--color-accent); animation: ai-caret-blink 0.85s steps(2, start) infinite; }
+@keyframes ai-caret-blink { to { visibility: hidden; } }
+
 /* ─── Scrollbar ──────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: var(--color-bg); }

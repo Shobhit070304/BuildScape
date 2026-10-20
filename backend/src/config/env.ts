@@ -14,7 +14,9 @@ export const env = {
   CORS_ORIGIN: process.env.CORS_ORIGIN ?? "http://localhost:3000",
   MONGODB_URI: process.env.MONGODB_URI ?? "",
   JWT_SECRET: configuredJwtSecret ?? "buildscape-session-secret-change-in-production",
-  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? ""
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? "",
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY?.trim() ?? "",
+  GEMINI_MODEL: process.env.GEMINI_MODEL?.trim() ?? ""
 };
 
 if (env.NODE_ENV === "production" && !env.GOOGLE_CLIENT_ID) {

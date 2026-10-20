@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { GoogleLogin } from "@react-oauth/google";
@@ -23,23 +23,27 @@ export default function ProfilePage() {
   const { user, isLoading: authLoading, login, logout } = useAuth();
   const [enrollments, setEnrollments] = useState<EnrolledProjectItem[]>([]);
   const [loadingEnrollments, setLoadingEnrollments] = useState(false);
+  const [enrollmentError, setEnrollmentError] = useState<string | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadEnrollments = useCallback(async () => {
     if (!user) return;
     setLoadingEnrollments(true);
-    api
-      .getEnrolledProjects()
-      .then((data) => {
-        setEnrollments(data.enrollments ?? []);
-      })
-      .catch((err) => {
-        console.error("Failed to load enrolled projects:", err);
-      })
-      .finally(() => {
-        setLoadingEnrollments(false);
-      });
+    setEnrollmentError(null);
+    try {
+      const data = await api.getEnrolledProjects();
+      setEnrollments(data.enrollments ?? []);
+    } catch (err) {
+      console.error("Failed to load enrolled projects:", err);
+      setEnrollmentError(err instanceof Error ? err.message : "Could not load your projects. Please try again.");
+    } finally {
+      setLoadingEnrollments(false);
+    }
   }, [user]);
+
+  useEffect(() => {
+    void loadEnrollments();
+  }, [loadEnrollments]);
 
 
   return (
@@ -149,6 +153,11 @@ export default function ProfilePage() {
                   <div className="flex h-36 items-center justify-center">
                     <Loader2 className="h-5 w-5 animate-spin text-accent" />
                   </div>
+                ) : enrollmentError ? (
+                  <div className="rounded-xl border border-rose-900/40 bg-rose-950/20 p-6 text-center">
+                    <p role="alert" className="text-sm text-rose-300">{enrollmentError}</p>
+                    <button onClick={() => void loadEnrollments()} className="mt-3 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-text transition hover:bg-surface-raised">Try again</button>
+                  </div>
                 ) : enrollments.length === 0 ? (
                   /* Empty state */
                   <div className="rounded-xl border border-dashed border-[#26221c] bg-[#11100e] p-8 text-center">
@@ -235,6 +244,9 @@ export default function ProfilePage() {
                                   {percent}%
                                 </span>
                               </div>
+                              {!isComplete && total > 0 && item.currentPhaseTitle && (
+                                <p className="mb-2 truncate text-[10px] text-text-faint">Next up: <span className="text-text-muted">{item.currentPhaseTitle}</span></p>
+                              )}
                               <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#221f1a]">
                                 <div
                                   className={`h-full rounded-full transition-all duration-300 ${
@@ -251,7 +263,7 @@ export default function ProfilePage() {
                           {/* Action Buttons matching Image 5 */}
                           <div className="flex items-center gap-2 pt-1">
                             <Link
-                              href={`/projects/${p.slug}/workspace`}
+                              href={`/projects/${p.slug}/workspace${item.currentPhaseId ? `?phase=${encodeURIComponent(item.currentPhaseId)}` : ""}`}
                               className="flex flex-1 items-center justify-center gap-1 rounded border border-amber-600/50 bg-[#d97706] hover:bg-[#b45309] px-3 py-1.5 text-xs font-semibold text-stone-950 transition-all shadow-xs"
                             >
                               <span>{isComplete ? "Review Workspace" : "Continue Project"}</span>

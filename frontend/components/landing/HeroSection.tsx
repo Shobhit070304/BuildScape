@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Check, Code2, Layers, ShieldCheck, Sparkles } from "lucide-react";
+import { TechMarquee } from "@/components/landing/TechMarquee";
 
 export function HeroSection() {
   return (
@@ -45,6 +46,7 @@ export function HeroSection() {
           </div>
         </div>
       </div>
+      <TechMarquee />
     </section>
   );
 }

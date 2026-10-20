@@ -53,6 +53,15 @@ export const projectsService = {
     await progressRepository.setCurrentPhase(userId, project._id, Math.min(enrollment.currentPhaseIndex, phaseIndex));
   },
 
+  async setCurrentPhase(userId: string, slug: string, phaseId: string) {
+    const project = await this.getBySlug(slug);
+    const enrollment = await progressRepository.findEnrollment(userId, project._id);
+    if (!enrollment) throw new HttpError(403, "Enroll in this project before recording progress");
+    const phaseIndex = project.phases.findIndex((phase) => phase.id === phaseId);
+    if (phaseIndex < 0) throw new HttpError(404, "Phase not found");
+    await progressRepository.setCurrentPhase(userId, project._id, phaseIndex);
+  },
+
   async getProgress(userId: string, slug: string) {
     const project = await projectRepository.findPhasesBySlug(slug);
     if (!project) throw new HttpError(404, "Project not found");
@@ -78,7 +87,7 @@ export const projectsService = {
     return Promise.all(enrollments.map(async (enrollment) => {
       const project = enrollment.projectId as unknown as {
         _id: Types.ObjectId; slug: string; title: string; tagline: string; track: string;
-        difficulty: "Beginner" | "Intermediate" | "Expert"; estimatedHours: number; techStack: string[]; phases?: { id: string }[];
+        difficulty: "Beginner" | "Intermediate" | "Expert"; estimatedHours: number; techStack: string[]; phases?: { id: string; title: string }[];
       } | null;
       if (!project || !canonicalSlugs.has(project.slug)) return null;
       const validPhaseIds = new Set((project.phases ?? []).map((phase) => phase.id));
@@ -93,6 +102,8 @@ export const projectsService = {
         completedCount: completed.length,
         totalPhases: project.phases?.length ?? 0,
         completedPhases: completed.map(({ phaseId }) => phaseId),
+        currentPhaseId: project.phases?.[Math.min(project.phases.length - 1, Math.max(0, enrollment.currentPhaseIndex ?? 0))]?.id ?? null,
+        currentPhaseTitle: project.phases?.[Math.min(project.phases.length - 1, Math.max(0, enrollment.currentPhaseIndex ?? 0))]?.title ?? null,
         project: {
           _id: project._id, slug: project.slug, title: project.title, tagline: project.tagline,
           track: project.track, difficulty: project.difficulty,

@@ -25,6 +25,8 @@ MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret_min_32_chars
 CORS_ORIGIN=http://localhost:3000
 GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
+GEMINI_API_KEY=your_server_side_gemini_key
+GEMINI_MODEL=your_gemini_model_id
 ```
 
 **`frontend/.env`**
@@ -32,6 +34,8 @@ GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
 NEXT_PUBLIC_API_URL=http://localhost:4000
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
 ```
+
+The project AI guide uses Google’s official Gemini SDK. Set `GEMINI_API_KEY` and `GEMINI_MODEL` on the backend. Keep the API key server-side; do not add it to a `NEXT_PUBLIC_` variable.
 
 ### 2. Install & Run
 
@@ -73,6 +77,8 @@ npm run seed
    - `JWT_SECRET`: Random 32+ character string
    - `CORS_ORIGIN`: Your deployed frontend URL (e.g. `https://your-app.vercel.app`)
    - `GOOGLE_CLIENT_ID`: Google OAuth Client ID
+   - `GEMINI_API_KEY`: Server-side Gemini API key for project AI help
+   - `GEMINI_MODEL`: Gemini model identifier
 
 ### Deploy Frontend (Vercel)
 
@@ -96,5 +102,6 @@ npm run seed
 | `GET` | `/api/projects/my/enrolled` | List current user's enrolled projects | Required |
 | `POST` | `/api/projects/:slug/enroll` | Enroll in a project | Required |
 | `GET` | `/api/projects/:slug/progress` | Get phase completion status | Required |
+| `POST` | `/api/projects/:slug/ai-help` | Project and phase scoped AI help (12 requests per 10 minutes) | Enrolled user |
 | `POST` | `/api/projects/:slug/phases/:id/complete` | Mark a phase completed (requires enrollment) | Required |
 `JWT_SECRET` must be a non-placeholder secret with at least 32 characters in production. The API requires `MONGODB_URI` and `GOOGLE_CLIENT_ID` in production.

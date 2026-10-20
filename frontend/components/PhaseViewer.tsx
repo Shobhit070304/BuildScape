@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -12,9 +12,12 @@ import {
   ChevronRight,
   RotateCcw,
   BookOpen,
+  Sparkles,
 } from "lucide-react";
 import type { Project, Phase } from "@/lib/projects";
 import { useProgress } from "@/hooks/useProgress";
+import { api } from "@/lib/api";
+import { AIHelpDrawer } from "@/components/AIHelpDrawer";
 
 const mdComponents: Components = {
   a({ href, children, ...props }) {
@@ -93,6 +96,8 @@ interface PhaseViewerProps {
 }
 
 export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
+  const [isAIHelpOpen, setIsAIHelpOpen] = useState(false);
+  const closeAIHelp = useCallback(() => setIsAIHelpOpen(false), []);
   const getInitialIdx = () => {
     if (!initialPhaseId) return 0;
     const idx = project.phases.findIndex(
@@ -102,22 +107,36 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
   };
 
   const [activeIndex, setActiveIndex] = useState(getInitialIdx);
+  const [phaseSelectionReady, setPhaseSelectionReady] = useState(false);
   const {
     completed,
     hydrated,
+    currentPhaseIndex,
     togglePhase,
     isCompleted,
     clearProgress,
   } = useProgress(project.slug);
 
   useEffect(() => {
-    if (initialPhaseId) {
-      const idx = project.phases.findIndex(
-        (p) => p.id === initialPhaseId || String(p.orderIndex) === initialPhaseId
-      );
-      if (idx !== -1) setActiveIndex(idx);
-    }
-  }, [initialPhaseId, project.phases]);
+    if (!hydrated) return;
+    const requestedIndex = initialPhaseId
+      ? project.phases.findIndex((p) => p.id === initialPhaseId || String(p.orderIndex) === initialPhaseId)
+      : -1;
+    const nextIndex = requestedIndex >= 0 ? requestedIndex : currentPhaseIndex;
+    setActiveIndex(Math.max(0, Math.min(project.phases.length - 1, nextIndex)));
+    setPhaseSelectionReady(true);
+  }, [hydrated, currentPhaseIndex, initialPhaseId, project.phases]);
+
+  useEffect(() => {
+    if (!phaseSelectionReady || !hydrated || !project.phases[activeIndex]) return;
+    const phaseId = project.phases[activeIndex].id;
+    const timer = window.setTimeout(() => {
+      api.setCurrentPhase(project.slug, phaseId).catch((err) => {
+        console.error("Failed to save current phase:", err);
+      });
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [activeIndex, hydrated, phaseSelectionReady, project.phases, project.slug]);
 
   const activePhase = project.phases[activeIndex];
   const totalPhases = project.phases.length;
@@ -206,6 +225,15 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsAIHelpOpen(true)}
+              className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-text-muted transition hover:border-amber-700/50 hover:bg-amber-950/20 hover:text-accent"
+              aria-label={`Get AI help for ${activePhase.title}`}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">AI help</span>
+            </button>
             {hydrated && (
               <button
                 onClick={() => togglePhase(activePhase.id)}
@@ -295,7 +323,14 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
           </button>
         </div>
       </div>
-
+      <AIHelpDrawer
+        key={activePhase.id}
+        project={project}
+        phase={activePhase}
+        phaseIndex={activeIndex}
+        open={isAIHelpOpen}
+        onClose={closeAIHelp}
+      />
     </div>
   );
 }

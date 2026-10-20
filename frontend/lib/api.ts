@@ -71,6 +71,57 @@ export const api = {
       { method: "DELETE" }
     ),
 
+  setCurrentPhase: (slug: string, phaseId: string) =>
+    request<{ success: boolean }>(
+      `/api/projects/${encodeURIComponent(slug)}/phases/${encodeURIComponent(phaseId)}/current`,
+      { method: "PUT" }
+    ),
+
+  streamProjectAIHelp: async (
+    slug: string,
+    phaseId: string,
+    messages: AIChatMessage[],
+    onChunk: (text: string) => void,
+  ) => {
+    const response = await fetch(`${getApiUrl()}/api/projects/${encodeURIComponent(slug)}/ai-help`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+      body: JSON.stringify({ phaseId, messages }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ message: response.statusText }));
+      throw new Error(err.message ?? err.error ?? "Request failed");
+    }
+    if (!response.body) throw new Error("Streaming is not available in this browser.");
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        buffer += decoder.decode(value, { stream: !done });
+        let boundary = buffer.indexOf("\n\n");
+        while (boundary >= 0) {
+          const event = buffer.slice(0, boundary).trim();
+          buffer = buffer.slice(boundary + 2);
+          const data = event.split("\n").find((line) => line.startsWith("data:"))?.slice(5).trim();
+          if (data) {
+            const payload = JSON.parse(data) as { text?: string; error?: string };
+            if (payload.error) throw new Error(payload.error);
+            if (payload.text) onChunk(payload.text);
+          }
+          boundary = buffer.indexOf("\n\n");
+        }
+        if (done) break;
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  },
+
   getEnrolledProjects: () =>
     request<{ enrollments: EnrolledProjectItem[] }>("/api/projects/my/enrolled"),
 
@@ -78,6 +129,11 @@ export const api = {
 
 // Shared types
 export type ProjectDifficulty = "Beginner" | "Intermediate" | "Expert";
+
+export interface AIChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
 
 export interface AuthUser {
   id: string;
@@ -90,6 +146,8 @@ export interface EnrolledProjectItem {
   enrollmentId: string;
   enrolledAt: string;
   currentPhaseIndex: number;
+  currentPhaseId: string | null;
+  currentPhaseTitle: string | null;
   completedCount: number;
   totalPhases: number;
   completedPhases: string[];

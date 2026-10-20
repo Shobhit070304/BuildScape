@@ -12,9 +12,9 @@ interface CurriculumPhasesListProps {
 export function CurriculumPhasesList({ project }: CurriculumPhasesListProps) {
   const router = useRouter();
   // Reuse the same useProgress instance — no extra API call.
-  const { enrolled } = useProgress(project.slug);
+  const { enrolled, hydrated, isCompleted } = useProgress(project.slug);
 
-  const handleClick = (phaseId: string, phaseIndex: number) => {
+  const handleClick = (phaseId: string) => {
     if (!enrolled) {
       // Highlight the enrollment box instead of navigating.
       const box = document.getElementById("enrollment-box");
@@ -52,25 +52,28 @@ export function CurriculumPhasesList({ project }: CurriculumPhasesListProps) {
           {project.phases.map((phase, idx) => {
             const stepNum = String(idx + 1).padStart(2, "0");
             const description = getPhaseDescription(phase);
+            const completed = enrolled && hydrated && isCompleted(phase.id);
 
             return (
               <div
                 key={phase.id}
-                onClick={() => handleClick(phase.id, idx)}
+                onClick={() => handleClick(phase.id)}
                 className="group relative cursor-pointer select-none"
+                aria-label={`${phase.title}${completed ? ", completed" : ""}`}
               >
                 {/* Node */}
-                <div className="absolute -left-6 sm:-left-6.75 top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#3a352c] bg-[#09090b] transition-all duration-200 group-hover:border-[#c9a96e] group-hover:scale-110">
-                  <div className="h-1 w-1 rounded-full bg-[#5a5246] group-hover:bg-[#c9a96e] transition-colors" />
+                <div className={`absolute -left-6 sm:-left-6.75 top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full border transition-all duration-200 group-hover:scale-110 ${completed ? "border-emerald-500 bg-emerald-500 text-[#07130b]" : "border-[#3a352c] bg-[#09090b] group-hover:border-[#c9a96e]"}`}>
+                  {completed ? <span className="text-[9px] font-bold">✓</span> : <div className="h-1 w-1 rounded-full bg-[#5a5246] group-hover:bg-[#c9a96e] transition-colors" />}
                 </div>
 
                 <div className="flex items-baseline gap-2.5">
-                  <span className="font-mono text-xs font-medium text-[#7a7168] shrink-0">
+                  <span className="shrink-0 font-mono text-xs font-medium text-[#7a7168]">
                     {stepNum}
                   </span>
-                  <h3 className="text-xs sm:text-[0.8125rem] font-semibold text-[#e4ddd3] transition-colors group-hover:text-[#ecd39e] leading-snug">
+                  <h3 className={`min-w-0 flex-1 text-xs sm:text-[0.8125rem] font-semibold transition-colors group-hover:text-[#ecd39e] leading-snug ${completed ? "text-emerald-300" : "text-[#e4ddd3]"}`}>
                     {phase.title}
                   </h3>
+                  {completed && <span className="ml-auto shrink-0 font-mono text-[10px] font-bold tracking-wide text-emerald-500">DONE</span>}
                 </div>
 
                 {description && (
