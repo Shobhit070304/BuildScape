@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { ProjectEnrollmentBox } from "@/components/ProjectEnrollmentBox";
+import { ProjectBookmarkButton } from "@/components/ProjectBookmarkButton";
 import { CurriculumPhasesList } from "@/components/CurriculumPhasesList";
 import { TechBadge } from "@/components/TechBadge";
 import { api } from "@/lib/api";
@@ -133,17 +134,20 @@ export function ProjectOverviewView({
 
           {/* Project Header Banner */}
           <div className="mb-6 rounded-xl border border-zinc-800 bg-[#0e0e0e] p-4 sm:p-6 shadow-xl">
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              <TechBadge name={project.track} size="xs" />
-              <span
-                className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[0.68rem] font-medium ${diffClass}`}
-              >
-                {project.difficulty}
-              </span>
-              <span className="flex items-center gap-1 text-[0.72rem] text-zinc-400">
-                <Clock className="h-3 w-3 text-zinc-500" />
-                {project.estimatedHours} hours estimated
-              </span>
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <TechBadge name={project.track} size="xs" />
+                <span
+                  className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[0.68rem] font-medium ${diffClass}`}
+                >
+                  {project.difficulty}
+                </span>
+                <span className="flex items-center gap-1 text-[0.72rem] text-zinc-400">
+                  <Clock className="h-3 w-3 text-zinc-500" />
+                  {project.estimatedHours} hours estimated
+                </span>
+              </div>
+              <ProjectBookmarkButton slug={project.slug} />
             </div>
 
             <h1 className="mb-2 font-serif text-2xl sm:text-3xl font-bold tracking-tight text-text">

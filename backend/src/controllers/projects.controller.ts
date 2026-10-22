@@ -56,15 +56,13 @@ export const projectAIHelp = asyncHandler(async (req, res) => {
 
 // Keep HTTP parsing and response formatting in controllers.
 export const listProjects = asyncHandler(async (_req, res) => {
-  res.set("Cache-Control", "public, max-age=0, s-maxage=300, stale-while-revalidate=600");
   res.json({ projects: await projectsService.list() });
 });
 
 export const getProject = asyncHandler(async (req, res) => {
-  const project = await projectsService.getBySlug(String(req.params.slug));
-  const enrolledUsersCount = await projectsService.countEnrolled(project._id.toString());
-  res.set("Cache-Control", "public, max-age=0, s-maxage=300, stale-while-revalidate=600");
-  res.json({ project: { ...project.toObject(), enrolledUsersCount } });
+  const project = await projectsService.getPublicBySlug(String(req.params.slug));
+  const enrolledUsersCount = await projectsService.countEnrolled(String(project._id));
+  res.json({ project: { ...project, enrolledUsersCount } });
 });
 
 export const enrollProject = asyncHandler(async (req, res) => {
@@ -95,4 +93,33 @@ export const getProgress = asyncHandler(async (req, res) => {
 export const getEnrolledProjects = asyncHandler(async (req, res) => {
   res.set("Cache-Control", "private, no-store");
   res.json({ enrollments: await projectsService.getEnrolled(req.user!.userId) });
+});
+
+export const getBookmarkedProjects = asyncHandler(async (req, res) => {
+  res.set("Cache-Control", "private, no-store");
+  res.json({ projects: await projectsService.getBookmarked(req.user!.userId) });
+});
+
+export const addProjectBookmark = asyncHandler(async (req, res) => {
+  await projectsService.addBookmark(req.user!.userId, String(req.params.slug));
+  res.json({ success: true });
+});
+
+export const removeProjectBookmark = asyncHandler(async (req, res) => {
+  await projectsService.removeBookmark(req.user!.userId, String(req.params.slug));
+  res.json({ success: true });
+});
+
+export const getProjectNotes = asyncHandler(async (req, res) => {
+  res.set("Cache-Control", "private, no-store");
+  res.json({ notes: await projectsService.getProjectNotes(req.user!.userId, String(req.params.slug)) });
+});
+
+export const saveProjectNotes = asyncHandler(async (req, res) => {
+  const { notes } = req.body ?? {};
+  if (typeof notes !== "string" || notes.length > 10000) {
+    throw new HttpError(400, "Notes must be text with a maximum of 10,000 characters");
+  }
+  await projectsService.saveProjectNotes(req.user!.userId, String(req.params.slug), notes);
+  res.json({ success: true });
 });

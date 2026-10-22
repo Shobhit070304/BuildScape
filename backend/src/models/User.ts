@@ -5,6 +5,7 @@ export interface IUser {
   email: string;
   name: string;
   avatar?: string;
+  bookmarkedProjectSlugs: string[];
   createdAt?: Date;
 }
 
@@ -14,6 +15,7 @@ const UserSchema = new Schema<IUser>(
     email: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     avatar: { type: String },
+    bookmarkedProjectSlugs: { type: [String], default: [] },
   },
   { timestamps: true }
 );

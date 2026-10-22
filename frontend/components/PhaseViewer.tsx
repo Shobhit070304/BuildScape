@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import type { Components } from "react-markdown";
+import type { ComponentProps, ReactNode } from "react";
 import {
   CheckCircle2,
   Circle,
@@ -12,14 +13,49 @@ import {
   ChevronRight,
   RotateCcw,
   BookOpen,
+  NotebookPen,
   Sparkles,
+  Copy,
+  Check,
 } from "lucide-react";
 import type { Project, Phase } from "@/lib/projects";
 import { useProgress } from "@/hooks/useProgress";
 import { api } from "@/lib/api";
 import { AIHelpDrawer } from "@/components/AIHelpDrawer";
+import { ProjectNotesPanel } from "@/components/ProjectNotesPanel";
+
+function textFromMarkdownNode(node: ReactNode): string {
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(textFromMarkdownNode).join("");
+  if (node && typeof node === "object" && "props" in node) {
+    return textFromMarkdownNode((node as { props?: { children?: ReactNode } }).props?.children);
+  }
+  return "";
+}
+
+function CopyableCodeBlock({ children, ...props }: ComponentProps<"pre">) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(textFromMarkdownNode(children));
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
+  };
+  return (
+    <div className="group relative">
+      <button type="button" onClick={() => void copy()} aria-label={copied ? "Code copied" : "Copy code"} className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-md border border-border bg-surface-card/90 px-2 py-1 text-[11px] text-text-muted opacity-100 transition hover:text-text sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100">
+        {copied ? <Check className="h-3 w-3 text-success" /> : <Copy className="h-3 w-3" />}{copied ? "Copied" : "Copy"}
+      </button>
+      <pre {...props}>{children}</pre>
+    </div>
+  );
+}
 
 const mdComponents: Components = {
+  pre: CopyableCodeBlock,
   a({ href, children, ...props }) {
     const isExternal = href?.startsWith("http");
     return (
@@ -97,6 +133,7 @@ interface PhaseViewerProps {
 
 export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
   const [isAIHelpOpen, setIsAIHelpOpen] = useState(false);
+  const [isNotesOpen, setIsNotesOpen] = useState(false);
   const closeAIHelp = useCallback(() => setIsAIHelpOpen(false), []);
   const getInitialIdx = () => {
     if (!initialPhaseId) return 0;
@@ -227,6 +264,15 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onClick={() => setIsNotesOpen((open) => !open)}
+              aria-pressed={isNotesOpen}
+              className={`flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition ${isNotesOpen ? "border-amber-700/50 bg-amber-950/20 text-accent" : "border-border text-text-muted hover:border-border-hover hover:text-text"}`}
+            >
+              <NotebookPen className="h-3.5 w-3.5" />
+              <span>Notes</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setIsAIHelpOpen(true)}
               className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-text-muted transition hover:border-amber-700/50 hover:bg-amber-950/20 hover:text-accent"
               aria-label={`Get AI help for ${activePhase.title}`}
@@ -260,10 +306,9 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
         </div>
 
         {/* Markdown content */}
-        <div className="flex-1 overflow-y-auto px-8 py-10">
+        <div className="flex-1 overflow-y-auto px-5 py-6 sm:px-8 sm:py-10">
           {/* Centered content wrapper */}
-          <div className="mx-auto w-full max-w-6xl">
-
+          <div className={isNotesOpen ? "hidden" : "mx-auto w-full max-w-6xl"}>
             <div className="prose">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
@@ -273,6 +318,15 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
                 {activePhase.content}
               </ReactMarkdown>
             </div>
+          </div>
+          <div className={isNotesOpen ? "block" : "hidden"}>
+            <ProjectNotesPanel
+              key={project.slug}
+              slug={project.slug}
+              projectTitle={project.title}
+              open={isNotesOpen}
+              onSaved={() => setIsNotesOpen(false)}
+            />
           </div>
         </div>
 

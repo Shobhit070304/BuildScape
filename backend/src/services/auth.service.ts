@@ -41,5 +41,10 @@ export async function loginWithGoogle(credential: string) {
 export async function getUserProfile(userId: string) {
   const user = await userRepository.findById(userId);
   if (!user) throw new HttpError(404, "User not found");
-  return user;
+  return {
+    id: user._id.toString(),
+    email: user.email,
+    name: user.name,
+    avatar: user.avatar,
+  };
 }

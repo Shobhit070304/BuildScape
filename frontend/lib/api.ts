@@ -46,7 +46,7 @@ export const api = {
 
   // Projects
   getProjects: () =>
-    request<{ projects: ApiProject[] }>("/api/projects", { cache: "force-cache" }),
+    request<{ projects: ApiProject[] }>("/api/projects"),
 
   getProject: (slug: string) =>
     request<{ project: ApiProject }>(`/api/projects/${encodeURIComponent(slug)}`),
@@ -124,6 +124,24 @@ export const api = {
 
   getEnrolledProjects: () =>
     request<{ enrollments: EnrolledProjectItem[] }>("/api/projects/my/enrolled"),
+
+  getBookmarkedProjects: () =>
+    request<{ projects: ApiProject[] }>("/api/projects/my/bookmarks"),
+
+  addProjectBookmark: (slug: string) =>
+    request<{ success: boolean }>(`/api/projects/${encodeURIComponent(slug)}/bookmark`, { method: "PUT" }),
+
+  removeProjectBookmark: (slug: string) =>
+    request<{ success: boolean }>(`/api/projects/${encodeURIComponent(slug)}/bookmark`, { method: "DELETE" }),
+
+  getProjectNotes: (slug: string) =>
+    request<{ notes: string }>(`/api/projects/${encodeURIComponent(slug)}/notes`),
+
+  saveProjectNotes: (slug: string, notes: string) =>
+    request<{ success: boolean }>(`/api/projects/${encodeURIComponent(slug)}/notes`, {
+      method: "PUT",
+      body: JSON.stringify({ notes }),
+    }),
 
 };
 

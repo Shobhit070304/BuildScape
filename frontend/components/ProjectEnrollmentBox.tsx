@@ -25,8 +25,8 @@ interface ProjectEnrollmentBoxProps {
 
 export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
   const { user, login } = useAuth();
-  // enrolled, currentPhaseIndex, and completed all come from a single shared API call.
-  const { enrolled: isEnrolled, completed, hydrated, togglePhase: _t } = useProgress(project.slug);
+  // Enrollment and saved phase progress hydrate from the same progress request.
+  const { enrolled: isEnrolled, currentPhaseIndex, completed, hydrated } = useProgress(project.slug);
 
   const [localEnrolled, setLocalEnrolled] = useState(false);
   const [loadingEnrollment, setLoadingEnrollment] = useState(false);
@@ -56,7 +56,10 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
   const completedCount = completed.length;
   const progressPercent =
     totalPhases > 0 ? Math.round((completedCount / totalPhases) * 100) : 0;
-  const hasStarted = completedCount > 0;
+  const resumePhaseIndex = Math.max(0, Math.min(totalPhases - 1, currentPhaseIndex));
+  const resumePhaseId = project.phases[resumePhaseIndex]?.id;
+  const hasStarted = completedCount > 0 || resumePhaseIndex > 0;
+  const workspaceHref = `/projects/${project.slug}/workspace${resumePhaseId ? `?phase=${encodeURIComponent(resumePhaseId)}` : ""}`;
 
   // Show a loading skeleton until useProgress has hydrated.
   if (!hydrated) {
@@ -163,7 +166,7 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
         {enrollmentError && <p role="alert" className="rounded-md border border-rose-900/50 bg-rose-950/30 px-3 py-2 text-xs text-rose-300">{enrollmentError}</p>}
         {effectivelyEnrolled ? (
           <Link
-            href={`/projects/${project.slug}/workspace`}
+            href={workspaceHref}
             className="group flex w-full items-center justify-center gap-2 rounded-lg border border-amber-600/50 bg-linear-to-r from-amber-700 via-amber-600 to-amber-700 px-4 py-2.5 text-sm font-semibold text-stone-950 shadow-md transition-all hover:opacity-95 hover:shadow-amber-900/20 active:scale-[0.99]"
           >
             <PlayCircle className="h-4 w-4 transition-transform group-hover:scale-110" />

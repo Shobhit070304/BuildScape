@@ -9,6 +9,11 @@ import {
   getProgress,
   getEnrolledProjects,
   projectAIHelp,
+  getBookmarkedProjects,
+  addProjectBookmark,
+  removeProjectBookmark,
+  getProjectNotes,
+  saveProjectNotes,
 } from "../controllers/projects.controller";
 import { authenticate } from "../middleware/authenticate";
 import { rateLimit } from "express-rate-limit";
@@ -24,6 +29,7 @@ const projectAIHelpLimiter = rateLimit({
 
 // User enrolled projects (must be before /:slug)
 router.get("/my/enrolled", authenticate, getEnrolledProjects);
+router.get("/my/bookmarks", authenticate, getBookmarkedProjects);
 
 // Public project browsing
 router.get("/", listProjects);
@@ -34,6 +40,10 @@ router.post("/:slug/enroll", authenticate, enrollProject);
 router.post("/:slug/phases/:phaseId/complete", authenticate, completePhase);
 router.delete("/:slug/phases/:phaseId/complete", authenticate, uncompletePhase);
 router.put("/:slug/phases/:phaseId/current", authenticate, setCurrentPhase);
+router.put("/:slug/bookmark", authenticate, addProjectBookmark);
+router.delete("/:slug/bookmark", authenticate, removeProjectBookmark);
+router.get("/:slug/notes", authenticate, getProjectNotes);
+router.put("/:slug/notes", authenticate, saveProjectNotes);
 router.post("/:slug/ai-help", authenticate, projectAIHelpLimiter, projectAIHelp);
 router.get("/:slug/progress", authenticate, getProgress);
 

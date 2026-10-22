@@ -16,8 +16,21 @@ export const progressRepository = {
   findEnrollment: (userId: string, projectId: Types.ObjectId) =>
     UserProjectEnrollment.findOne({ userId: asObjectId(userId), projectId }),
 
+  getProjectNotes: (userId: string, projectId: Types.ObjectId) =>
+    UserProjectEnrollment.findOne({ userId: asObjectId(userId), projectId }).select("notes"),
+
+  setProjectNotes: (userId: string, projectId: Types.ObjectId, notes: string) =>
+    UserProjectEnrollment.findOneAndUpdate(
+      { userId: asObjectId(userId), projectId },
+      { $set: { notes } },
+      { new: true, runValidators: true }
+    ).select("notes"),
+
   listEnrollments: (userId: string) =>
-    UserProjectEnrollment.find({ userId: asObjectId(userId) }).populate("projectId"),
+    UserProjectEnrollment.find({ userId: asObjectId(userId) }).populate({
+      path: "projectId",
+      select: "slug title tagline track difficulty estimatedHours techStack",
+    }),
 
   countEnrollments: (projectId: Types.ObjectId | string) =>
     UserProjectEnrollment.countDocuments({ projectId: asObjectId(projectId) }),

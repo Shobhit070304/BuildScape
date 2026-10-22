@@ -13,37 +13,86 @@ import {
   FolderOpen,
   Clock,
   CheckCircle2,
+  Bookmark,
+  Trash2,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
 import { api, EnrolledProjectItem } from "@/lib/api";
-import { DIFFICULTY_COLORS, getTrackColor } from "@/lib/projects";
+import { DIFFICULTY_COLORS, getTrackColor, mapApiProject } from "@/lib/projects";
+import type { Project } from "@/lib/projects";
 
 export default function ProfilePage() {
   const { user, isLoading: authLoading, login, logout } = useAuth();
   const [enrollments, setEnrollments] = useState<EnrolledProjectItem[]>([]);
   const [loadingEnrollments, setLoadingEnrollments] = useState(false);
   const [enrollmentError, setEnrollmentError] = useState<string | null>(null);
+  const [bookmarkData, setBookmarkData] = useState<{ userId: string; projects: Project[] } | null>(null);
+  const [loadingBookmarks, setLoadingBookmarks] = useState(false);
+  const [bookmarkError, setBookmarkError] = useState<string | null>(null);
+  const [removingBookmark, setRemovingBookmark] = useState<string | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
 
-  const loadEnrollments = useCallback(async () => {
+  const loadEnrollments = useCallback(() => {
     if (!user) return;
-    setLoadingEnrollments(true);
-    setEnrollmentError(null);
-    try {
-      const data = await api.getEnrolledProjects();
-      setEnrollments(data.enrollments ?? []);
-    } catch (err) {
-      console.error("Failed to load enrolled projects:", err);
-      setEnrollmentError(err instanceof Error ? err.message : "Could not load your projects. Please try again.");
-    } finally {
-      setLoadingEnrollments(false);
-    }
+    return Promise.resolve().then(async () => {
+      setLoadingEnrollments(true);
+      setEnrollmentError(null);
+      try {
+        const data = await api.getEnrolledProjects();
+        setEnrollments(data.enrollments ?? []);
+      } catch (err) {
+        console.error("Failed to load enrolled projects:", err);
+        setEnrollmentError(err instanceof Error ? err.message : "Could not load your projects. Please try again.");
+      } finally {
+        setLoadingEnrollments(false);
+      }
+    });
   }, [user]);
+
+  const loadBookmarks = useCallback(() => {
+    if (!user) return;
+    return Promise.resolve().then(async () => {
+      setLoadingBookmarks(true);
+      setBookmarkError(null);
+      try {
+        const data = await api.getBookmarkedProjects();
+        setBookmarkData({ userId: user.id, projects: (data.projects ?? []).map(mapApiProject) });
+      } catch (err) {
+        setBookmarkError(err instanceof Error ? err.message : "Could not load your bookmarks. Please try again.");
+      } finally {
+        setLoadingBookmarks(false);
+      }
+    });
+  }, [user]);
+
+  const removeBookmark = async (slug: string) => {
+    setRemovingBookmark(slug);
+    setBookmarkError(null);
+    try {
+      await api.removeProjectBookmark(slug);
+      setBookmarkData((current) => {
+        if (!current || current.userId !== user?.id) return current;
+        return { userId: current.userId, projects: current.projects.filter((project) => project.slug !== slug) };
+      });
+    } catch (err) {
+      setBookmarkError(err instanceof Error ? err.message : "Could not remove this bookmark.");
+    } finally {
+      setRemovingBookmark(null);
+    }
+  };
 
   useEffect(() => {
     void loadEnrollments();
   }, [loadEnrollments]);
+
+  useEffect(() => {
+    void loadBookmarks();
+  }, [loadBookmarks]);
+
+  const bookmarkedProjects = user !== null && bookmarkData !== null && bookmarkData.userId === user.id
+    ? bookmarkData.projects
+    : [];
 
 
   return (
@@ -133,10 +182,10 @@ export default function ProfilePage() {
                 <div className="mb-4 flex items-center justify-between">
                   <div>
                     <h2 className="font-serif text-lg font-bold text-[#e4ddd3]">
-                      My Enrolled Projects
+                      Continue Learning
                     </h2>
                     <p className="text-[11px] text-text-muted">
-                      Pick up right where you left off in your active projects.
+                      Resume an enrolled project at its saved phase, or review one you’ve completed.
                     </p>
                   </div>
 
@@ -283,6 +332,49 @@ export default function ProfilePage() {
                   </div>
                 )}
               </div>
+
+              {/* Saved Projects */}
+              <section>
+                <div className="mb-4">
+                  <h2 className="font-serif text-lg font-bold text-[#e4ddd3]">Saved Projects</h2>
+                  <p className="text-[11px] text-text-muted">Projects you bookmarked to build later.</p>
+                </div>
+                {loadingBookmarks ? (
+                  <div className="flex h-24 items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-accent" /></div>
+                ) : bookmarkError ? (
+                  <div className="rounded-xl border border-rose-900/40 bg-rose-950/20 p-5 text-center">
+                    <p role="alert" className="text-sm text-rose-300">{bookmarkError}</p>
+                    <button onClick={() => void loadBookmarks()} className="mt-3 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-text transition hover:bg-surface-raised">Try again</button>
+                  </div>
+                ) : bookmarkedProjects.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-[#26221c] bg-[#11100e] p-6 text-center">
+                    <Bookmark className="mx-auto mb-2 h-5 w-5 text-[#6b6256]" />
+                    <p className="text-xs text-[#8a8178]">No saved projects yet. Bookmark a project from its overview page to keep it here.</p>
+                    <Link href="/projects" className="mt-3 inline-flex items-center gap-1 text-xs text-accent hover:underline">Browse projects <ArrowRight className="h-3 w-3" /></Link>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {bookmarkedProjects.map((project) => (
+                      <div key={project.slug} className="flex items-center gap-3 rounded-xl border border-[#221f1a] bg-[#11100e] p-3 transition hover:border-[#332e26]">
+                        <Link href={`/projects/${project.slug}`} className="min-w-0 flex-1">
+                          <span className="text-[10px] font-medium text-accent">{project.track}</span>
+                          <h3 className="truncate font-serif text-sm font-semibold text-[#e4ddd3]">{project.title}</h3>
+                          <p className="line-clamp-1 text-[11px] text-[#8a8178]">{project.tagline}</p>
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => void removeBookmark(project.slug)}
+                          disabled={removingBookmark === project.slug}
+                          aria-label={`Remove ${project.title} from saved projects`}
+                          className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-border text-text-faint transition hover:border-rose-800/50 hover:text-rose-300 disabled:opacity-50"
+                        >
+                          {removingBookmark === project.slug ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
             </div>
           )}
         </div>

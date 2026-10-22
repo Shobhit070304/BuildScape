@@ -1,14 +1,32 @@
+import { createHash } from "node:crypto";
 import { Types } from "mongoose";
 import { projectRepository } from "../repositories/projects.repository";
 import { progressRepository } from "../repositories/progress.repository";
+import { userRepository } from "../repositories/users.repository";
 import { HttpError } from "./httpError";
 import { loadProjectCatalog } from "./projectCatalog.service";
+import { getOrLoadCached } from "./cache.service";
 
-const canonicalSlugs = new Set(loadProjectCatalog().map(({ slug }) => slug));
+const canonicalProjects = loadProjectCatalog();
+const canonicalProjectsBySlug = new Map(canonicalProjects.map((project) => [project.slug, project]));
+const cacheNamespace = createHash("sha256").update(JSON.stringify(canonicalProjects)).digest("hex").slice(0, 12);
+const projectCachePrefix = `buildscape:projects:v1:${cacheNamespace}`;
+const PROJECT_CACHE_TTL_SECONDS = 300;
 
 export const projectsService = {
   async list() {
-    return projectRepository.list();
+    return getOrLoadCached(`${projectCachePrefix}:list`, PROJECT_CACHE_TTL_SECONDS, async () => {
+      const projects = await projectRepository.list();
+      return projects.map((project) => project.toObject());
+    });
+  },
+
+  async getPublicBySlug(slug: string) {
+    return getOrLoadCached(`${projectCachePrefix}:detail:${slug}`, PROJECT_CACHE_TTL_SECONDS, async () => {
+      const project = await projectRepository.findBySlug(slug);
+      if (!project) throw new HttpError(404, "Project not found");
+      return project.toObject();
+    });
   },
 
   countEnrolled(projectId: string | Types.ObjectId) {
@@ -26,6 +44,39 @@ export const projectsService = {
   async enroll(userId: string, slug: string) {
     const project = await this.getBySlug(slug);
     return progressRepository.enroll(userId, project._id);
+  },
+
+  async getBookmarked(userId: string) {
+    const slugs = await userRepository.getBookmarkedProjectSlugs(userId);
+    if (!slugs.length) return [];
+    const projects = await projectRepository.findBySlugs(slugs);
+    const bySlug = new Map(projects.map((project) => [project.slug, project]));
+    return slugs.map((slug) => bySlug.get(slug)).filter((project) => project !== undefined);
+  },
+
+  async addBookmark(userId: string, slug: string) {
+    await this.getBySlug(slug);
+    const user = await userRepository.addBookmarkedProject(userId, slug);
+    if (!user) throw new HttpError(404, "User not found");
+  },
+
+  async removeBookmark(userId: string, slug: string) {
+    await this.getBySlug(slug);
+    const user = await userRepository.removeBookmarkedProject(userId, slug);
+    if (!user) throw new HttpError(404, "User not found");
+  },
+
+  async getProjectNotes(userId: string, slug: string) {
+    const project = await this.getBySlug(slug);
+    const enrollment = await progressRepository.getProjectNotes(userId, project._id);
+    if (!enrollment) throw new HttpError(403, "Enroll in this project to use private project notes");
+    return enrollment.notes ?? "";
+  },
+
+  async saveProjectNotes(userId: string, slug: string, notes: string) {
+    const project = await this.getBySlug(slug);
+    const enrollment = await progressRepository.setProjectNotes(userId, project._id, notes);
+    if (!enrollment) throw new HttpError(403, "Enroll in this project to use private project notes");
   },
 
   async completePhase(userId: string, slug: string, phaseId: string) {
@@ -87,27 +138,29 @@ export const projectsService = {
     return Promise.all(enrollments.map(async (enrollment) => {
       const project = enrollment.projectId as unknown as {
         _id: Types.ObjectId; slug: string; title: string; tagline: string; track: string;
-        difficulty: "Beginner" | "Intermediate" | "Expert"; estimatedHours: number; techStack: string[]; phases?: { id: string; title: string }[];
+        difficulty: "Beginner" | "Intermediate" | "Expert"; estimatedHours: number; techStack: string[];
       } | null;
-      if (!project || !canonicalSlugs.has(project.slug)) return null;
-      const validPhaseIds = new Set((project.phases ?? []).map((phase) => phase.id));
+      const canonicalProject = project && canonicalProjectsBySlug.get(project.slug);
+      if (!project || !canonicalProject) return null;
+      const validPhaseIds = new Set(canonicalProject.phases.map((phase) => phase.id));
       const completed = (await progressRepository.listCompletedPhases(userId, project._id))
         .filter(({ phaseId }) => validPhaseIds.has(phaseId));
+      const currentPhaseIndex = canonicalProject.phases.length
+        ? Math.min(canonicalProject.phases.length - 1, Math.max(0, enrollment.currentPhaseIndex ?? 0))
+        : 0;
       return {
         enrollmentId: enrollment._id,
         enrolledAt: enrollment.enrolledAt,
-        currentPhaseIndex: project.phases?.length
-          ? Math.min(project.phases.length - 1, Math.max(0, enrollment.currentPhaseIndex ?? 0))
-          : 0,
+        currentPhaseIndex,
         completedCount: completed.length,
-        totalPhases: project.phases?.length ?? 0,
+        totalPhases: canonicalProject.phases.length,
         completedPhases: completed.map(({ phaseId }) => phaseId),
-        currentPhaseId: project.phases?.[Math.min(project.phases.length - 1, Math.max(0, enrollment.currentPhaseIndex ?? 0))]?.id ?? null,
-        currentPhaseTitle: project.phases?.[Math.min(project.phases.length - 1, Math.max(0, enrollment.currentPhaseIndex ?? 0))]?.title ?? null,
+        currentPhaseId: canonicalProject.phases[currentPhaseIndex]?.id ?? null,
+        currentPhaseTitle: canonicalProject.phases[currentPhaseIndex]?.title ?? null,
         project: {
-          _id: project._id, slug: project.slug, title: project.title, tagline: project.tagline,
-          track: project.track, difficulty: project.difficulty,
-          estimatedHours: project.estimatedHours, techStack: project.techStack,
+          _id: project._id, slug: canonicalProject.slug, title: canonicalProject.title, tagline: canonicalProject.tagline,
+          track: canonicalProject.track, difficulty: canonicalProject.difficulty,
+          estimatedHours: canonicalProject.estimatedHours, techStack: canonicalProject.techStack,
         },
       };
     })).then((items) => items.filter((item) => item !== null));

@@ -15,6 +15,8 @@ export const env = {
   MONGODB_URI: process.env.MONGODB_URI ?? "",
   JWT_SECRET: configuredJwtSecret ?? "buildscape-session-secret-change-in-production",
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? "",
+  UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL?.trim() ?? "",
+  UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN?.trim() ?? "",
   GEMINI_API_KEY: process.env.GEMINI_API_KEY?.trim() ?? "",
   GEMINI_MODEL: process.env.GEMINI_MODEL?.trim() ?? ""
 };
