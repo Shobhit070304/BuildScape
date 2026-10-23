@@ -80,6 +80,11 @@ export const uncompletePhase = asyncHandler(async (req, res) => {
   res.json({ success: true });
 });
 
+export const resetProgress = asyncHandler(async (req, res) => {
+  await projectsService.resetProgress(req.user!.userId, String(req.params.slug));
+  res.json({ success: true });
+});
+
 export const setCurrentPhase = asyncHandler(async (req, res) => {
   await projectsService.setCurrentPhase(req.user!.userId, String(req.params.slug), String(req.params.phaseId));
   res.json({ success: true });

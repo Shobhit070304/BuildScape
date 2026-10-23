@@ -52,6 +52,23 @@ export const progressRepository = {
       { returnDocument: "after", runValidators: true }
     ),
 
+  resetProgress: async (userId: string, projectId: Types.ObjectId) => {
+    const session = await UserProjectEnrollment.startSession();
+    try {
+      // Keep the completion records and resume pointer in sync as one database operation.
+      await session.withTransaction(async () => {
+        await UserTaskProgress.deleteMany({ userId: asObjectId(userId), projectId }).session(session);
+        await UserProjectEnrollment.updateOne(
+          { userId: asObjectId(userId), projectId },
+          { $set: { currentPhaseIndex: 0 } },
+          { session }
+        );
+      });
+    } finally {
+      await session.endSession();
+    }
+  },
+
   listCompletedPhases: (userId: string, projectId: Types.ObjectId) =>
     UserTaskProgress.find({ userId: asObjectId(userId), projectId }).select("phaseId completedAt"),
 };

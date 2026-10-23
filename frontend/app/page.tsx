@@ -11,6 +11,8 @@ import { FooterSection } from "@/components/landing/FooterSection";
 import { ScrollSectionTracker } from "@/components/landing/ScrollSectionTracker";
 import { fetchProjectsFromDb } from "@/lib/projects";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "BuildScape — Build Real Production Software | Escape Tutorial Hell",
   description:

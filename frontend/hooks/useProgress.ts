@@ -9,6 +9,7 @@ interface ProgressState {
   currentPhaseIndex: number;
   completed: string[];
   hydrated: boolean;
+  error: string | null;
 }
 
 export function useProgress(projectSlug: string) {
@@ -19,6 +20,7 @@ export function useProgress(projectSlug: string) {
     currentPhaseIndex: 0,
     completed: [],
     hydrated: false,
+    error: null,
   });
 
   const fetchDbProgress = useCallback(async () => {
@@ -28,10 +30,12 @@ export function useProgress(projectSlug: string) {
         currentPhaseIndex: 0,
         completed: [],
         hydrated: true,
+        error: null,
       });
       return;
     }
 
+    setState((previous) => ({ ...previous, hydrated: false, error: null }));
     try {
       const data = await api.getProgress(projectSlug);
       setState({
@@ -39,14 +43,15 @@ export function useProgress(projectSlug: string) {
         currentPhaseIndex: data.currentPhaseIndex,
         completed: data.completedPhases.map((p) => p.phaseId),
         hydrated: true,
+        error: null,
       });
-    } catch {
-      setState({
-        enrolled: false,
-        currentPhaseIndex: 0,
-        completed: [],
+    } catch (error) {
+      // Keep enrollment distinct from transport failures so callers do not redirect learners.
+      setState((previous) => ({
+        ...previous,
         hydrated: true,
-      });
+        error: error instanceof Error ? error.message : "Could not load project progress.",
+      }));
     }
   }, [projectSlug, user]);
 
@@ -81,6 +86,7 @@ export function useProgress(projectSlug: string) {
           currentPhaseIndex: fresh.currentPhaseIndex,
           completed: fresh.completedPhases.map((p) => p.phaseId),
           hydrated: true,
+          error: null,
         });
       } catch (err) {
         console.error("Failed to update phase progress in DB:", err);
@@ -97,20 +103,22 @@ export function useProgress(projectSlug: string) {
   );
 
   const clearProgress = useCallback(async () => {
-    if (!user || state.completed.length === 0) return;
+    if (!user || !state.enrolled) return;
     try {
-      await Promise.all(state.completed.map((phaseId) => api.uncompletePhase(projectSlug, phaseId)));
+      await api.resetProgress(projectSlug);
       await fetchDbProgress();
     } catch (err) {
       console.error("Failed to reset progress in DB:", err);
     }
-  }, [user, state.completed, projectSlug, fetchDbProgress]);
+  }, [user, state.enrolled, projectSlug, fetchDbProgress]);
 
   return {
     enrolled: state.enrolled,
     currentPhaseIndex: state.currentPhaseIndex,
     completed: state.completed,
     hydrated: state.hydrated,
+    error: state.error,
+    refreshProgress: fetchDbProgress,
     togglePhase,
     isCompleted,
     clearProgress,

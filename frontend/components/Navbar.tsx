@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { LogOut, AlertCircle, Sun, Moon } from "lucide-react";
+import { LogOut, AlertCircle, SunMoon } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
 import { useAuth } from "@/context/AuthContext";
 import { Logo } from "@/components/Logo";
@@ -12,7 +12,7 @@ export function Navbar() {
   const { user, isLoading, login, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [loginError, setLoginError] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const themeRef = useRef<"light" | "dark">("dark");
 
   useEffect(() => {
     let stored: string | null = null;
@@ -20,12 +20,12 @@ export function Navbar() {
     const media = matchMedia("(prefers-color-scheme: light)");
     const resolved = stored === "light" || stored === "dark" ? stored : (media.matches ? "light" : "dark");
     document.documentElement.dataset.theme = resolved;
-    setTheme(resolved);
+    themeRef.current = resolved;
     if (stored !== "light" && stored !== "dark") {
       const handleSystemTheme = (event: MediaQueryListEvent) => {
         const next = event.matches ? "light" : "dark";
         document.documentElement.dataset.theme = next;
-        setTheme(next);
+        themeRef.current = next;
       };
       media.addEventListener("change", handleSystemTheme);
       return () => media.removeEventListener("change", handleSystemTheme);
@@ -33,10 +33,10 @@ export function Navbar() {
   }, []);
 
   const toggleTheme = () => {
-    const next = theme === "dark" ? "light" : "dark";
+    const next = themeRef.current === "dark" ? "light" : "dark";
+    themeRef.current = next;
     document.documentElement.dataset.theme = next;
     try { localStorage.setItem("buildscape-theme", next); } catch { /* the current session still changes theme */ }
-    setTheme(next);
   };
 
   useEffect(() => {
@@ -70,8 +70,8 @@ export function Navbar() {
             Projects
           </Link>
 
-          <button onClick={toggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`} title="Toggle theme" className="rounded-full border border-[#2a2620] bg-[#14120f] p-1.5 text-[#d4cbbd] transition-colors hover:border-amber-700/60">
-            {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+          <button onClick={toggleTheme} aria-label="Toggle color theme" title="Toggle theme" className="rounded-full border border-[#2a2620] bg-[#14120f] p-1.5 text-[#d4cbbd] transition-colors hover:border-amber-700/60">
+            <SunMoon className="h-3.5 w-3.5" />
           </button>
 
           {isLoading ? (

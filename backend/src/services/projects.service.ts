@@ -104,6 +104,13 @@ export const projectsService = {
     await progressRepository.setCurrentPhase(userId, project._id, Math.min(enrollment.currentPhaseIndex, phaseIndex));
   },
 
+  async resetProgress(userId: string, slug: string) {
+    const project = await this.getBySlug(slug);
+    const enrollment = await progressRepository.findEnrollment(userId, project._id);
+    if (!enrollment) throw new HttpError(403, "Enroll in this project before resetting progress");
+    await progressRepository.resetProgress(userId, project._id);
+  },
+
   async setCurrentPhase(userId: string, slug: string, phaseId: string) {
     const project = await this.getBySlug(slug);
     const enrollment = await progressRepository.findEnrollment(userId, project._id);

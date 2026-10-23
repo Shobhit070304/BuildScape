@@ -2,6 +2,8 @@ import { MetadataRoute } from "next";
 import { getSiteUrl } from "@/lib/site";
 import { fetchProjectsFromDb } from "@/lib/projects";
 
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteUrl();
 

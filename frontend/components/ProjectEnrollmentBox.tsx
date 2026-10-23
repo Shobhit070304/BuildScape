@@ -26,7 +26,7 @@ interface ProjectEnrollmentBoxProps {
 export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
   const { user, login } = useAuth();
   // Enrollment and saved phase progress hydrate from the same progress request.
-  const { enrolled: isEnrolled, currentPhaseIndex, completed, hydrated } = useProgress(project.slug);
+  const { enrolled: isEnrolled, currentPhaseIndex, completed, hydrated, error: progressError, refreshProgress } = useProgress(project.slug);
 
   const [localEnrolled, setLocalEnrolled] = useState(false);
   const [loadingEnrollment, setLoadingEnrollment] = useState(false);
@@ -68,6 +68,16 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
         <div className="flex h-48 items-center justify-center">
           <Loader2 className="h-5 w-5 animate-spin text-accent" />
         </div>
+      </div>
+    );
+  }
+
+  if (progressError) {
+    return (
+      <div className="rounded-xl border border-rose-900/40 bg-[#0e0e0e] p-5 shadow-xl">
+        <p role="alert" className="text-sm font-medium text-rose-300">Could not load your project status.</p>
+        <p className="mt-1 text-xs text-text-muted">{progressError}</p>
+        <button type="button" onClick={() => void refreshProgress()} className="mt-4 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-text transition hover:bg-surface-raised">Try again</button>
       </div>
     );
   }

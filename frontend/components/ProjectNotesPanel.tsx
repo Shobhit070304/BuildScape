@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Download, Loader2, Save } from "lucide-react";
 import { api } from "@/lib/api";
 
@@ -13,6 +13,7 @@ export function ProjectNotesPanel({ slug, projectTitle, open, onSaved }: { slug:
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [retry, setRetry] = useState(0);
+  const latestNotes = useRef("");
 
   useEffect(() => {
     if (!open || loaded) return;
@@ -20,6 +21,7 @@ export function ProjectNotesPanel({ slug, projectTitle, open, onSaved }: { slug:
     api.getProjectNotes(slug)
       .then(({ notes: savedNotes }) => {
         if (active) {
+          latestNotes.current = savedNotes;
           setNotes(savedNotes);
           setLoaded(true);
         }
@@ -37,8 +39,9 @@ export function ProjectNotesPanel({ slug, projectTitle, open, onSaved }: { slug:
     setSaved(false);
     try {
       await api.saveProjectNotes(slug, notesToSave);
-      setSaved(notes === notesToSave);
-      if (notes === notesToSave) onSaved();
+      const savedCurrentDraft = latestNotes.current === notesToSave;
+      setSaved(savedCurrentDraft);
+      if (savedCurrentDraft) onSaved();
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Could not save project notes.");
     } finally {
@@ -80,7 +83,12 @@ export function ProjectNotesPanel({ slug, projectTitle, open, onSaved }: { slug:
         <>
           <textarea
             value={notes}
-            onChange={(event) => { setNotes(event.target.value.slice(0, MAX_NOTES_LENGTH)); setSaved(false); }}
+            onChange={(event) => {
+              const nextNotes = event.target.value.slice(0, MAX_NOTES_LENGTH);
+              latestNotes.current = nextNotes;
+              setNotes(nextNotes);
+              setSaved(false);
+            }}
             maxLength={MAX_NOTES_LENGTH}
             placeholder="Write down decisions, commands, errors, or ideas for this project…"
             aria-label="Private project notes"

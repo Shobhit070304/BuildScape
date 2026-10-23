@@ -160,6 +160,8 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
       ? project.phases.findIndex((p) => p.id === initialPhaseId || String(p.orderIndex) === initialPhaseId)
       : -1;
     const nextIndex = requestedIndex >= 0 ? requestedIndex : currentPhaseIndex;
+    // Persisted progress hydrates asynchronously; reconcile the visible phase once it arrives.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveIndex(Math.max(0, Math.min(project.phases.length - 1, nextIndex)));
     setPhaseSelectionReady(true);
   }, [hydrated, currentPhaseIndex, initialPhaseId, project.phases]);

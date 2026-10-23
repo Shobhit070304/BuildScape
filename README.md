@@ -15,7 +15,7 @@
 
 ### 1. Environment Configuration
 
-Create `.env` in both folders:
+Create `backend/.env` from `backend/.env.example` and `frontend/.env.local` from `frontend/.env.local.example`:
 
 **`backend/.env`**
 ```env
@@ -29,7 +29,7 @@ GEMINI_API_KEY=your_server_side_gemini_key
 GEMINI_MODEL=your_gemini_model_id
 ```
 
-**`frontend/.env`**
+**`frontend/.env.local`**
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:4000
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
@@ -79,6 +79,7 @@ npm run seed
    - `GOOGLE_CLIENT_ID`: Google OAuth Client ID
    - `GEMINI_API_KEY`: Server-side Gemini API key for project AI help
    - `GEMINI_MODEL`: Gemini model identifier
+   - `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`: Required when enabling project AI in production. These provide a shared per-account rate limit across backend instances; project caching also uses them when configured.
 
 ### Deploy Frontend (Vercel)
 
@@ -102,6 +103,12 @@ npm run seed
 | `GET` | `/api/projects/my/enrolled` | List current user's enrolled projects | Required |
 | `POST` | `/api/projects/:slug/enroll` | Enroll in a project | Required |
 | `GET` | `/api/projects/:slug/progress` | Get phase completion status | Required |
+| `DELETE` | `/api/projects/:slug/progress` | Clear completed phases and reset the current phase | Required |
 | `POST` | `/api/projects/:slug/ai-help` | Project and phase scoped AI help (12 requests per 10 minutes) | Enrolled user |
 | `POST` | `/api/projects/:slug/phases/:id/complete` | Mark a phase completed (requires enrollment) | Required |
+| `DELETE` | `/api/projects/:slug/phases/:id/complete` | Mark a phase incomplete | Required |
+| `PUT` | `/api/projects/:slug/phases/:id/current` | Save the current phase | Required |
+| `GET` | `/api/projects/my/bookmarks` | List saved projects | Required |
+| `PUT` / `DELETE` | `/api/projects/:slug/bookmark` | Add or remove a saved project | Required |
+| `GET` / `PUT` | `/api/projects/:slug/notes` | Read or save private project notes | Required |
 `JWT_SECRET` must be a non-placeholder secret with at least 32 characters in production. The API requires `MONGODB_URI` and `GOOGLE_CLIENT_ID` in production.

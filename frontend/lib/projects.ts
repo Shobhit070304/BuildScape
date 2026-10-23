@@ -50,7 +50,7 @@ export function mapApiProject(p: ApiProject): Project {
 export async function fetchProjectsFromDb(): Promise<Project[]> {
   const apiUrl = getApiUrl();
   try {
-    const res = await fetch(`${apiUrl}/api/projects`);
+    const res = await fetch(`${apiUrl}/api/projects`, { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if (data.projects && Array.isArray(data.projects) && data.projects.length > 0) {
@@ -68,7 +68,7 @@ export async function fetchProjectsFromDb(): Promise<Project[]> {
 export async function fetchProjectBySlugFromDb(slug: string): Promise<Project | undefined> {
   const apiUrl = getApiUrl();
   try {
-    const res = await fetch(`${apiUrl}/api/projects/${encodeURIComponent(slug)}`);
+    const res = await fetch(`${apiUrl}/api/projects/${encodeURIComponent(slug)}`, { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if (data.project) {

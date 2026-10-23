@@ -1,5 +1,4 @@
 export function getApiUrl(): string {
-  // Changed from process.env.API_URL to process.env.NEXT_PUBLIC_API_URL
   const url =
     process.env.NEXT_PUBLIC_API_URL ||
     "http://localhost:4000";
@@ -70,6 +69,11 @@ export const api = {
       `/api/projects/${encodeURIComponent(slug)}/phases/${encodeURIComponent(phaseId)}/complete`,
       { method: "DELETE" }
     ),
+
+  resetProgress: (slug: string) =>
+    request<{ success: boolean }>(`/api/projects/${encodeURIComponent(slug)}/progress`, {
+      method: "DELETE",
+    }),
 
   setCurrentPhase: (slug: string, phaseId: string) =>
     request<{ success: boolean }>(

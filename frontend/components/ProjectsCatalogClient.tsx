@@ -152,8 +152,6 @@ export function ProjectsCatalogClient({ initialProjects = [] }: { initialProject
   const [isExpanded, setIsExpanded] = useState(true);
 
   const loadProjects = useCallback(() => {
-    setIsLoading(true);
-    setLoadError(null);
     api
       .getProjects()
       .then((data) => {
@@ -167,14 +165,16 @@ export function ProjectsCatalogClient({ initialProjects = [] }: { initialProject
       })
       .catch((err) => {
         setProjects([]);
-        setLoadError(err.message ?? "Database connection failed. Please ensure backend is running.");
+        setLoadError(err instanceof Error ? err.message : "Database connection failed. Please ensure backend is running.");
       })
       .finally(() => {
         setIsLoading(false);
       });
   }, []);
 
-  useEffect(() => { if (!initialProjects.length) loadProjects(); }, [loadProjects, initialProjects.length]);
+  useEffect(() => {
+    if (!initialProjects.length) loadProjects();
+  }, [loadProjects, initialProjects.length]);
 
   const availableTracks = useMemo(() => [...new Set(projects.map((p) => p.track))].sort(), [projects]);
   const comingSoonTracks = COMING_SOON_TRACKS.filter((track) => !availableTracks.includes(track));
@@ -394,7 +394,11 @@ export function ProjectsCatalogClient({ initialProjects = [] }: { initialProject
                 {loadError}
               </p>
               <button
-                onClick={loadProjects}
+                onClick={() => {
+                  setIsLoading(true);
+                  setLoadError(null);
+                  loadProjects();
+                }}
                 className="inline-flex items-center gap-2 rounded-lg bg-amber-600 hover:bg-amber-500 px-4 py-2 text-xs font-semibold text-white transition-all shadow-md cursor-pointer"
               >
                 <RefreshCw className="h-3.5 w-3.5" />

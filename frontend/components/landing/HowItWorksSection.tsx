@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Compass, Code2, Rocket, CheckCircle2, Lock, Zap } from "lucide-react";
 
 const STEPS = [

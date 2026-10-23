@@ -29,28 +29,26 @@ export function ProjectOverviewView({
   slug,
   access,
 }: ProjectOverviewViewProps) {
-  const [project, setProject] = useState<Project | null>(initialProject);
-  const [loading, setLoading] = useState(!initialProject);
-  const [notFound, setNotFound] = useState(false);
+  const [fetchResult, setFetchResult] = useState<{ slug: string; project: Project | null; notFound: boolean } | null>(null);
+  const currentResult = fetchResult?.slug === slug ? fetchResult : null;
+  const project = initialProject ?? currentResult?.project ?? null;
+  const loading = !initialProject && !currentResult;
+  const notFound = currentResult?.notFound ?? false;
 
   useEffect(() => {
     if (!initialProject) {
-      setLoading(true);
       api
         .getProject(slug)
         .then((data) => {
           if (data?.project) {
-            setProject(mapApiProject(data.project));
+            setFetchResult({ slug, project: mapApiProject(data.project), notFound: false });
           } else {
-            setNotFound(true);
+            setFetchResult({ slug, project: null, notFound: true });
           }
         })
         .catch((err) => {
           console.error("Could not fetch project client-side:", err);
-          setNotFound(true);
-        })
-        .finally(() => {
-          setLoading(false);
+          setFetchResult({ slug, project: null, notFound: true });
         });
     }
   }, [initialProject, slug]);

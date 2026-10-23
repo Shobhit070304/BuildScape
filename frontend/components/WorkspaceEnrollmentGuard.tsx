@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useProgress } from "@/hooks/useProgress";
-import { Loader2, Lock, ArrowLeft } from "lucide-react";
+import { Loader2, Lock, ArrowLeft, AlertCircle, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import type { Project } from "@/lib/projects";
 
@@ -28,31 +28,44 @@ export function WorkspaceEnrollmentGuard({
 }: WorkspaceEnrollmentGuardProps) {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
-  // Shares the same single API call as any other useProgress consumer on this page.
-  const { enrolled, hydrated } = useProgress(project.slug);
-  const [deniedReason, setDeniedReason] = useState<string | null>(null);
+  // Do not redirect until the authenticated user's enrollment status is known.
+  const { enrolled, hydrated, error: progressError, refreshProgress } = useProgress(project.slug);
 
   useEffect(() => {
     if (authLoading) return;
 
     if (!user) {
-      setDeniedReason("Authentication required. Please sign in and enroll to access this workspace.");
       const timer = setTimeout(() => {
         router.replace(`/projects/${project.slug}?access=login_required`);
       }, 1500);
       return () => clearTimeout(timer);
     }
 
+    if (progressError) return;
     if (!hydrated) return;
 
     if (!enrolled) {
-      setDeniedReason("Enrollment required. You must enroll in this project to access the workspace.");
       const timer = setTimeout(() => {
         router.replace(`/projects/${project.slug}?access=enrollment_required`);
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [user, authLoading, enrolled, hydrated, project.slug, router]);
+  }, [user, authLoading, enrolled, hydrated, progressError, project.slug, router]);
+
+  if (user && progressError) {
+    return (
+      <div className="flex h-screen w-screen flex-col items-center justify-center bg-[#0a0a0a] px-4 text-center">
+        <div className="max-w-md rounded-xl border border-rose-900/40 bg-[#12100d] p-6 shadow-2xl">
+          <AlertCircle className="mx-auto mb-3 h-6 w-6 text-rose-400" />
+          <h2 className="mb-2 text-base font-semibold text-[#f0eae1]">Could not verify enrollment</h2>
+          <p role="alert" className="mb-5 text-xs leading-relaxed text-[#9a9187]">{progressError}</p>
+          <button type="button" onClick={() => void refreshProgress()} className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-amber-500">
+            <RefreshCw className="h-3.5 w-3.5" /> Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (authLoading || (user && !hydrated)) {
     return (
@@ -74,7 +87,9 @@ export function WorkspaceEnrollmentGuard({
             {!user ? "Sign In Required" : "Enrollment Required"}
           </h2>
           <p className="text-xs text-[#9a9187] leading-relaxed mb-5">
-            {deniedReason ?? "You must enroll in this project to access the interactive step-by-step workspace."}
+            {!user
+              ? "Authentication required. Please sign in and enroll to access this workspace."
+              : "Enrollment required. You must enroll in this project to access the workspace."}
           </p>
           <Link
             href={`/projects/${project.slug}`}
