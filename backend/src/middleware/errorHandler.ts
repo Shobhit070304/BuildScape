@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 
 export function errorHandler(err: any, _req: Request, res: Response, _next: NextFunction): void {
-  const status = err.statusCode ?? 500;
+  const status = err.statusCode ?? err.status ?? 500;
   // Only log server errors (5xx); 4xx are user errors, not system failures.
   if (status >= 500) {
     console.error("[ERROR]", err);

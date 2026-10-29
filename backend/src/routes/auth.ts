@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { googleAuth, getMe, logout } from "../controllers/auth.controller";
+import { googleAuth, getMe, logout, changeUsername } from "../controllers/auth.controller";
 import { authenticate } from "../middleware/authenticate";
 import rateLimit from "express-rate-limit";
 
@@ -21,5 +21,6 @@ router.post("/logout", logout);
 
 // GET /api/auth/me (protected)
 router.get("/me", authenticate, getMe);
+router.put("/username", authenticate, changeUsername);
 
 export default router;

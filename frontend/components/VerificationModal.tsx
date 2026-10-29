@@ -5,15 +5,12 @@ import Link from "next/link";
 import {
   ShieldCheck,
   Globe,
-  Copy,
-  Check,
   ExternalLink,
   X,
   Loader2,
-  Sparkles,
   Award,
 } from "lucide-react";
-import { api, getApiUrl } from "@/lib/api";
+import { api } from "@/lib/api";
 
 function GithubIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -56,16 +53,13 @@ export function VerificationModal({
   const [demoUrl, setDemoUrl] = useState(initialDemoUrl);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   const [justVerified, setJustVerified] = useState(false);
+  const [editingExisting, setEditingExisting] = useState(false);
 
   if (!isOpen) return null;
 
-  const currentVerified = isVerified || justVerified;
+  const currentVerified = (isVerified && !editingExisting) || justVerified;
   const userHandle = username || "developer";
-  const badgeUrl = `${getApiUrl()}/api/badges/${userHandle}/${projectSlug}.svg`;
-  const profileUrl = typeof window !== "undefined" ? `${window.location.origin}/u/${userHandle}` : `/u/${userHandle}`;
-  const markdownSnippet = `[![BuildScape Verified](${badgeUrl})](${profileUrl})`;
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,6 +82,7 @@ export function VerificationModal({
         githubRepoUrl: trimmedGithub,
         liveDemoUrl: demoUrl.trim() || undefined,
       });
+      setEditingExisting(false);
       setJustVerified(true);
       if (onVerifiedSuccess) onVerifiedSuccess();
     } catch (err: unknown) {
@@ -96,12 +91,6 @@ export function VerificationModal({
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(markdownSnippet);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -127,11 +116,11 @@ export function VerificationModal({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-serif text-lg font-bold text-[#e4ddd3]">
-                Verified Proof-of-Work
+                Public Repository Link
               </h2>
               {currentVerified && (
                 <span className="rounded-full border border-emerald-700/50 bg-emerald-950/60 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
-                  Verified
+                  Public repo checked
                 </span>
               )}
             </div>
@@ -146,47 +135,17 @@ export function VerificationModal({
           <div className="space-y-4">
             <div className="rounded-xl border border-emerald-900/40 bg-emerald-950/20 p-4">
               <div className="flex items-center gap-2 text-xs font-medium text-emerald-400 mb-1">
-                <Sparkles className="h-4 w-4" />
-                <span>Proof-of-Work Successfully Verified!</span>
+                <ShieldCheck className="h-4 w-4" />
+                <span>Public repository checked</span>
               </div>
               <p className="text-xs text-[#a0978c] leading-relaxed">
-                Your build has been verified and permanently linked to your public developer portfolio. Add your live badge to your GitHub repository README.
+                The submitted GitHub URL is a public repository and is listed on your developer profile. BuildScape does not check repository ownership or contents.
               </p>
               {verifiedAt && (
                 <p className="mt-2 text-[11px] text-[#6b6256] font-mono">
-                  Verified on {new Date(verifiedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  Checked on {new Date(verifiedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                 </p>
               )}
-            </div>
-
-            {/* Badge Preview */}
-            <div className="rounded-xl border border-[#221f1a] bg-[#11100e] p-3.5">
-              <div className="flex items-center justify-between text-xs text-[#8a8178] mb-2 font-mono">
-                <span>README Live Badge</span>
-                <span className="text-[11px] text-emerald-400">Live dynamic SVG</span>
-              </div>
-              <div className="flex items-center justify-center py-2 bg-[#0c0c0d] rounded-lg border border-[#1e1e22]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={badgeUrl} alt="BuildScape Verified" className="h-7" />
-              </div>
-
-              {/* Copy snippet */}
-              <div className="mt-3 flex items-center gap-2">
-                <input
-                  type="text"
-                  readOnly
-                  value={markdownSnippet}
-                  className="w-full rounded-lg border border-[#2a2620] bg-[#161411] px-3 py-1.5 font-mono text-[11px] text-accent focus:outline-hidden"
-                />
-                <button
-                  onClick={handleCopy}
-                  className="flex shrink-0 items-center gap-1 rounded-lg border border-amber-700/50 bg-amber-950/40 hover:bg-amber-900/50 px-3 py-1.5 text-xs font-medium text-accent transition-all cursor-pointer"
-                  title="Copy markdown code"
-                >
-                  {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                  <span>{copied ? "Copied" : "Copy"}</span>
-                </button>
-              </div>
             </div>
 
             {/* Profile CTA */}
@@ -201,7 +160,7 @@ export function VerificationModal({
                 <ExternalLink className="h-3 w-3 ml-0.5 opacity-80" />
               </Link>
               <button
-                onClick={() => setJustVerified(false)}
+                onClick={() => { setJustVerified(false); setEditingExisting(true); }}
                 className="rounded-lg border border-[#2a2620] bg-transparent hover:bg-[#1a1814] px-3 py-2 text-xs text-[#8a8178] transition-colors cursor-pointer"
               >
                 Update URL
@@ -212,7 +171,7 @@ export function VerificationModal({
           /* Submission Form */
           <form onSubmit={handleVerify} className="space-y-4">
             <p className="text-xs text-[#8a8178] leading-relaxed">
-              Submit your project repository to verify your proof-of-work. We will validate that your repository is accessible and issue a verified badge for your public profile and GitHub README.
+              Link a public GitHub repository to your developer profile. BuildScape checks that the repository is public; it does not check ownership or contents.
             </p>
 
             {error && (
@@ -237,7 +196,7 @@ export function VerificationModal({
                 />
               </div>
               <p className="mt-1 text-[11px] text-[#6b6256]">
-                Must be a public repository containing your project code.
+                The URL must point to a public GitHub repository. Make sure it contains your project code.
               </p>
             </div>
 
@@ -271,7 +230,7 @@ export function VerificationModal({
                 ) : (
                   <>
                     <ShieldCheck className="h-4 w-4" />
-                    <span>Verify & Claim Proof-of-Work</span>
+                    <span>Check & Link Repository</span>
                   </>
                 )}
               </button>

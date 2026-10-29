@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import type { FormEvent } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -14,11 +15,15 @@ import {
   BookOpen,
   Trophy,
   ShieldCheck,
+  FileText,
+  Flag,
+  Save,
 } from "lucide-react";
 import type { Project, Phase } from "@/lib/projects";
 import { useProgress } from "@/hooks/useProgress";
 import { useAuth } from "@/context/AuthContext";
 import { VerificationModal } from "./VerificationModal";
+import { api, type CurriculumIssueCategory } from "@/lib/api";
 
 const mdComponents: Components = {
   a({ href, children, ...props }) {
@@ -107,8 +112,21 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
 
   const [activeIndex, setActiveIndex] = useState(getInitialIdx);
   const [modalOpen, setModalOpen] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [note, setNote] = useState("");
+  const [noteLoading, setNoteLoading] = useState(false);
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteMessage, setNoteMessage] = useState("");
+  const [issueOpen, setIssueOpen] = useState(false);
+  const [issueCategory, setIssueCategory] = useState<CurriculumIssueCategory>("unclear");
+  const [issueMessage, setIssueMessage] = useState("");
+  const [issueSaving, setIssueSaving] = useState(false);
+  const [issueFeedback, setIssueFeedback] = useState("");
+  const [savedPhaseRestored, setSavedPhaseRestored] = useState(false);
   const { user } = useAuth();
   const {
+    enrolled,
+    currentPhaseIndex,
     completed,
     hydrated,
     togglePhase,
@@ -119,7 +137,14 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
     liveDemoUrl,
     verifiedAt,
     refreshProgress,
+    setActivePhase,
   } = useProgress(project.slug);
+
+  const activePhase = project.phases[activeIndex];
+  const totalPhases = project.phases.length;
+  const completedCount = completed.length;
+  const progressPct = totalPhases > 0 ? (completedCount / totalPhases) * 100 : 0;
+  const allDone = completedCount === totalPhases;
 
   useEffect(() => {
     if (initialPhaseId) {
@@ -130,14 +155,75 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
     }
   }, [initialPhaseId, project.phases]);
 
-  const activePhase = project.phases[activeIndex];
-  const totalPhases = project.phases.length;
-  const completedCount = completed.length;
-  const progressPct = totalPhases > 0 ? (completedCount / totalPhases) * 100 : 0;
-  const allDone = completedCount === totalPhases;
+  useEffect(() => {
+    if (!hydrated || initialPhaseId) return;
+    if (!enrolled) { setSavedPhaseRestored(false); return; }
+    if (savedPhaseRestored) return;
+    if (currentPhaseIndex >= 0 && currentPhaseIndex < project.phases.length) setActiveIndex(currentPhaseIndex);
+    setSavedPhaseRestored(true);
+  }, [hydrated, enrolled, currentPhaseIndex, initialPhaseId, savedPhaseRestored, project.phases.length]);
+
+  useEffect(() => {
+    if (!notesOpen || !user || !enrolled || !activePhase) return;
+    let cancelled = false;
+    setNoteLoading(true);
+    setNoteMessage("");
+    api.getPhaseNote(project.slug, activePhase.id)
+      .then((result) => { if (!cancelled) setNote(result.content); })
+      .catch((error) => { if (!cancelled) setNoteMessage(error instanceof Error ? error.message : "Could not load note"); })
+      .finally(() => { if (!cancelled) setNoteLoading(false); });
+    return () => { cancelled = true; };
+  }, [notesOpen, user, enrolled, activePhase?.id, project.slug]);
 
   const goTo = (i: number) => {
-    if (i >= 0 && i < totalPhases) setActiveIndex(i);
+    if (i >= 0 && i < totalPhases) {
+      setActiveIndex(i);
+      if (hydrated && enrolled) setActivePhase(project.phases[i].id, i);
+      setNoteMessage("");
+      setIssueFeedback("");
+    }
+  };
+
+  const handleToggleActivePhase = async () => {
+    if (!activePhase) return;
+    const wasCompleted = isCompleted(activePhase.id);
+    if (!await togglePhase(activePhase.id)) return;
+    if (!wasCompleted && activeIndex + 1 < totalPhases) {
+      goTo(activeIndex + 1);
+      return;
+    }
+    if (wasCompleted) {
+      const firstIncomplete = project.phases.findIndex((phase) =>
+        phase.id === activePhase.id ? true : !completed.includes(phase.id)
+      );
+      goTo(firstIncomplete >= 0 ? firstIncomplete : activeIndex);
+    }
+  };
+
+  const saveNote = async () => {
+    if (!activePhase) return;
+    setNoteSaving(true);
+    setNoteMessage("");
+    try {
+      await api.savePhaseNote(project.slug, activePhase.id, note);
+      setNoteMessage("Note saved.");
+    } catch (error) {
+      setNoteMessage(error instanceof Error ? error.message : "Could not save note");
+    } finally { setNoteSaving(false); }
+  };
+
+  const submitIssue = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!activePhase) return;
+    setIssueSaving(true);
+    setIssueFeedback("");
+    try {
+      await api.reportPhaseIssue(project.slug, activePhase.id, { category: issueCategory, message: issueMessage });
+      setIssueMessage("");
+      setIssueFeedback("Thanks. Your report was sent to the curriculum team.");
+    } catch (error) {
+      setIssueFeedback(error instanceof Error ? error.message : "Could not submit report");
+    } finally { setIssueSaving(false); }
   };
 
   return (
@@ -190,12 +276,12 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
         {/* Reset progress */}
         {hydrated && completedCount > 0 && (
           <div className="shrink-0 border-t border-[#1a1a1a] p-3 px-4">
-            <button
-              onClick={clearProgress}
+          <button
+              onClick={async () => { if (await clearProgress()) goTo(0); }}
               className="flex cursor-pointer items-center gap-1.5 text-xs text-text-faint transition-colors hover:text-text-muted"
             >
               <RotateCcw className="h-3 w-3" />
-              Reset progress
+              Reset phase checkboxes
             </button>
           </div>
         )}
@@ -215,19 +301,29 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
           </div>
 
           <div className="flex items-center gap-2">
+            {enrolled && hydrated && (
+              <>
+                <button onClick={() => { setNotesOpen((open) => !open); setIssueOpen(false); }} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[#373128] px-2.5 py-1.5 text-xs text-text-muted hover:bg-[#1a1814]" aria-expanded={notesOpen}>
+                  <FileText className="h-3.5 w-3.5" /> Notes
+                </button>
+                <button onClick={() => { setIssueOpen((open) => !open); setNotesOpen(false); }} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[#373128] px-2.5 py-1.5 text-xs text-text-muted hover:bg-[#1a1814]" aria-expanded={issueOpen}>
+                  <Flag className="h-3.5 w-3.5" /> Report issue
+                </button>
+              </>
+            )}
             {allDone && hydrated && (
               <button
                 onClick={() => setModalOpen(true)}
                 className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-emerald-700/60 bg-emerald-950/40 px-3 py-1.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-900/50 transition-all shadow-xs"
               >
                 <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-                <span>{isVerified ? "Proof-of-Work" : "Verify Build"}</span>
+                <span>{isVerified ? "Public Repo Linked" : "Check Public Repo"}</span>
               </button>
             )}
 
             {hydrated && (
               <button
-                onClick={() => togglePhase(activePhase.id)}
+                onClick={() => void handleToggleActivePhase()}
                 className={`flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
                   isCompleted(activePhase.id)
                     ? "border-emerald-700/40 bg-emerald-950/20 text-success"
@@ -267,14 +363,14 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
                       </h4>
                       {isVerified && (
                         <span className="rounded-full border border-emerald-700/50 bg-emerald-950/70 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
-                          Verified
+                          Public repo checked
                         </span>
                       )}
                     </div>
                     <p className="text-xs text-[#a0978c] mt-0.5">
                       {isVerified
-                        ? "Your build is verified! Embed the badge in your repository or view your public portfolio."
-                        : "Claim your Verified Proof-of-Work badge by linking your public GitHub repository."}
+                        ? "Your public GitHub repository is listed on your developer profile. BuildScape checks that it is public, not who owns it or what it contains."
+                        : "Link a public GitHub repository to your developer profile. BuildScape checks that the repository is public."}
                     </p>
                   </div>
                 </div>
@@ -284,7 +380,7 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
                   className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-emerald-600/50 bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-xs font-semibold text-stone-950 transition-all cursor-pointer shadow-xs"
                 >
                   <ShieldCheck className="h-4 w-4" />
-                  <span>{isVerified ? "View Badge & Links" : "Verify Proof-of-Work"}</span>
+                  <span>{isVerified ? "View Profile & Links" : "Check Public Repository"}</span>
                 </button>
               </div>
             )}
@@ -298,6 +394,30 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
                 {activePhase.content}
               </ReactMarkdown>
             </div>
+
+            {notesOpen && enrolled && (
+              <section className="mt-8 rounded-xl border border-[#342f27] bg-[#11100e] p-4">
+                <h2 className="font-serif text-base font-semibold text-[#e4ddd3]">My notes for this phase</h2>
+                <p className="mb-3 mt-1 text-xs text-text-faint">Private to your account. Notes stay saved if you reset phase checkboxes.</p>
+                {noteLoading ? <p className="text-xs text-text-muted">Loading note…</p> : <textarea maxLength={10000} rows={6} value={note} onChange={(event) => { setNote(event.target.value); setNoteMessage(""); }} className="w-full rounded-lg border border-[#342f27] bg-[#0d0c0a] p-3 text-sm text-[#e4ddd3] outline-none focus:border-amber-700" placeholder="Save key ideas, links, or questions for this phase…" />}
+                <div className="mt-2 flex items-center justify-between gap-3">
+                  <p aria-live="polite" className="text-xs text-text-muted">{noteMessage || `${note.length}/10,000 characters`}</p>
+                  <button onClick={() => void saveNote()} disabled={noteSaving || noteLoading} className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-2 text-xs font-semibold text-black disabled:opacity-50"><Save className="h-3.5 w-3.5" />{noteSaving ? "Saving…" : "Save note"}</button>
+                </div>
+              </section>
+            )}
+
+            {issueOpen && enrolled && (
+              <form onSubmit={(event) => void submitIssue(event)} className="mt-8 rounded-xl border border-[#342f27] bg-[#11100e] p-4">
+                <h2 className="font-serif text-base font-semibold text-[#e4ddd3]">Report a curriculum issue</h2>
+                <p className="mb-3 mt-1 text-xs text-text-faint">Tell the team what needs fixing in this phase.</p>
+                <div className="grid gap-3 sm:grid-cols-[180px_1fr]">
+                  <select value={issueCategory} onChange={(event) => setIssueCategory(event.target.value as CurriculumIssueCategory)} className="rounded-lg border border-[#342f27] bg-[#0d0c0a] p-2 text-xs text-[#e4ddd3]"><option value="unclear">Unclear instructions</option><option value="broken">Broken link or code</option><option value="outdated">Outdated information</option><option value="other">Other</option></select>
+                  <textarea required minLength={1} maxLength={2000} rows={4} value={issueMessage} onChange={(event) => setIssueMessage(event.target.value)} className="rounded-lg border border-[#342f27] bg-[#0d0c0a] p-3 text-sm text-[#e4ddd3] outline-none focus:border-amber-700" placeholder="Describe the problem (up to 2,000 characters)…" />
+                </div>
+                <div className="mt-2 flex items-center justify-between gap-3"><p aria-live="polite" className="text-xs text-text-muted">{issueFeedback}</p><button type="submit" disabled={issueSaving || !issueMessage.trim()} className="rounded-lg border border-amber-800/50 bg-amber-950/25 px-3 py-2 text-xs font-semibold text-accent disabled:opacity-50">{issueSaving ? "Sending…" : "Send report"}</button></div>
+              </form>
+            )}
           </div>
         </div>
 
@@ -349,7 +469,7 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
         </div>
       </div>
 
-      {/* Proof-of-Work Verification Modal */}
+      {/* Public repository check modal */}
       <VerificationModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}

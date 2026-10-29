@@ -52,6 +52,15 @@ export function Navbar() {
             </Link>
           )}
 
+          {user?.role === "admin" && (
+            <Link
+              href="/admin"
+              className="rounded px-2 py-1 text-xs text-purple-300 transition-colors hover:bg-purple-950/40 hover:text-purple-200"
+            >
+              Admin
+            </Link>
+          )}
+
           {isLoading ? (
             <div className="h-5 w-14 animate-pulse rounded bg-stone-900" />
           ) : user ? (

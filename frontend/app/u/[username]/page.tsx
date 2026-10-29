@@ -55,8 +55,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const title = `${profile.user.name} (@${profile.user.username}) • Verified Builds | BuildScape`;
-  const description = `Explore verified production-grade builds and engineering proof-of-work by ${profile.user.name} on BuildScape. ${profile.stats.verifiedBuildsCount} verified projects, ${profile.stats.totalEngineeringHours} engineering hours completed.`;
+  const title = `${profile.user.name} (@${profile.user.username}) • Project Builds | BuildScape`;
+  const description = `Explore project builds and linked public repositories by ${profile.user.name} on BuildScape. ${profile.stats.verifiedBuildsCount} public repositories linked, ${profile.stats.totalEngineeringHours} estimated project hours.`;
 
   return {
     title,
@@ -105,7 +105,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
       name: user.name,
       alternateName: `@${user.username}`,
       image: user.avatar,
-      description: `Software developer with ${stats.verifiedBuildsCount} verified builds and ${stats.totalEngineeringHours} engineering hours completed on BuildScape.`,
+      description: `Software developer with ${stats.verifiedBuildsCount} public repositories linked to completed BuildScape projects.`,
       knowsAbout: stats.masteredTechStack,
     },
   };
@@ -137,7 +137,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                       height={68}
                       className="rounded-full border-2 border-amber-600/40 shadow-md"
                     />
-                    <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-[#0a0a09] bg-emerald-500 text-stone-950 shadow-xs" title="Verified Proof-of-Work Builder">
+                    <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-[#0a0a09] bg-emerald-500 text-stone-950 shadow-xs" title="Completed projects with public repositories">
                       <ShieldCheck className="h-3.5 w-3.5" />
                     </div>
                   </div>
@@ -157,7 +157,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                     </h1>
                     <span className="flex items-center gap-1 rounded-full border border-emerald-800/50 bg-emerald-950/40 px-2.5 py-0.5 text-[11px] font-medium text-emerald-400">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      Verified Builder
+                      BuildScape Builder
                     </span>
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-[#8a8178]">
@@ -188,7 +188,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
             <div className="mt-7 grid grid-cols-2 gap-3 border-t border-[#1f1c17] pt-5 sm:grid-cols-3">
               <div className="rounded-xl border border-[#221f1a] bg-[#11100e]/80 p-3.5">
                 <span className="text-[10px] uppercase tracking-wider text-[#6b6256] font-mono">
-                  Verified Builds
+                  Public Repositories Linked
                 </span>
                 <p className="mt-1 font-mono text-2xl font-bold text-emerald-400">
                   {stats.verifiedBuildsCount}
@@ -197,7 +197,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
               <div className="rounded-xl border border-[#221f1a] bg-[#11100e]/80 p-3.5">
                 <span className="text-[10px] uppercase tracking-wider text-[#6b6256] font-mono">
-                  Engineering Hours
+                  Estimated Project Hours
                 </span>
                 <p className="mt-1 font-mono text-2xl font-bold text-accent">
                   {stats.totalEngineeringHours}h
@@ -206,7 +206,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
               <div className="col-span-2 sm:col-span-1 rounded-xl border border-[#221f1a] bg-[#11100e]/80 p-3.5">
                 <span className="text-[10px] uppercase tracking-wider text-[#6b6256] font-mono">
-                  Tech Stacks Mastered
+                  Technologies Used
                 </span>
                 <p className="mt-1 font-mono text-2xl font-bold text-[#e4ddd3]">
                   {stats.masteredTechStack.length}
@@ -230,16 +230,16 @@ export default async function PublicProfilePage({ params }: PageProps) {
             )}
           </div>
 
-          {/* Verified Projects Showcase */}
+          {/* Projects with checked public repository links */}
           <div className="mt-10">
             <div className="mb-5 flex items-center justify-between">
               <div>
                 <h2 className="font-serif text-lg font-bold text-[#f4eee6] flex items-center gap-2">
                   <Award className="h-5 w-5 text-accent" />
-                  <span>Verified Proof-of-Work Projects</span>
+                  <span>Completed Projects with Public Repositories</span>
                 </h2>
                 <p className="text-xs text-[#8a8178] mt-0.5">
-                  Production-grade systems built and verified end-to-end.
+                  Projects with all curriculum phases completed and a GitHub repository checked as public.
                 </p>
               </div>
             </div>
@@ -250,10 +250,10 @@ export default async function PublicProfilePage({ params }: PageProps) {
                   <Layers className="h-5 w-5 text-[#6b6256]" />
                 </div>
                 <h3 className="font-serif text-sm font-semibold text-[#e4ddd3]">
-                  No Verified Projects Yet
+                  No Linked Public Repositories Yet
                 </h3>
                 <p className="mx-auto mt-1 max-w-sm text-xs text-[#8a8178]">
-                  This developer has not yet submitted a verified project to their public portfolio.
+                  This developer has not linked a public repository to a completed project yet.
                 </p>
               </div>
             ) : (
@@ -263,8 +263,6 @@ export default async function PublicProfilePage({ params }: PageProps) {
                     DIFFICULTY_COLORS[project.difficulty] ??
                     "text-amber-400 bg-amber-950/60 border-amber-900";
                   const trackColor = getTrackColor(project.track);
-                  const badgeEndpoint = `${getApiUrl()}/api/badges/${user.username}/${project.slug}.svg`;
-
                   return (
                     <div
                       key={project.slug}
@@ -311,12 +309,12 @@ export default async function PublicProfilePage({ params }: PageProps) {
                           ))}
                         </div>
 
-                        {/* Verified Proof Banner */}
+                        {/* Public repository check banner */}
                         <div className="mb-4 rounded-lg border border-emerald-900/40 bg-emerald-950/20 p-2.5">
                           <div className="flex items-center justify-between text-[11px]">
                             <span className="flex items-center gap-1.5 font-medium text-emerald-400">
                               <ShieldCheck className="h-3.5 w-3.5" />
-                              Proof-of-Work Verified
+                              Public Repository Checked
                             </span>
                             {project.verifiedAt && (
                               <span className="text-[#6b6256] font-mono text-[10px]">

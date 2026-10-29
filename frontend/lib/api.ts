@@ -1,8 +1,6 @@
 export function getApiUrl(): string {
-  // Changed from process.env.API_URL to process.env.NEXT_PUBLIC_API_URL
-  const url =
-    process.env.NEXT_PUBLIC_API_URL ||
-    "http://localhost:4000";
+  const url = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (!url) throw new Error("NEXT_PUBLIC_API_URL is required");
   return url.replace(/\/+$/, "");
 }
 
@@ -44,6 +42,12 @@ export const api = {
 
   getMe: () => request<{ user: AuthUser }>("/api/auth/me"),
 
+  updateUsername: (username: string) =>
+    request<{ username: string }>("/api/auth/username", {
+      method: "PUT",
+      body: JSON.stringify({ username }),
+    }),
+
   // Projects
   getProjects: () =>
     request<{ projects: ApiProject[] }>("/api/projects"),
@@ -59,6 +63,35 @@ export const api = {
   getProgress: (slug: string) =>
     request<ProgressResponse>(`/api/projects/${slug}/progress`),
 
+  clearProgress: (slug: string) =>
+    request<{ success: boolean }>(`/api/projects/${slug}/progress`, { method: "DELETE" }),
+
+  setActivePhase: (slug: string, phaseId: string) =>
+    request<{ success: boolean; currentPhaseIndex: number }>(`/api/projects/${slug}/progress/active-phase`, {
+      method: "PUT", body: JSON.stringify({ phaseId }),
+    }),
+
+  getPhaseNote: (slug: string, phaseId: string) =>
+    request<{ content: string }>(`/api/projects/${slug}/phases/${encodeURIComponent(phaseId)}/note`),
+
+  savePhaseNote: (slug: string, phaseId: string, content: string) =>
+    request<{ success: boolean; content: string }>(`/api/projects/${slug}/phases/${encodeURIComponent(phaseId)}/note`, {
+      method: "PUT", body: JSON.stringify({ content }),
+    }),
+
+  reportPhaseIssue: (slug: string, phaseId: string, data: { category: CurriculumIssueCategory; message: string }) =>
+    request<{ success: boolean; issue: AdminCurriculumIssue }>(`/api/projects/${slug}/phases/${encodeURIComponent(phaseId)}/issues`, {
+      method: "POST", body: JSON.stringify(data),
+    }),
+
+  getCurriculumIssues: (status?: CurriculumIssueStatus) =>
+    request<{ issues: AdminCurriculumIssue[] }>(`/api/admin/curriculum-issues${status ? `?status=${status}` : ""}`),
+
+  updateCurriculumIssue: (id: string, status: CurriculumIssueStatus) =>
+    request<{ success: boolean; issue: AdminCurriculumIssue }>(`/api/admin/curriculum-issues/${id}`, {
+      method: "PATCH", body: JSON.stringify({ status }),
+    }),
+
   completePhase: (slug: string, phaseId: string) =>
     request<{ success: boolean }>(
       `/api/projects/${slug}/phases/${phaseId}/complete`,
@@ -73,6 +106,23 @@ export const api = {
 
   getEnrolledProjects: () =>
     request<{ enrollments: EnrolledProjectItem[] }>("/api/projects/my/enrolled"),
+
+  createProject: (project: ProjectPayload) =>
+    request<{ success: boolean; project: ApiProject }>("/api/projects", {
+      method: "POST",
+      body: JSON.stringify(project),
+    }),
+
+  updateProject: (slug: string, project: ProjectPayload) =>
+    request<{ success: boolean; project: ApiProject }>(`/api/projects/${encodeURIComponent(slug)}`, {
+      method: "PUT",
+      body: JSON.stringify(project),
+    }),
+
+  deleteProject: (slug: string) =>
+    request<{ success: boolean; message: string }>(`/api/projects/${encodeURIComponent(slug)}`, {
+      method: "DELETE",
+    }),
 
   verifyProject: (slug: string, data: { githubRepoUrl: string; liveDemoUrl?: string }) =>
     request<{ success: boolean; verification: unknown }>(`/api/projects/${slug}/verify`, {
@@ -97,6 +147,7 @@ export interface AuthUser {
 export interface EnrolledProjectItem {
   enrollmentId: string;
   enrolledAt: string;
+  completedAt?: string;
   currentPhaseIndex: number;
   completedCount: number;
   totalPhases: number;
@@ -131,6 +182,19 @@ export interface ApiProject {
   phases?: ApiPhase[];
 }
 
+export interface ProjectPayload {
+  slug: string;
+  title: string;
+  tagline: string;
+  description?: string;
+  whatYouWillLearn?: string[];
+  track: string;
+  difficulty: string;
+  estimatedHours: number;
+  techStack: string[];
+  phases: { id: string; orderIndex: number; title: string; content: string }[];
+}
+
 export interface ApiPhase {
   id: string;
   orderIndex: number;
@@ -141,11 +205,28 @@ export interface ApiPhase {
 export interface ProgressResponse {
   enrolled: boolean;
   currentPhaseIndex: number;
+  completedAt?: string;
   completedPhases: { phaseId: string; completedAt: string }[];
   isVerified?: boolean;
   githubRepoUrl?: string;
   liveDemoUrl?: string;
   verifiedAt?: string;
+}
+
+export type CurriculumIssueCategory = "outdated" | "broken" | "unclear" | "other";
+export type CurriculumIssueStatus = "open" | "in_review" | "resolved";
+
+export interface AdminCurriculumIssue {
+  _id: string;
+  phaseId: string;
+  phaseTitle: string;
+  category: CurriculumIssueCategory;
+  message: string;
+  status: CurriculumIssueStatus;
+  createdAt: string;
+  updatedAt: string;
+  projectId: { _id: string; slug: string; title: string };
+  userId: { _id: string; name: string; username?: string };
 }
 
 export interface PublicVerifiedProject {

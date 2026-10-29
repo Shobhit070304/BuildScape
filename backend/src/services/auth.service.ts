@@ -19,7 +19,7 @@ export async function loginWithGoogle(credential: string) {
   if (!payload?.sub || !payload.email) throw new HttpError(401, "Invalid Google token");
 
   const email = payload.email.toLowerCase();
-  const existingUser = await userRepository.findById(payload.sub).catch(() => null);
+  const existingUser = await userRepository.findByGoogleId(payload.sub);
   const isAdmin = Boolean(env.ADMIN_EMAIL && email === env.ADMIN_EMAIL);
   const role: "user" | "admin" = existingUser?.role === "admin" || isAdmin ? "admin" : "user";
 
@@ -67,7 +67,34 @@ export async function getUserProfile(userId: string) {
   return user;
 }
 
-// Retrieve public developer portfolio and verified proof-of-work achievements.
+export async function updateUsername(userId: string, requestedUsername: unknown) {
+  if (typeof requestedUsername !== "string") {
+    throw new HttpError(400, "Username is required");
+  }
+
+  const username = requestedUsername.trim().toLowerCase();
+  if (username.length < 3 || username.length > 24 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(username)) {
+    throw new HttpError(400, "Use 3–24 lowercase letters or numbers, with single hyphens between words");
+  }
+
+  const existing = await userRepository.findByUsername(username);
+  if (existing && existing._id.toString() !== userId) {
+    throw new HttpError(409, "That username is already taken");
+  }
+
+  try {
+    const user = await userRepository.updateUsername(userId, username);
+    if (!user) throw new HttpError(404, "User not found");
+    return user;
+  } catch (error) {
+    if ((error as { code?: number }).code === 11000) {
+      throw new HttpError(409, "That username is already taken");
+    }
+    throw error;
+  }
+}
+
+// Retrieve a public developer profile and completed projects with checked public repositories.
 export async function getPublicProfile(username: string) {
   const user = await userRepository.findByUsername(username);
   if (!user) {

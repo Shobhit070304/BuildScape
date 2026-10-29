@@ -1,5 +1,6 @@
 import { asyncHandler } from "../middleware/asyncHandler";
 import { projectsService } from "../services/projects.service";
+import { feedbackService } from "../services/feedback.service";
 
 // Keep HTTP parsing and response formatting in controllers.
 export const listProjects = asyncHandler(async (_req, res) => {
@@ -29,6 +30,33 @@ export const getProgress = asyncHandler(async (req, res) => {
   res.json({ ...await projectsService.getProgress(req.user!.userId, String(req.params.slug)) });
 });
 
+export const clearProgress = asyncHandler(async (req, res) => {
+  await projectsService.clearProgress(req.user!.userId, String(req.params.slug));
+  res.json({ success: true });
+});
+
+export const setCurrentPhase = asyncHandler(async (req, res) => {
+  const currentPhaseIndex = await projectsService.setCurrentPhase(
+    req.user!.userId, String(req.params.slug), String(req.body.phaseId ?? "")
+  );
+  res.json({ success: true, currentPhaseIndex });
+});
+
+export const getPhaseNote = asyncHandler(async (req, res) => {
+  const content = await feedbackService.getNote(req.user!.userId, String(req.params.slug), String(req.params.phaseId));
+  res.json({ content });
+});
+
+export const savePhaseNote = asyncHandler(async (req, res) => {
+  const content = await feedbackService.saveNote(req.user!.userId, String(req.params.slug), String(req.params.phaseId), req.body.content);
+  res.json({ success: true, content });
+});
+
+export const reportPhaseIssue = asyncHandler(async (req, res) => {
+  const issue = await feedbackService.reportIssue(req.user!.userId, String(req.params.slug), String(req.params.phaseId), req.body);
+  res.status(201).json({ success: true, issue });
+});
+
 export const getEnrolledProjects = asyncHandler(async (req, res) => {
   res.json({ enrollments: await projectsService.getEnrolled(req.user!.userId) });
 });
@@ -53,6 +81,6 @@ export const updateProject = asyncHandler(async (req, res) => {
 });
 
 export const deleteProject = asyncHandler(async (req, res) => {
-  await projectsService.delete(String(req.params.slug));
-  res.json({ success: true, message: "Project deleted successfully" });
+  const project = await projectsService.delete(String(req.params.slug));
+  res.json({ success: true, message: `Project “${project.title}” and its learner data were deleted` });
 });

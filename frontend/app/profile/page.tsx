@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import type { FormEvent } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { GoogleLogin } from "@react-oauth/google";
@@ -15,6 +16,9 @@ import {
   CheckCircle2,
   ShieldCheck,
   ExternalLink,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
@@ -23,10 +27,18 @@ import { DIFFICULTY_COLORS, getTrackColor } from "@/lib/projects";
 import { VerificationModal } from "@/components/VerificationModal";
 
 export default function ProfilePage() {
-  const { user, isLoading: authLoading, login, logout } = useAuth();
+  const { user, isLoading: authLoading, login, logout, updateUsername } = useAuth();
   const [enrollments, setEnrollments] = useState<EnrolledProjectItem[]>([]);
   const [loadingEnrollments, setLoadingEnrollments] = useState(false);
   const [selectedVerifyProject, setSelectedVerifyProject] = useState<EnrolledProjectItem | null>(null);
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [usernameDraft, setUsernameDraft] = useState("");
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [savingUsername, setSavingUsername] = useState(false);
+
+  useEffect(() => {
+    if (user?.username) setUsernameDraft(user.username);
+  }, [user?.username]);
 
   useEffect(() => {
     if (!user) return;
@@ -48,6 +60,20 @@ export default function ProfilePage() {
     (sum, item) => sum + item.completedCount,
     0
   );
+
+  const handleUsernameSave = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSavingUsername(true);
+    setUsernameError(null);
+    try {
+      await updateUsername(usernameDraft);
+      setEditingUsername(false);
+    } catch (error) {
+      setUsernameError(error instanceof Error ? error.message : "Could not update username");
+    } finally {
+      setSavingUsername(false);
+    }
+  };
 
   return (
     <>
@@ -104,7 +130,7 @@ export default function ProfilePage() {
                         {user.name[0]?.toUpperCase()}
                       </div>
                     )}
-                    <div>
+                    <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <h1 className="font-serif text-lg font-bold text-[#e4ddd3]">
                           {user.name}
@@ -120,11 +146,25 @@ export default function ProfilePage() {
                         </span>
                       </div>
                       <p className="text-[11px] text-[#8a8178]">{user.email}</p>
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-[11px] text-[#b59a69]">@{user.username}</span>
+                        {!editingUsername && <button onClick={() => { setUsernameError(null); setEditingUsername(true); }} className="inline-flex items-center gap-1 text-[10px] text-[#8a8178] hover:text-accent"><Pencil className="h-3 w-3" />Edit username</button>}
+                      </div>
+                      {editingUsername && <form onSubmit={handleUsernameSave} className="mt-2 flex max-w-sm flex-wrap items-center gap-2">
+                        <label className="sr-only" htmlFor="profile-username">Public username</label>
+                        <span className="text-xs text-[#81776b]">@</span>
+                        <input id="profile-username" required minLength={3} maxLength={24} pattern="[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*" autoComplete="off" value={usernameDraft} onChange={(event) => setUsernameDraft(event.target.value)} className="min-w-0 flex-1 rounded-md border border-[#342f27] bg-[#0d0c0a] px-2 py-1 text-xs text-[#e4ddd3] outline-none focus:border-amber-700" />
+                        <button type="submit" disabled={savingUsername} className="inline-flex items-center gap-1 rounded-md bg-amber-700 px-2 py-1 text-[10px] font-semibold text-black disabled:opacity-50">{savingUsername ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}Save</button>
+                        <button type="button" disabled={savingUsername} onClick={() => { setEditingUsername(false); setUsernameDraft(user.username ?? ""); setUsernameError(null); }} className="rounded-md border border-[#342f27] p-1 text-[#8a8178] hover:text-white" aria-label="Cancel username edit"><X className="h-3 w-3" /></button>
+                        {usernameError && <p role="alert" className="w-full text-[10px] text-red-300">{usernameError}</p>}
+                        <p className="w-full text-[10px] text-[#6b6256]">3–24 letters or numbers; use single hyphens between words.</p>
+                      </form>}
                     </div>
                   </div>
 
                   {/* Action buttons */}
                   <div className="flex items-center gap-2">
+                    {user.role === "admin" && <Link href="/admin" className="rounded border border-purple-800/40 bg-purple-950/30 px-3 py-1.5 text-xs text-purple-200 hover:bg-purple-900/40">Manage projects</Link>}
                     {user.username && (
                       <Link
                         href={`/u/${user.username}`}
@@ -168,7 +208,7 @@ export default function ProfilePage() {
                   </div>
                   <div className="rounded-lg border border-[#221f1a] bg-[#11100e] p-3">
                     <span className="text-[0.62rem] uppercase tracking-wider text-[#6b6256] font-mono">
-                      Verified Builds
+                      Public Repositories Linked
                     </span>
                     <p className="mt-0.5 font-mono text-lg font-bold text-emerald-400">
                       {enrollments.filter((item) => item.isVerified).length}
@@ -240,7 +280,7 @@ export default function ProfilePage() {
                       const p = item.project;
                       const total = item.totalPhases || 5;
                       const percent = Math.round((item.completedCount / total) * 100);
-                      const isComplete = item.completedCount >= total;
+                      const isComplete = Boolean(item.completedAt) || item.completedCount >= total;
 
                       const diffColor =
                         DIFFICULTY_COLORS[p.difficulty] ??
@@ -285,9 +325,9 @@ export default function ProfilePage() {
                             <div className="mb-3.5 rounded-lg border border-[#221f1a] bg-[#14120f] p-2.5">
                               <div className="mb-1 flex items-center justify-between text-[11px]">
                                 <span className="text-[#8a8178]">
-                                  {isComplete ? (
+                                      {isComplete ? (
                                     <span className="text-emerald-400 font-medium flex items-center gap-1">
-                                      <CheckCircle2 className="h-3 w-3" /> Complete
+                                      <CheckCircle2 className="h-3 w-3" /> Completion earned
                                     </span>
                                   ) : (
                                     `Progress: ${item.completedCount} of ${total} phases`
@@ -308,18 +348,21 @@ export default function ProfilePage() {
                                 />
                               </div>
                             </div>
-                            {/* Verification Proof-of-Work Status */}
+                            {isComplete && item.completedCount < total && (
+                              <p className="-mt-2 mb-3 text-[10px] text-[#81776b]">Some phase checkboxes are now unchecked; earned completion and repository status remain on your profile.</p>
+                            )}
+                            {/* Public repository link status */}
                             {isComplete && (
                               <div className="mb-3 flex items-center justify-between rounded-lg border border-emerald-900/40 bg-emerald-950/20 px-3 py-1.5 text-xs">
                                 <span className="flex items-center gap-1.5 font-medium text-emerald-400">
                                   <ShieldCheck className="h-3.5 w-3.5" />
-                                  {item.isVerified ? "Verified Proof-of-Work" : "Completion Ready"}
+                                  {item.isVerified ? "Public Repo Checked" : "Ready to Link Repo"}
                                 </span>
                                 <button
                                   onClick={() => setSelectedVerifyProject(item)}
                                   className="flex items-center gap-1 font-semibold text-accent hover:underline cursor-pointer"
                                 >
-                                  <span>{item.isVerified ? "Badge & Links" : "Verify Build"}</span>
+                                  <span>{item.isVerified ? "View Links" : "Check Public Repo"}</span>
                                   <ArrowRight className="h-2.5 w-2.5" />
                                 </button>
                               </div>
@@ -357,6 +400,7 @@ export default function ProfilePage() {
       {/* Verification Modal for Profile Page */}
       {selectedVerifyProject && user && (
         <VerificationModal
+          key={selectedVerifyProject.project.slug}
           isOpen={Boolean(selectedVerifyProject)}
           onClose={() => setSelectedVerifyProject(null)}
           projectSlug={selectedVerifyProject.project.slug}

@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "BuildScape — Build Real Production Software | Escape Tutorial Hell",
   description:
-    "Stop watching tutorials. Build real-world distributed architectures, cache engines, and streaming systems with phase-by-phase blueprints and verifiable proof-of-work.",
+    "Stop watching tutorials. Build real-world distributed architectures, cache engines, and streaming systems with phase-by-phase blueprints and a portfolio of completed projects.",
   alternates: {
     canonical: "/",
   },

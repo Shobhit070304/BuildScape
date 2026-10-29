@@ -1,5 +1,5 @@
 import { asyncHandler } from "../middleware/asyncHandler";
-import { getUserProfile, loginWithGoogle } from "../services/auth.service";
+import { getUserProfile, loginWithGoogle, updateUsername } from "../services/auth.service";
 import { HttpError } from "../services/httpError";
 
 // Handle authentication request validation and response formatting.
@@ -35,4 +35,9 @@ export const logout = asyncHandler(async (_req, res) => {
 
 export const getMe = asyncHandler(async (req, res) => {
   res.json({ user: await getUserProfile(req.user!.userId) });
+});
+
+export const changeUsername = asyncHandler(async (req, res) => {
+  const user = await updateUsername(req.user!.userId, req.body?.username);
+  res.json({ username: user.username });
 });

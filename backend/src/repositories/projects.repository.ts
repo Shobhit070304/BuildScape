@@ -1,3 +1,4 @@
+import type { ClientSession } from "mongoose";
 import { Project, IProject } from "../models/Project";
 import { HttpError } from "../services/httpError";
 
@@ -8,9 +9,13 @@ export const projectRepository = {
   findPhasesBySlug: (slug: string) => Project.findOne({ slug }, { phases: 1 }),
   create: (values: Partial<IProject>) => Project.create(values),
   updateBySlug: async (slug: string, values: Partial<IProject>) => {
-    const project = await Project.findOneAndUpdate({ slug }, values, { returnDocument: "after" });
+    const project = await Project.findOneAndUpdate({ slug }, { $set: values }, {
+      returnDocument: "after",
+      runValidators: true,
+    });
     if (!project) throw new HttpError(404, "Project not found");
     return project;
   },
-  deleteBySlug: (slug: string) => Project.findOneAndDelete({ slug }),
+  deleteBySlug: (slug: string, session?: ClientSession) =>
+    Project.findOneAndDelete({ slug }, { session }),
 };
