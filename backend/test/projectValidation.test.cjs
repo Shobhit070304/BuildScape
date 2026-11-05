@@ -36,3 +36,13 @@ test("rejects malformed phase ordering and duplicate phase IDs", () => {
   duplicateIds.phases.push({ ...duplicateIds.phases[0], orderIndex: 2 });
   assert.throws(() => validateProjectInput(duplicateIds), { statusCode: 400 });
 });
+
+test("rejects whitespace-padded slugs and phase IDs", () => {
+  const paddedSlug = project();
+  paddedSlug.slug = " sample-project ";
+  assert.throws(() => validateProjectInput(paddedSlug), { statusCode: 400 });
+
+  const paddedPhaseId = project();
+  paddedPhaseId.phases[0].id = " phase-1 ";
+  assert.throws(() => validateProjectInput(paddedPhaseId), { statusCode: 400 });
+});

@@ -58,7 +58,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
       <div className="flex items-center justify-between border-t border-[#1e1c18] pt-2 text-xs">
         <div className="flex flex-wrap gap-1">
           {project.techStack.slice(0, 3).map((tech) => (
-            <TechBadge key={tech} name={tech} size="xs" showIcon={false} />
+            <TechBadge key={tech} name={tech} size="xs" />
           ))}
           {project.techStack.length > 3 && (
             <span className="rounded border border-[#221f1a] bg-[#14120f] px-1 py-0.2 text-[0.58rem] text-[#8a8178]">

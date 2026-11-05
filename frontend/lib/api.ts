@@ -4,6 +4,81 @@ export function getApiUrl(): string {
   return url.replace(/\/+$/, "");
 }
 
+export interface AssistantChatMessage {
+  role: "user" | "assistant";
+  text: string;
+}
+
+export async function streamAssistantChat(
+  projectSlug: string,
+  phaseId: string,
+  message: string,
+  onDelta: (text: string) => void,
+  signal?: AbortSignal
+): Promise<void> {
+  const controller = new AbortController();
+  let timedOut = false;
+  const timeout = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, 60_000);
+  const abortFromCaller = () => controller.abort();
+  signal?.addEventListener("abort", abortFromCaller, { once: true });
+
+  try {
+    const response = await fetch(`${getApiUrl()}/api/assistant/chat`, {
+      method: "POST",
+      credentials: "include",
+      signal: controller.signal,
+      headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+      body: JSON.stringify({ projectSlug, phaseId, message }),
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: response.statusText }));
+      throw new Error(error.message ?? error.error ?? "Assistant request failed");
+    }
+    if (!response.body) throw new Error("Streaming is not supported by this browser");
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let finished = false;
+    const handleEvent = (event: string) => {
+      const dataLine = event.split("\n").find((line) => line.startsWith("data:"));
+      if (!dataLine) return;
+      const data = JSON.parse(dataLine.slice(5).trim()) as { type: string; text?: string; message?: string };
+      if (data.type === "delta" && data.text) onDelta(data.text);
+      if (data.type === "error") throw new Error(data.message || "Assistant request failed");
+      if (data.type === "done") finished = true;
+    };
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        buffer += decoder.decode(value, { stream: !done }).replaceAll("\r\n", "\n");
+        let boundary = buffer.indexOf("\n\n");
+        while (boundary !== -1) {
+          handleEvent(buffer.slice(0, boundary));
+          buffer = buffer.slice(boundary + 2);
+          boundary = buffer.indexOf("\n\n");
+        }
+        if (done) break;
+      }
+      if (buffer.trim()) handleEvent(buffer);
+      if (!finished) throw new Error("The assistant connection ended before completing the answer.");
+    } finally {
+      reader.releaseLock();
+    }
+  } catch (error) {
+    if (timedOut) throw new Error("The assistant timed out. Please try again.");
+    if (signal?.aborted) throw new Error("Assistant request cancelled");
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+    signal?.removeEventListener("abort", abortFromCaller);
+  }
+}
+
 async function request<T>(
   path: string,
   options: RequestInit = {}
@@ -144,6 +219,12 @@ export const api = {
 
   getPublicProfile: (username: string) =>
     request<PublicUserProfile>(`/api/users/${username}`),
+
+  getAssistantHistory: (projectSlug: string, phaseId: string) =>
+    request<{ messages: AssistantChatMessage[] }>(`/api/assistant/history/${encodeURIComponent(projectSlug)}/${encodeURIComponent(phaseId)}`),
+
+  clearAssistantHistory: (projectSlug: string, phaseId: string) =>
+    request<{ success: boolean }>(`/api/assistant/history/${encodeURIComponent(projectSlug)}/${encodeURIComponent(phaseId)}`, { method: "DELETE" }),
 };
 
 // Shared types
@@ -182,6 +263,7 @@ export interface EnrolledProjectItem {
 
 export interface ApiProject {
   _id: string;
+  learnerCount?: number;
   slug: string;
   title: string;
   tagline: string;

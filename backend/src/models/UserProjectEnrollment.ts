@@ -28,6 +28,7 @@ const EnrollmentSchema = new Schema<IUserProjectEnrollment>(
 
 // One enrollment per user-project pair
 EnrollmentSchema.index({ userId: 1, projectId: 1 }, { unique: true });
+EnrollmentSchema.index({ projectId: 1 });
 
 export const UserProjectEnrollment = mongoose.model<IUserProjectEnrollment>(
   "UserProjectEnrollment",

@@ -3,10 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { createPortal } from "react-dom";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeHighlight from "rehype-highlight";
-import type { Components } from "react-markdown";
 import {
   CheckCircle2,
   Circle,
@@ -20,29 +16,16 @@ import {
   Flag,
   Save,
   X,
+  Sparkles,
 } from "lucide-react";
 import type { Project, Phase } from "@/lib/projects";
 import type { ProgressController } from "@/hooks/useProgress";
 import { useAuth } from "@/context/AuthContext";
 import { VerificationModal } from "./VerificationModal";
+import { AssistantDrawer } from "./AssistantDrawer";
+import { MarkdownContent } from "./MarkdownContent";
+import { TechBadge } from "./TechBadge";
 import { api, type CurriculumIssueCategory } from "@/lib/api";
-
-const mdComponents: Components = {
-  a({ href, children, ...props }) {
-    const isExternal = href?.startsWith("http");
-    return (
-      <a
-        href={href}
-        target={isExternal ? "_blank" : undefined}
-        rel={isExternal ? "noopener noreferrer" : undefined}
-        className="text-accent underline underline-offset-[3px] transition-colors hover:text-accent-hover"
-        {...props}
-      >
-        {children}
-      </a>
-    );
-  },
-};
 
 function PhaseSidebarItem({
   phase,
@@ -205,6 +188,7 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
   const [noteSaving, setNoteSaving] = useState(false);
   const [noteMessage, setNoteMessage] = useState("");
   const [issueOpen, setIssueOpen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const [issueCategory, setIssueCategory] = useState<CurriculumIssueCategory>("unclear");
   const [issueMessage, setIssueMessage] = useState("");
   const [issueSaving, setIssueSaving] = useState(false);
@@ -336,6 +320,11 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
           <h2 className="mb-3 font-serif text-sm font-semibold leading-snug text-[#e4ddd3]">
             {project.title}
           </h2>
+          <div className="mb-3 flex flex-wrap gap-1" aria-label="Project technologies">
+            {project.techStack.map((technology) => (
+              <TechBadge key={technology} name={technology} size="xs" />
+            ))}
+          </div>
 
           {/* Progress bar */}
           <div>
@@ -398,11 +387,14 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
           <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
             {enrolled && hydrated && (
               <>
-                <button type="button" onClick={() => { setNotesOpen((open) => !open); setIssueOpen(false); }} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[#373128] px-2.5 py-1.5 text-xs text-text-muted hover:bg-[#1a1814]" aria-haspopup="dialog" aria-expanded={notesOpen}>
+                <button type="button" onClick={() => { setNotesOpen((open) => !open); setIssueOpen(false); setAssistantOpen(false); }} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[#373128] px-2.5 py-1.5 text-xs text-text-muted hover:bg-[#1a1814]" aria-haspopup="dialog" aria-expanded={notesOpen}>
                   <FileText className="h-3.5 w-3.5" /> Notes
                 </button>
-                <button type="button" onClick={() => { setIssueOpen((open) => !open); setNotesOpen(false); }} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[#373128] px-2.5 py-1.5 text-xs text-text-muted hover:bg-[#1a1814]" aria-haspopup="dialog" aria-expanded={issueOpen}>
+                <button type="button" onClick={() => { setIssueOpen((open) => !open); setNotesOpen(false); setAssistantOpen(false); }} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[#373128] px-2.5 py-1.5 text-xs text-text-muted hover:bg-[#1a1814]" aria-haspopup="dialog" aria-expanded={issueOpen}>
                   <Flag className="h-3.5 w-3.5" /> Report issue
+                </button>
+                <button type="button" onClick={() => { setAssistantOpen(true); setNotesOpen(false); setIssueOpen(false); }} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-amber-800/50 bg-amber-950/25 px-2.5 py-1.5 text-xs text-amber-200 transition-colors hover:bg-amber-900/35" aria-haspopup="dialog" aria-expanded={assistantOpen}>
+                  <Sparkles className="h-3.5 w-3.5" /> AI Help
                 </button>
               </>
             )}
@@ -480,15 +472,7 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
               </div>
             )}
 
-            <div className="prose">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeHighlight]}
-                components={mdComponents}
-              >
-                {activePhase.content}
-              </ReactMarkdown>
-            </div>
+            <MarkdownContent>{activePhase.content}</MarkdownContent>
 
             {notesOpen && enrolled && (
               <WorkspaceDialog title="My notes for this phase" onClose={() => setNotesOpen(false)}>
@@ -505,9 +489,9 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
               <WorkspaceDialog title="Report a curriculum issue" onClose={() => setIssueOpen(false)}>
                 <form onSubmit={(event) => void submitIssue(event)}>
                   <p className="mb-3 mt-1 text-xs text-text-faint">Tell the team what needs fixing in this phase.</p>
-                  <div className="grid gap-3 sm:grid-cols-[180px_1fr]">
-                    <select aria-label="Issue category" value={issueCategory} onChange={(event) => setIssueCategory(event.target.value as CurriculumIssueCategory)} className="rounded-lg border border-[#342f27] bg-[#0d0c0a] p-2 text-xs text-[#e4ddd3]"><option value="unclear">Unclear instructions</option><option value="broken">Broken link or code</option><option value="outdated">Outdated information</option><option value="other">Other</option></select>
-                    <textarea aria-label="Describe the curriculum issue" required minLength={1} maxLength={2000} rows={4} value={issueMessage} onChange={(event) => setIssueMessage(event.target.value)} className="rounded-lg border border-[#342f27] bg-[#0d0c0a] p-3 text-sm text-[#e4ddd3] outline-none focus:border-amber-700" placeholder="Describe the problem (up to 2,000 characters)…" />
+                  <div className="grid items-start gap-3 sm:grid-cols-[180px_minmax(0,1fr)]">
+                    <select aria-label="Issue category" value={issueCategory} onChange={(event) => setIssueCategory(event.target.value as CurriculumIssueCategory)} className="h-10 w-full self-start rounded-lg border border-[#342f27] bg-[#0d0c0a] p-2 text-xs text-[#e4ddd3]"><option value="unclear">Unclear instructions</option><option value="broken">Broken link or code</option><option value="outdated">Outdated information</option><option value="other">Other</option></select>
+                    <textarea aria-label="Describe the curriculum issue" required minLength={1} maxLength={2000} rows={4} value={issueMessage} onChange={(event) => setIssueMessage(event.target.value)} className="min-w-0 w-full rounded-lg border border-[#342f27] bg-[#0d0c0a] p-3 text-sm text-[#e4ddd3] outline-none focus:border-amber-700" placeholder="Describe the problem (up to 2,000 characters)…" />
                   </div>
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-3"><p aria-live="polite" className="text-xs text-text-muted">{issueFeedback}</p><button type="submit" disabled={issueSaving || !issueMessage.trim()} className="rounded-lg border border-amber-800/50 bg-amber-950/25 px-3 py-2 text-xs font-semibold text-accent disabled:opacity-50">{issueSaving ? "Sending…" : "Send report"}</button></div>
                 </form>
@@ -579,6 +563,14 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
           refreshProgress();
         }}
       />
+      {assistantOpen && activePhase && (
+        <AssistantDrawer
+          key={activePhase.id}
+          project={project}
+          phase={activePhase}
+          onClose={() => setAssistantOpen(false)}
+        />
+      )}
     </div>
   );
 }

@@ -30,13 +30,17 @@ export function useProgress(projectSlug: string, enabled = true) {
     isVerified: false,
   });
   const phaseSaveQueue = useRef<Promise<unknown>>(Promise.resolve());
+  const requestVersion = useRef(0);
+  const phaseToggleInFlight = useRef(false);
 
   const fetchDbProgress = useCallback(async () => {
     if (!user || !enabled) return;
     const ownerId = user.id || null;
+    const requestId = ++requestVersion.current;
 
     try {
       const data = await api.getProgress(projectSlug);
+      if (requestId !== requestVersion.current) return;
       setState({
         ownerId,
         enrolled: data.enrolled,
@@ -50,6 +54,7 @@ export function useProgress(projectSlug: string, enabled = true) {
         verifiedAt: data.verifiedAt,
       });
     } catch (error) {
+      if (requestId !== requestVersion.current) return;
       setState({
         ownerId,
         enrolled: false,
@@ -70,7 +75,9 @@ export function useProgress(projectSlug: string, enabled = true) {
 
   const togglePhase = useCallback(
     async (phaseId: string) => {
-      if (!user) return false;
+      if (!user || phaseToggleInFlight.current) return false;
+      phaseToggleInFlight.current = true;
+      const requestId = ++requestVersion.current;
 
       const isNowCompleting = !state.completed.includes(phaseId);
 
@@ -88,26 +95,37 @@ export function useProgress(projectSlug: string, enabled = true) {
         } else {
           await api.uncompletePhase(projectSlug, phaseId);
         }
-        // Refresh accurate DB progress state (including currentPhaseIndex)
-        const fresh = await api.getProgress(projectSlug);
-        setState({
-          ownerId: user.id || null,
-          enrolled: fresh.enrolled,
-          currentPhaseIndex: fresh.currentPhaseIndex,
-          completed: fresh.completedPhases.map((p) => p.phaseId),
-          hydrated: true,
-          loadError: null,
-          isVerified: Boolean(fresh.isVerified),
-          githubRepoUrl: fresh.githubRepoUrl,
-          liveDemoUrl: fresh.liveDemoUrl,
-          verifiedAt: fresh.verifiedAt,
-        });
+        // The write succeeded, so keep its optimistic state even if the follow-up
+        // read briefly fails; a later refresh can reconcile the remaining fields.
+        try {
+          const fresh = await api.getProgress(projectSlug);
+          if (requestId === requestVersion.current) {
+            setState({
+              ownerId: user.id || null,
+              enrolled: fresh.enrolled,
+              currentPhaseIndex: fresh.currentPhaseIndex,
+              completed: fresh.completedPhases.map((p) => p.phaseId),
+              hydrated: true,
+              loadError: null,
+              isVerified: Boolean(fresh.isVerified),
+              githubRepoUrl: fresh.githubRepoUrl,
+              liveDemoUrl: fresh.liveDemoUrl,
+              verifiedAt: fresh.verifiedAt,
+            });
+          }
+        } catch (refreshError) {
+          console.error("Phase progress was saved, but the follow-up refresh failed:", refreshError);
+        }
         return true;
       } catch (err) {
         console.error("Failed to update phase progress in DB:", err);
         // Rollback on failure
-        setState((prev) => ({ ...prev, completed: previousCompleted }));
+        if (requestId === requestVersion.current) {
+          setState((prev) => ({ ...prev, completed: previousCompleted }));
+        }
         return false;
+      } finally {
+        phaseToggleInFlight.current = false;
       }
     },
     [state.completed, user, projectSlug]

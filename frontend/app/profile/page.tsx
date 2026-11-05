@@ -35,24 +35,27 @@ export default function ProfilePage() {
   const [usernameDraft, setUsernameDraft] = useState("");
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [signInError, setSignInError] = useState<string | null>(null);
+  const [logoutError, setLogoutError] = useState<string | null>(null);
   const [savingUsername, setSavingUsername] = useState(false);
 
   useEffect(() => {
     if (!user) return;
+    let cancelled = false;
     // The first authenticated profile load should show its loading state immediately.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoadingEnrollments(true);
     api
       .getEnrolledProjects()
       .then((data) => {
-        setEnrollments(data.enrollments ?? []);
+        if (!cancelled) setEnrollments(data.enrollments ?? []);
       })
       .catch((err) => {
-        console.error("Failed to load enrolled projects:", err);
+        if (!cancelled) console.error("Failed to load enrolled projects:", err);
       })
       .finally(() => {
-        setLoadingEnrollments(false);
+        if (!cancelled) setLoadingEnrollments(false);
       });
+    return () => { cancelled = true; };
   }, [user]);
 
   const totalCompletedPhases = enrollments.reduce(
@@ -71,6 +74,15 @@ export default function ProfilePage() {
       setUsernameError(error instanceof Error ? error.message : "Could not update username");
     } finally {
       setSavingUsername(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    setLogoutError(null);
+    try {
+      await logout();
+    } catch (error) {
+      setLogoutError(error instanceof Error ? error.message : "Could not log out. Please try again.");
     }
   };
 
@@ -185,7 +197,7 @@ export default function ProfilePage() {
                       </Link>
                     )}
                     <button
-                      onClick={logout}
+                      onClick={() => void handleLogout()}
                       className="flex items-center gap-1.5 rounded border border-[#2a2620] bg-[#14120f] px-3 py-1.5 text-xs font-medium text-[#a0978c] transition-all hover:border-[#3a342c] hover:bg-[#1a1814] hover:text-[#e4ddd3] cursor-pointer"
                       title="Sign out of your account"
                     >
@@ -194,6 +206,7 @@ export default function ProfilePage() {
                     </button>
                   </div>
                 </div>
+                {logoutError && <p role="alert" className="mt-3 text-xs text-rose-300">{logoutError}</p>}
 
                 {/* Stats Bar */}
                 <div className="mt-5 grid grid-cols-2 gap-3 border-t border-[#1e1c18] pt-4 sm:grid-cols-4">
@@ -418,8 +431,10 @@ export default function ProfilePage() {
           initialDemoUrl={selectedVerifyProject.liveDemoUrl}
           username={user.username}
           onVerifiedSuccess={() => {
-            api.getEnrolledProjects().then((data) => {
+            void api.getEnrolledProjects().then((data) => {
               setEnrollments(data.enrollments ?? []);
+            }).catch((error: unknown) => {
+              console.error("Failed to refresh enrolled projects:", error);
             });
           }}
         />

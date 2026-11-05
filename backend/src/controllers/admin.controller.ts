@@ -6,6 +6,6 @@ export const listCurriculumIssues = asyncHandler(async (req, res) => {
 });
 
 export const updateCurriculumIssue = asyncHandler(async (req, res) => {
-  const issue = await feedbackService.updateIssueStatus(String(req.params.issueId), req.body.status);
+  const issue = await feedbackService.updateIssueStatus(String(req.params.issueId), req.body?.status);
   res.json({ success: true, issue });
 });

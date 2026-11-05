@@ -6,7 +6,7 @@ BuildScape is a learning platform for production software projects. Visitors can
 
 - `frontend/` — Next.js App Router application.
 - `backend/` — Express API, MongoDB models, and seed/migration scripts.
-- `backend/data/projects.json` — local seed input used only by the seed script. Do not commit or push changes to this file.
+- `backend/data/projects.json` — private local seed input used by the seed script; the ignored data file is not included in the repository.
 
 ## Requirements
 
@@ -50,6 +50,10 @@ The frontend runs at `http://localhost:3000`; the API runs at `http://localhost:
 | `JWT_SECRET` | Yes | Random secret of at least 32 characters. |
 | `GOOGLE_CLIENT_ID` | Yes | Google OAuth web client ID. |
 | `ADMIN_EMAIL` | Yes for admin tools | Verified Google account allowed to administer curriculum. |
+| `GROQ_API_KEY` | Yes in production | Groq API key for the workspace assistant. Keep it on the backend. |
+| `GROQ_MODEL` | No | Groq model; defaults to `openai/gpt-oss-20b`. |
+| `UPSTASH_REDIS_REST_URL` | Yes in production | HTTPS REST URL for the Upstash Redis database. |
+| `UPSTASH_REDIS_REST_TOKEN` | Yes in production | Server-side Upstash REST token. Never expose it in frontend variables. |
 
 ### Frontend (`frontend/.env.local`)
 
@@ -72,7 +76,7 @@ npm run migrate:difficulties
 
 The migration maps `Entry` and `Basic` to `Beginner`, maps `Expert` to `Advanced`, and stops if it finds any other unsupported value. Back up production data before running migrations.
 
-To seed or refresh the local MongoDB database from `backend/data/projects.json`, run `npm run seed` from `backend/`. The seed file is local input; do not commit or push changes to it. The application does not seed the production database on startup.
+To seed or refresh a local MongoDB database, place your privately maintained `projects.json` at `backend/data/projects.json`, then run `npm run seed` from `backend/`. The data directory is ignored by Git and must be supplied separately. The application does not seed the production database on startup.
 
 ## Checks
 
@@ -82,6 +86,14 @@ Run the backend type check and unit tests:
 cd backend
 npm run check
 ```
+
+## AI assistant and caching
+
+The enrolled project workspace has a phase-aware AI tutor powered only by Groq. It streams concise answers, limits its scope to the current project and phase, and returns a fixed fallback for unrelated questions. Chat history is stored in Upstash per user, project, and phase for 24 hours; the three built-in starter prompts also use a 24-hour Upstash response cache when a new conversation starts. Saved phase notes are never sent to the model. If Groq is unavailable, the assistant displays a short offline next-step suggestion. Free-tier limits and model availability can change, so availability is not guaranteed.
+
+Upstash Redis is the only application cache. Public project lists and details use a five-minute Redis TTL, and admin project writes invalidate those entries. If Redis is temporarily unavailable, public reads fall back to MongoDB without keeping a process-local cache. User progress, enrollment, and private notes are not cached.
+
+Create an API key in [Groq Console](https://console.groq.com/keys) and a Redis database in Upstash. Set `GROQ_API_KEY`, `UPSTASH_REDIS_REST_URL`, and `UPSTASH_REDIS_REST_TOKEN` in the backend environment. `GROQ_MODEL` defaults to `openai/gpt-oss-20b`; override it only if you choose another model available to your account. Never put the key in `frontend/.env.local`.
 
 Run frontend lint and production build:
 
@@ -100,7 +112,7 @@ Deploy `backend/` as a Node.js service (for example, Render or Railway):
 - Start: `npm start`
 - Set the backend environment variables above. Use MongoDB Atlas or a replica set so transaction-based actions work.
 - Set `CORS_ORIGIN` to the exact HTTPS frontend origin.
-- Confirm `GET /health` returns `200` and `GET /health/ready` returns `200` after MongoDB connects.
+- Confirm `GET /health` returns `200` and `GET /health/ready` returns `200` after MongoDB and Upstash are reachable.
 - Run the difficulty migration once against the target database before serving this release.
 - Ensure the database already contains the intended curriculum. Seeding is an explicit operation and does not happen at startup.
 

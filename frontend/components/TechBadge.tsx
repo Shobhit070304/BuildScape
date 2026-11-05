@@ -17,7 +17,8 @@ import {
   Binary,
   Cpu,
   Globe,
-  Code2
+  Code2,
+  Shield,
 } from "lucide-react";
 
 export interface TechBadgeProps {
@@ -47,11 +48,47 @@ export const TECH_STYLES: Record<string, TechStyle> = {
     border: "border-emerald-800/60 hover:border-emerald-600",
     icon: Server,
   },
+  "Spring Boot & React.js": {
+    text: "text-emerald-300",
+    bg: "bg-emerald-950/50",
+    border: "border-emerald-800/60 hover:border-emerald-600",
+    icon: Layers,
+  },
+  "Node.js & React.js": {
+    text: "text-cyan-300",
+    bg: "bg-cyan-950/50",
+    border: "border-cyan-800/60 hover:border-cyan-600",
+    icon: Layers,
+  },
+  "Next.js & TypeScript": {
+    text: "text-sky-300",
+    bg: "bg-sky-950/50",
+    border: "border-sky-800/60 hover:border-sky-600",
+    icon: Code2,
+  },
+  "PostgreSQL / Distributed Systems": {
+    text: "text-cyan-300",
+    bg: "bg-cyan-950/50",
+    border: "border-cyan-800/60 hover:border-cyan-600",
+    icon: Network,
+  },
+  "Python & FastAPI": {
+    text: "text-teal-300",
+    bg: "bg-teal-950/50",
+    border: "border-teal-800/60 hover:border-teal-600",
+    icon: Terminal,
+  },
   "Spring Boot": {
     text: "text-emerald-400",
     bg: "bg-emerald-950/50",
     border: "border-emerald-800/60 hover:border-emerald-600",
     icon: Server,
+  },
+  "Spring Security": {
+    text: "text-emerald-300",
+    bg: "bg-emerald-950/50",
+    border: "border-emerald-800/60 hover:border-emerald-600",
+    icon: Shield,
   },
   "Machine Learning": {
     text: "text-purple-300",
@@ -71,6 +108,30 @@ export const TECH_STYLES: Record<string, TechStyle> = {
     border: "border-blue-800/60 hover:border-blue-600",
     icon: Binary,
   },
+  "Java 21": {
+    text: "text-rose-300",
+    bg: "bg-rose-950/50",
+    border: "border-rose-800/60 hover:border-rose-600",
+    icon: FileCode2,
+  },
+  Go: {
+    text: "text-cyan-300",
+    bg: "bg-cyan-950/50",
+    border: "border-cyan-800/60 hover:border-cyan-600",
+    icon: Network,
+  },
+  Golang: {
+    text: "text-cyan-300",
+    bg: "bg-cyan-950/50",
+    border: "border-cyan-800/60 hover:border-cyan-600",
+    icon: Network,
+  },
+  React: {
+    text: "text-cyan-300",
+    bg: "bg-cyan-950/50",
+    border: "border-cyan-800/60 hover:border-cyan-600",
+    icon: Layers,
+  },
   "Ethereum dApps": {
     text: "text-violet-300",
     bg: "bg-violet-950/40",
@@ -82,12 +143,6 @@ export const TECH_STYLES: Record<string, TechStyle> = {
     bg: "bg-orange-950/40",
     border: "border-orange-800/60 hover:border-orange-600",
     icon: Cpu,
-  },
-  Golang: {
-    text: "text-cyan-300",
-    bg: "bg-cyan-950/50",
-    border: "border-cyan-800/60 hover:border-cyan-600",
-    icon: Zap,
   },
   Java: {
     text: "text-rose-400",
@@ -136,6 +191,48 @@ export const TECH_STYLES: Record<string, TechStyle> = {
     bg: "bg-cyan-950/60",
     border: "border-cyan-800/70 hover:border-cyan-600",
     icon: Database,
+  },
+  pg: {
+    text: "text-cyan-400",
+    bg: "bg-cyan-950/60",
+    border: "border-cyan-900 hover:border-cyan-600",
+    icon: Database,
+  },
+  pgx: {
+    text: "text-cyan-400",
+    bg: "bg-cyan-950/60",
+    border: "border-cyan-900 hover:border-cyan-600",
+    icon: Database,
+  },
+  "Apache Kafka": {
+    text: "text-purple-300",
+    bg: "bg-purple-950/50",
+    border: "border-purple-800/60 hover:border-purple-600",
+    icon: Network,
+  },
+  Debezium: {
+    text: "text-purple-300",
+    bg: "bg-purple-950/50",
+    border: "border-purple-800/60 hover:border-purple-600",
+    icon: Workflow,
+  },
+  "Distributed Systems": {
+    text: "text-violet-300",
+    bg: "bg-violet-950/50",
+    border: "border-violet-800/60 hover:border-violet-600",
+    icon: Network,
+  },
+  "WebSockets": {
+    text: "text-indigo-300",
+    bg: "bg-indigo-950/50",
+    border: "border-indigo-800/60 hover:border-indigo-600",
+    icon: Network,
+  },
+  gRPC: {
+    text: "text-indigo-300",
+    bg: "bg-indigo-950/50",
+    border: "border-indigo-800/60 hover:border-indigo-600",
+    icon: Workflow,
   },
   Redis: {
     text: "text-rose-400",

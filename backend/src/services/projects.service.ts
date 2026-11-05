@@ -4,20 +4,28 @@ import { progressRepository } from "../repositories/progress.repository";
 import { HttpError } from "./httpError";
 import { validateProjectInput } from "./projectValidation";
 import { feedbackRepository } from "../repositories/feedback.repository";
+import { cacheAside, invalidateProjectCache, projectCacheKeys } from "./cache.service";
 
 // Project browsing, enrollment, and progress use cases.
 export const projectsService = {
-  list: () => projectRepository.list(),
+  list: () => cacheAside(projectCacheKeys.list, async () =>
+    (await projectRepository.list()).map((project) => project.toObject())
+  ),
 
   async getBySlug(slug: string) {
-    const project = await projectRepository.findBySlug(slug);
-    if (!project) throw new HttpError(404, "Project not found");
-    return project;
+    return cacheAside(projectCacheKeys.detail(slug), async () => {
+      const project = await projectRepository.findBySlug(slug);
+      if (!project) throw new HttpError(404, "Project not found");
+      const learnerCount = await progressRepository.countEnrollments(project._id);
+      return { ...project.toObject(), learnerCount };
+    });
   },
 
   async enroll(userId: string, slug: string) {
     const project = await this.getBySlug(slug);
-    return progressRepository.enroll(userId, project._id);
+    const enrollment = await progressRepository.enroll(userId, project._id);
+    await invalidateProjectCache(slug);
+    return enrollment;
   },
 
   async completePhase(userId: string, slug: string, phaseId: string) {
@@ -257,7 +265,9 @@ export const projectsService = {
   create: async (values: unknown) => {
     validateProjectInput(values);
     try {
-      return await projectRepository.create(values);
+      const project = await projectRepository.create(values);
+      await invalidateProjectCache(project.slug);
+      return project;
     } catch (error) {
       if ((error as { code?: number }).code === 11000) throw new HttpError(409, "A project with that slug already exists");
       throw error;
@@ -282,7 +292,9 @@ export const projectsService = {
           throw new HttpError(409, "A phase with learner progress or private notes cannot be removed. Keep its phase ID or create a new project.");
         }
       }
-      return await projectRepository.updateBySlug(slug, values);
+      const project = await projectRepository.updateBySlug(slug, values);
+      await invalidateProjectCache(slug, project.slug);
+      return project;
     } catch (error) {
       if ((error as { code?: number }).code === 11000) throw new HttpError(409, "A project with that slug already exists");
       throw error;
@@ -300,6 +312,7 @@ export const projectsService = {
         return project;
       });
       if (!deletedProject) throw new HttpError(404, "Project not found");
+      await invalidateProjectCache(slug);
       return deletedProject;
     } finally {
       await session.endSession();

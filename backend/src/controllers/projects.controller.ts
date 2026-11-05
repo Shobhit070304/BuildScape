@@ -37,7 +37,7 @@ export const clearProgress = asyncHandler(async (req, res) => {
 
 export const setCurrentPhase = asyncHandler(async (req, res) => {
   const currentPhaseIndex = await projectsService.setCurrentPhase(
-    req.user!.userId, String(req.params.slug), String(req.body.phaseId ?? "")
+    req.user!.userId, String(req.params.slug), String(req.body?.phaseId ?? "")
   );
   res.json({ success: true, currentPhaseIndex });
 });
@@ -48,7 +48,7 @@ export const getPhaseNote = asyncHandler(async (req, res) => {
 });
 
 export const savePhaseNote = asyncHandler(async (req, res) => {
-  const content = await feedbackService.saveNote(req.user!.userId, String(req.params.slug), String(req.params.phaseId), req.body.content);
+  const content = await feedbackService.saveNote(req.user!.userId, String(req.params.slug), String(req.params.phaseId), req.body?.content);
   res.json({ success: true, content });
 });
 
@@ -65,7 +65,7 @@ export const verifyProject = asyncHandler(async (req, res) => {
   const result = await projectsService.verifyProject(
     req.user!.userId,
     String(req.params.slug),
-    req.body
+    req.body ?? {}
   );
   res.json({ success: true, verification: result });
 });

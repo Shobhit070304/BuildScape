@@ -12,6 +12,7 @@ export function Navbar() {
   const { user, isLoading, login, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [loginError, setLoginError] = useState(false);
+  const [logoutError, setLogoutError] = useState(false);
 
   const handleGoogleSuccess = async (credential?: string) => {
     if (!credential) {
@@ -23,6 +24,15 @@ export function Navbar() {
       await login(credential);
     } catch {
       setLoginError(true);
+    }
+  };
+
+  const handleLogout = async () => {
+    setLogoutError(false);
+    try {
+      await logout();
+    } catch {
+      setLogoutError(true);
     }
   };
 
@@ -103,7 +113,7 @@ export function Navbar() {
 
               {/* Logout button */}
               <button
-                onClick={logout}
+                onClick={() => void handleLogout()}
                 className="flex items-center gap-1 rounded border border-[#2a2620] bg-[#14120f] px-2 py-0.5 text-[11px] font-medium text-[#a0978c] transition-all hover:border-[#3a342c] hover:bg-[#1c1915] hover:text-[#e4ddd3] cursor-pointer"
                 title="Log out of your account"
               >
@@ -131,6 +141,7 @@ export function Navbar() {
               )}
             </div>
           )}
+          {logoutError && <span role="alert" className="text-[10px] text-rose-400">Could not log out. Try again.</span>}
         </div>
       </div>
     </header>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { CheckCircle2 } from "lucide-react";
 import type { Project } from "@/lib/projects";
 import { getPhaseDescription } from "@/lib/projects";
 import type { ProgressController } from "@/hooks/useProgress";
@@ -12,7 +13,7 @@ interface CurriculumPhasesListProps {
 
 export function CurriculumPhasesList({ project, progress }: CurriculumPhasesListProps) {
   const router = useRouter();
-  const { enrolled } = progress;
+  const { enrolled, completed, hydrated } = progress;
 
   const handleClick = (phaseId: string) => {
     if (!enrolled) {
@@ -52,6 +53,7 @@ export function CurriculumPhasesList({ project, progress }: CurriculumPhasesList
           {project.phases.map((phase, idx) => {
             const stepNum = String(idx + 1).padStart(2, "0");
             const description = getPhaseDescription(phase);
+            const isDone = hydrated && completed.includes(phase.id);
 
             return (
               <button
@@ -62,17 +64,18 @@ export function CurriculumPhasesList({ project, progress }: CurriculumPhasesList
                 className="group relative w-full cursor-pointer select-none text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-500"
               >
                 {/* Node */}
-                <div className="absolute -left-6 sm:-left-6.75 top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#3a352c] bg-[#09090b] transition-all duration-200 group-hover:border-[#c9a96e] group-hover:scale-110">
-                  <div className="h-1 w-1 rounded-full bg-[#5a5246] group-hover:bg-[#c9a96e] transition-colors" />
+                <div className={`absolute -left-6 sm:-left-6.75 top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full border bg-[#09090b] transition-all duration-200 group-hover:scale-110 ${isDone ? "border-emerald-700 text-emerald-400" : "border-[#3a352c] group-hover:border-[#c9a96e]"}`}>
+                  {isDone ? <CheckCircle2 className="h-3.5 w-3.5 bg-[#09090b]" /> : <div className="h-1 w-1 rounded-full bg-[#5a5246] transition-colors group-hover:bg-[#c9a96e]" />}
                 </div>
 
                 <div className="flex items-baseline gap-2.5">
                   <span className="font-mono text-xs font-medium text-[#7a7168] shrink-0">
                     {stepNum}
                   </span>
-                  <h3 className="text-xs sm:text-[0.8125rem] font-semibold text-[#e4ddd3] transition-colors group-hover:text-[#ecd39e] leading-snug">
+                  <h3 className={`text-xs sm:text-[0.8125rem] font-semibold transition-colors group-hover:text-[#ecd39e] leading-snug ${isDone ? "text-emerald-300" : "text-[#e4ddd3]"}`}>
                     {phase.title}
                   </h3>
+                  {isDone && <span className="shrink-0 rounded-full border border-emerald-900/60 bg-emerald-950/30 px-1.5 py-0.5 text-[9px] font-medium text-emerald-400">Done</span>}
                 </div>
 
                 {description && (

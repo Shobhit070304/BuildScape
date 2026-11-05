@@ -24,7 +24,7 @@ export function validateProjectInput(value: unknown): asserts value is IProject 
 
   const project = value as Record<string, unknown>;
   requiredText(project.slug, "Slug", 64);
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test((project.slug as string).trim())) {
+  if (project.slug !== (project.slug as string).trim() || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(project.slug as string)) {
     throw new HttpError(400, "Slug must use lowercase letters, numbers, and single hyphens");
   }
   requiredText(project.title, "Title", 120);
@@ -57,10 +57,10 @@ export function validateProjectInput(value: unknown): asserts value is IProject 
     }
     const phase = item as Record<string, unknown>;
     requiredText(phase.id, `Phase ${index + 1} ID`, 64);
-    if (!/^[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$/.test((phase.id as string).trim()) || phaseIds.has((phase.id as string).trim())) {
+    if (phase.id !== (phase.id as string).trim() || !/^[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$/.test(phase.id as string) || phaseIds.has(phase.id as string)) {
       throw new HttpError(400, `Phase ${index + 1} ID must be unique and use letters, numbers, and hyphens`);
     }
-    phaseIds.add((phase.id as string).trim());
+    phaseIds.add(phase.id as string);
     if (phase.orderIndex !== index + 1) {
       throw new HttpError(400, `Phase ${index + 1} order must be ${index + 1}`);
     }

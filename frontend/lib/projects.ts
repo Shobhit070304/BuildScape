@@ -20,6 +20,7 @@ export function normalizeDifficulty(value: string): ProjectDifficulty {
 
 export interface Project {
   id: string;
+  learnerCount?: number;
   slug: string;
   title: string;
   tagline: string;
@@ -38,6 +39,7 @@ export interface Project {
 export function mapApiProject(p: ApiProject): Project {
   return {
     id: p._id ?? p.slug,
+    learnerCount: p.learnerCount,
     slug: p.slug,
     title: p.title,
     tagline: p.tagline,

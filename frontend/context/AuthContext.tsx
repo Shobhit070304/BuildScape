@@ -56,11 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    try {
-      await api.logout();
-    } catch {
-      /* ignore */
-    }
+    // Keep the authenticated UI in place if the server could not clear its cookie.
+    await api.logout();
     setUser(null);
   }, []);
 

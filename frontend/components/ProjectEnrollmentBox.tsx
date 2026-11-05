@@ -29,12 +29,13 @@ export function ProjectEnrollmentBox({ project, progress }: ProjectEnrollmentBox
   const { user, login } = useAuth();
   const { enrolled: isEnrolled, completed, hydrated, loadError, refreshProgress } = progress;
 
-  const [localEnrolled, setLocalEnrolled] = useState(false);
+  const [localEnrolledOwner, setLocalEnrolledOwner] = useState<string | null>(null);
   const [loadingEnrollment, setLoadingEnrollment] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
   // Derive effective enrollment: useProgress hydrates from backend; localEnrolled handles
   // optimistic state right after the user clicks "Enroll" before the next re-hydration.
+  const localEnrolled = Boolean(user && localEnrolledOwner === user.id);
   const effectivelyEnrolled = isEnrolled || localEnrolled;
 
   const handleEnroll = async () => {
@@ -43,7 +44,7 @@ export function ProjectEnrollmentBox({ project, progress }: ProjectEnrollmentBox
     setActionError(null);
     try {
       await api.enrollProject(project.slug);
-      setLocalEnrolled(true);
+      setLocalEnrolledOwner(user.id);
       await refreshProgress();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Could not enroll right now. Please try again.");
@@ -227,9 +228,9 @@ export function ProjectEnrollmentBox({ project, progress }: ProjectEnrollmentBox
           </div>
         )}
 
-        {effectivelyEnrolled && (
-          <p className="text-center text-[0.7rem] text-[#6b6256]">
-            Enrolled with {user?.email}. Progress syncs automatically.
+        {typeof project.learnerCount === "number" && (
+          <p className="text-center text-[0.7rem] text-[#8a8178]">
+            {project.learnerCount.toLocaleString()} {project.learnerCount === 1 ? "learner" : "learners"} enrolled
           </p>
         )}
       </div>

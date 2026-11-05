@@ -6,18 +6,31 @@ const asObjectId = (value: string) => new Types.ObjectId(value);
 
 // Enrollment and phase completion persistence operations.
 export const progressRepository = {
-  enroll: (userId: string, projectId: Types.ObjectId) =>
-    UserProjectEnrollment.findOneAndUpdate(
-      { userId: asObjectId(userId), projectId },
-      // $setOnInsert preserves currentPhaseIndex on re-enroll; only runs on first insert.
-      { $setOnInsert: { userId: asObjectId(userId), projectId, currentPhaseIndex: 0 } },
-      { upsert: true, returnDocument: "after" }
-    ),
+  enroll: async (userId: string, projectId: Types.ObjectId) => {
+    const query = { userId: asObjectId(userId), projectId };
+    try {
+      return await UserProjectEnrollment.findOneAndUpdate(
+        query,
+        // $setOnInsert preserves currentPhaseIndex on re-enroll; only runs on first insert.
+        { $setOnInsert: { ...query, currentPhaseIndex: 0 } },
+        { upsert: true, returnDocument: "after" }
+      );
+    } catch (error) {
+      // Concurrent first-time enrollments can race on the unique user/project index.
+      if ((error as { code?: number }).code !== 11000) throw error;
+      const existing = await UserProjectEnrollment.findOne(query);
+      if (!existing) throw error;
+      return existing;
+    }
+  },
 
   findEnrollment: (userId: string, projectId: Types.ObjectId, session?: ClientSession) => {
     const query = UserProjectEnrollment.findOne({ userId: asObjectId(userId), projectId });
     return session ? query.session(session) : query;
   },
+
+  countEnrollments: (projectId: Types.ObjectId) =>
+    UserProjectEnrollment.countDocuments({ projectId }),
 
   listEnrollments: (userId: string) =>
     UserProjectEnrollment.find({ userId: asObjectId(userId) }).populate("projectId"),
