@@ -42,6 +42,7 @@ export default async function ProjectWorkspacePage({ params, searchParams }: Pag
 
   return (
     <ProjectWorkspaceView
+      key={slug}
       initialProject={project ?? null}
       slug={slug}
       initialPhaseId={phase}

@@ -16,6 +16,7 @@ import { TechBadge } from "@/components/TechBadge";
 import { api } from "@/lib/api";
 import { DIFFICULTY_COLORS, mapApiProject } from "@/lib/projects";
 import type { Project } from "@/lib/projects";
+import { useProgress } from "@/hooks/useProgress";
 
 interface ProjectOverviewViewProps {
   initialProject: Project | null;
@@ -31,10 +32,10 @@ export function ProjectOverviewView({
   const [project, setProject] = useState<Project | null>(initialProject);
   const [loading, setLoading] = useState(!initialProject);
   const [notFound, setNotFound] = useState(false);
+  const progress = useProgress(slug, Boolean(project));
 
   useEffect(() => {
     if (!initialProject) {
-      setLoading(true);
       api
         .getProject(slug)
         .then((data) => {
@@ -198,7 +199,7 @@ export function ProjectOverviewView({
 
               {/* Locked / Enrolled Interactive Roadmap */}
               <div className="rounded-xl border border-zinc-800/80 bg-[#0d0d0d] p-4 sm:p-6">
-                <CurriculumPhasesList project={project} />
+                <CurriculumPhasesList project={project} progress={progress} />
               </div>
 
               {/* Fully working deliverable notice */}
@@ -220,7 +221,7 @@ export function ProjectOverviewView({
             {/* Right Column: Enrollment Card (Sticky) */}
             <div className="lg:col-span-4">
               <div className="sticky top-16">
-                <ProjectEnrollmentBox project={project} />
+                <ProjectEnrollmentBox project={project} progress={progress} />
               </div>
             </div>
           </div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { fetchProjectBySlugFromDb } from "@/lib/projects";
 import { ProjectOverviewView } from "@/components/ProjectOverviewView";
 import { getSiteUrl } from "@/lib/site";
+import { serializeStructuredData } from "@/lib/structuredData";
 
 export const dynamic = "force-dynamic";
 
@@ -104,10 +105,11 @@ export default async function ProjectOverviewPage({ params, searchParams }: Page
       {courseJsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(courseJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeStructuredData(courseJsonLd) }}
         />
       )}
       <ProjectOverviewView
+        key={slug}
         initialProject={project ?? null}
         slug={slug}
         access={access}

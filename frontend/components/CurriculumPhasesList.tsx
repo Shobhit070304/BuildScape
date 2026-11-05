@@ -3,18 +3,18 @@
 import { useRouter } from "next/navigation";
 import type { Project } from "@/lib/projects";
 import { getPhaseDescription } from "@/lib/projects";
-import { useProgress } from "@/hooks/useProgress";
+import type { ProgressController } from "@/hooks/useProgress";
 
 interface CurriculumPhasesListProps {
   project: Project;
+  progress: ProgressController;
 }
 
-export function CurriculumPhasesList({ project }: CurriculumPhasesListProps) {
+export function CurriculumPhasesList({ project, progress }: CurriculumPhasesListProps) {
   const router = useRouter();
-  // Reuse the same useProgress instance — no extra API call.
-  const { enrolled } = useProgress(project.slug);
+  const { enrolled } = progress;
 
-  const handleClick = (phaseId: string, phaseIndex: number) => {
+  const handleClick = (phaseId: string) => {
     if (!enrolled) {
       // Highlight the enrollment box instead of navigating.
       const box = document.getElementById("enrollment-box");
@@ -54,10 +54,12 @@ export function CurriculumPhasesList({ project }: CurriculumPhasesListProps) {
             const description = getPhaseDescription(phase);
 
             return (
-              <div
+              <button
+                type="button"
                 key={phase.id}
-                onClick={() => handleClick(phase.id, idx)}
-                className="group relative cursor-pointer select-none"
+                onClick={() => handleClick(phase.id)}
+                aria-label={`Open phase ${idx + 1}: ${phase.title}`}
+                className="group relative w-full cursor-pointer select-none text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-500"
               >
                 {/* Node */}
                 <div className="absolute -left-6 sm:-left-6.75 top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#3a352c] bg-[#09090b] transition-all duration-200 group-hover:border-[#c9a96e] group-hover:scale-110">
@@ -78,7 +80,7 @@ export function CurriculumPhasesList({ project }: CurriculumPhasesListProps) {
                     {description}
                   </p>
                 )}
-              </div>
+              </button>
             );
           })}
         </div>

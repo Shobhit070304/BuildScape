@@ -11,11 +11,9 @@ import { mapApiProject } from "@/lib/projects";
 import type { Project } from "@/lib/projects";
 
 const DIFFICULTY_CLASSES: Record<string, string> = {
-  Entry: "text-sky-400 bg-sky-950/30 border-sky-900/50",
-  Basic: "text-emerald-400 bg-emerald-950/30 border-emerald-900/50",
+  Beginner: "text-emerald-400 bg-emerald-950/30 border-emerald-900/50",
   Intermediate: "text-amber-400 bg-amber-950/30 border-amber-800/50",
   Advanced: "text-rose-400 bg-rose-950/30 border-rose-900/50",
-  Expert: "text-purple-400 bg-purple-950/30 border-purple-900/50",
 };
 
 interface ProjectWorkspaceViewProps {
@@ -35,7 +33,6 @@ export function ProjectWorkspaceView({
 
   useEffect(() => {
     if (!initialProject) {
-      setLoading(true);
       api
         .getProject(slug)
         .then((data) => {
@@ -95,6 +92,7 @@ export function ProjectWorkspaceView({
 
   return (
     <WorkspaceEnrollmentGuard project={project}>
+      {(progress) => (
       <div className="flex h-dvh flex-col overflow-hidden">
         {/* Top breadcrumb bar */}
         <div className="flex h-11 shrink-0 items-center gap-3 overflow-hidden border-b border-[#1a1a1a] bg-[#0a0a0a] px-4">
@@ -138,9 +136,10 @@ export function ProjectWorkspaceView({
 
         {/* Phase viewer */}
         <div className="flex-1 overflow-hidden">
-          <PhaseViewer project={project} initialPhaseId={initialPhaseId} />
+          <PhaseViewer project={project} initialPhaseId={initialPhaseId} progress={progress} />
         </div>
       </div>
+      )}
     </WorkspaceEnrollmentGuard>
   );
 }

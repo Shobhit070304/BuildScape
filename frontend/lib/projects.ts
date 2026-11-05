@@ -8,7 +8,15 @@ export interface Phase {
   content: string;
 }
 
-export type ProjectDifficulty = "Entry" | "Basic" | "Intermediate" | "Advanced" | "Expert";
+export type ProjectDifficulty = "Beginner" | "Intermediate" | "Advanced";
+
+/** Translate older database labels while existing records are migrated. */
+export function normalizeDifficulty(value: string): ProjectDifficulty {
+  if (value === "Entry" || value === "Basic") return "Beginner";
+  if (value === "Expert") return "Advanced";
+  if (value === "Beginner" || value === "Intermediate" || value === "Advanced") return value;
+  return "Beginner";
+}
 
 export interface Project {
   id: string;
@@ -36,7 +44,7 @@ export function mapApiProject(p: ApiProject): Project {
     description: p.description,
     whatYouWillLearn: p.whatYouWillLearn,
     track: p.track,
-    difficulty: p.difficulty as ProjectDifficulty,
+    difficulty: normalizeDifficulty(p.difficulty),
     estimatedHours: p.estimatedHours,
     techStack: p.techStack ?? [],
     phases: (p.phases ?? []) as Phase[],
@@ -83,39 +91,16 @@ export async function fetchProjectBySlugFromDb(slug: string): Promise<Project | 
   return undefined;
 }
 
-export function getAllTracks(): string[] {
-  return [
-    "Web Development",
-    "Full-Stack SpringBoot",
-    "Machine Learning",
-    "React & Node.js",
-    "C++",
-    "Python",
-    "Ethereum dApps",
-    "Rust",
-    "Golang",
-    "Java",
-    "C Language",
-    "Next.js",
-    "C#",
-    "Node.js",
-  ];
-}
-
 export const DIFFICULTY_ORDER: Record<string, number> = {
-  Entry: 0,
-  Basic: 1,
-  Intermediate: 2,
-  Advanced: 3,
-  Expert: 4,
+  Beginner: 0,
+  Intermediate: 1,
+  Advanced: 2,
 };
 
 export const DIFFICULTY_COLORS: Record<string, string> = {
-  Entry: "text-sky-400 bg-sky-950/50 border-sky-800/60",
-  Basic: "text-emerald-400 bg-emerald-950/50 border-emerald-800/60",
+  Beginner: "text-emerald-400 bg-emerald-950/50 border-emerald-800/60",
   Intermediate: "text-amber-400 bg-amber-950/50 border-amber-800/60",
   Advanced: "text-rose-400 bg-rose-950/50 border-rose-800/60",
-  Expert: "text-purple-400 bg-purple-950/50 border-purple-800/60",
 };
 
 export const TRACK_COLORS: Record<string, string> = {

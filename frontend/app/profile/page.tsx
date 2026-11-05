@@ -34,14 +34,13 @@ export default function ProfilePage() {
   const [editingUsername, setEditingUsername] = useState(false);
   const [usernameDraft, setUsernameDraft] = useState("");
   const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [signInError, setSignInError] = useState<string | null>(null);
   const [savingUsername, setSavingUsername] = useState(false);
 
   useEffect(() => {
-    if (user?.username) setUsernameDraft(user.username);
-  }, [user?.username]);
-
-  useEffect(() => {
     if (!user) return;
+    // The first authenticated profile load should show its loading state immediately.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoadingEnrollments(true);
     api
       .getEnrolledProjects()
@@ -94,20 +93,27 @@ export default function ProfilePage() {
                 Your BuildScape Profile
               </h1>
               <p className="mb-5 text-xs text-[#8a8178]">
-                Sign in with Google to view your enrolled projects, track your learning progress, and earn completion certificates.
+                Sign in with Google to view your enrolled projects and track your learning progress.
               </p>
               <div className="flex justify-center scale-95 origin-center">
                 <GoogleLogin
                   onSuccess={(res) => {
-                    if (res.credential) login(res.credential);
+                    if (!res.credential) {
+                      setSignInError("Google did not return a credential. Please try again.");
+                      return;
+                    }
+                    void login(res.credential).then(() => setSignInError(null)).catch((error: unknown) => {
+                      setSignInError(error instanceof Error ? error.message : "Sign-in failed. Please try again.");
+                    });
                   }}
-                  onError={() => console.error("Google sign in failed")}
+                  onError={() => setSignInError("Google sign-in failed. Please try again.")}
                   shape="pill"
                   theme="filled_black"
                   text="signin_with"
                   size="medium"
                 />
               </div>
+              {signInError && <p role="alert" className="mt-3 text-xs text-rose-300">{signInError}</p>}
             </div>
           ) : (
             /* Logged in User Profile (Clean, compact, slightly smaller) */
@@ -148,7 +154,7 @@ export default function ProfilePage() {
                       <p className="text-[11px] text-[#8a8178]">{user.email}</p>
                       <div className="mt-1 flex flex-wrap items-center gap-2">
                         <span className="font-mono text-[11px] text-[#b59a69]">@{user.username}</span>
-                        {!editingUsername && <button onClick={() => { setUsernameError(null); setEditingUsername(true); }} className="inline-flex items-center gap-1 text-[10px] text-[#8a8178] hover:text-accent"><Pencil className="h-3 w-3" />Edit username</button>}
+                        {!editingUsername && <button onClick={() => { setUsernameDraft(user.username ?? ""); setUsernameError(null); setEditingUsername(true); }} className="inline-flex items-center gap-1 text-[10px] text-[#8a8178] hover:text-accent"><Pencil className="h-3 w-3" />Edit username</button>}
                       </div>
                       {editingUsername && <form onSubmit={handleUsernameSave} className="mt-2 flex max-w-sm flex-wrap items-center gap-2">
                         <label className="sr-only" htmlFor="profile-username">Public username</label>
@@ -169,6 +175,7 @@ export default function ProfilePage() {
                       <Link
                         href={`/u/${user.username}`}
                         target="_blank"
+                        rel="noopener noreferrer"
                         className="flex items-center gap-1.5 rounded border border-amber-800/40 bg-amber-950/30 px-3 py-1.5 text-xs font-medium text-accent transition-all hover:border-amber-700/60 hover:bg-amber-900/40 cursor-pointer"
                         title="View your public developer profile"
                       >

@@ -267,6 +267,21 @@ export const projectsService = {
   update: async (slug: string, values: unknown) => {
     validateProjectInput(values);
     try {
+      const existing = await projectRepository.findBySlug(slug);
+      if (!existing) throw new HttpError(404, "Project not found");
+      const retainedPhaseIds = new Set(values.phases.map((phase) => phase.id));
+      const removedPhaseIds = existing.phases
+        .map((phase) => phase.id)
+        .filter((phaseId) => !retainedPhaseIds.has(phaseId));
+      if (removedPhaseIds.length > 0) {
+        const [progressCount, noteCount] = await Promise.all([
+          progressRepository.countByPhaseIds(existing._id, removedPhaseIds),
+          feedbackRepository.countNotesByPhaseIds(existing._id, removedPhaseIds),
+        ]);
+        if (progressCount > 0 || noteCount > 0) {
+          throw new HttpError(409, "A phase with learner progress or private notes cannot be removed. Keep its phase ID or create a new project.");
+        }
+      }
       return await projectRepository.updateBySlug(slug, values);
     } catch (error) {
       if ((error as { code?: number }).code === 11000) throw new HttpError(409, "A project with that slug already exists");
@@ -277,12 +292,12 @@ export const projectsService = {
   delete: async (slug: string) => {
     const session = await mongoose.startSession();
     try {
-      let deletedProject: Awaited<ReturnType<typeof projectRepository.deleteBySlug>> = null;
-      await session.withTransaction(async () => {
-        deletedProject = await projectRepository.deleteBySlug(slug, session);
-        if (!deletedProject) throw new HttpError(404, "Project not found");
-        await progressRepository.deleteProjectData(deletedProject._id, session);
-        await feedbackRepository.deleteProjectFeedback(deletedProject._id, session);
+      const deletedProject = await session.withTransaction(async () => {
+        const project = await projectRepository.deleteBySlug(slug, session);
+        if (!project) throw new HttpError(404, "Project not found");
+        await progressRepository.deleteProjectData(project._id, session);
+        await feedbackRepository.deleteProjectFeedback(project._id, session);
+        return project;
       });
       if (!deletedProject) throw new HttpError(404, "Project not found");
       return deletedProject;

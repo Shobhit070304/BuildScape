@@ -15,6 +15,7 @@ import {
 import { Navbar } from "@/components/Navbar";
 import { DIFFICULTY_COLORS, getTrackColor } from "@/lib/projects";
 import { getApiUrl, PublicUserProfile } from "@/lib/api";
+import { serializeStructuredData } from "@/lib/structuredData";
 
 function GithubIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -114,7 +115,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(profileJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeStructuredData(profileJsonLd) }}
       />
       <Navbar />
       <main className="min-h-screen w-full bg-[#0a0a0a] pb-24 pt-8 text-[#e4ddd3]">

@@ -3,7 +3,6 @@ import { User } from "../models/User";
 // User persistence operations.
 export const userRepository = {
   findById: (id: string) => User.findById(id).select("-__v"),
-  findByGoogleId: (googleId: string) => User.findOne({ googleId }).select("-__v"),
   findByUsername: (username: string) =>
     User.findOne({ username: username.toLowerCase().trim() }).select("-__v"),
 

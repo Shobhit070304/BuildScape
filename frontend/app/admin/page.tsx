@@ -10,6 +10,7 @@ import { Navbar } from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
 import type { ApiProject, ProjectPayload } from "@/lib/api";
+import { normalizeDifficulty } from "@/lib/projects";
 
 type ProjectDraft = ProjectPayload;
 
@@ -20,7 +21,7 @@ const emptyProject = (): ProjectDraft => ({
   description: "",
   whatYouWillLearn: [],
   track: "",
-  difficulty: "Entry",
+  difficulty: "Beginner",
   estimatedHours: 1,
   techStack: [],
   phases: [{ id: "phase-1", orderIndex: 1, title: "", content: "" }],
@@ -38,7 +39,7 @@ function asDraft(project: ApiProject): ProjectDraft {
     description: project.description ?? "",
     whatYouWillLearn: project.whatYouWillLearn ?? [],
     track: project.track,
-    difficulty: project.difficulty,
+    difficulty: normalizeDifficulty(project.difficulty),
     estimatedHours: project.estimatedHours,
     techStack: project.techStack ?? [],
     phases: (project.phases ?? []).map((phase, index) => ({
@@ -75,6 +76,8 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
+    // Load protected curriculum after the session role has been restored.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!authLoading && user?.role === "admin") void loadProjects();
   }, [authLoading, user, loadProjects]);
 
@@ -203,7 +206,7 @@ export default function AdminPage() {
             <div><p className="text-[10px] uppercase tracking-widest text-[#81776b]">Admin editor</p><h2 className="font-serif text-xl font-bold">{heading}</h2></div>
             <div className="flex items-center gap-4">
               <Link href="/admin/issues" className="text-xs text-accent hover:underline">Curriculum issue reports</Link>
-              {editingSlug && <Link href={`/projects/${draft.slug}`} target="_blank" className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline"><Eye className="h-3.5 w-3.5" />Preview saved project</Link>}
+              {editingSlug && <Link href={`/projects/${draft.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline"><Eye className="h-3.5 w-3.5" />Preview saved project</Link>}
             </div>
           </div>
 
@@ -216,7 +219,7 @@ export default function AdminPage() {
               <label className="space-y-1 text-xs">Title<input required maxLength={120} value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} className="admin-input" /></label>
               <label className="space-y-1 text-xs sm:col-span-2">Tagline<input required maxLength={240} value={draft.tagline} onChange={(e) => setDraft({ ...draft, tagline: e.target.value })} className="admin-input" /></label>
               <label className="space-y-1 text-xs">Track<input required maxLength={80} value={draft.track} onChange={(e) => setDraft({ ...draft, track: e.target.value })} className="admin-input" placeholder="Backend Engineering" /></label>
-              <label className="space-y-1 text-xs">Difficulty<select value={draft.difficulty} onChange={(e) => setDraft({ ...draft, difficulty: e.target.value })} className="admin-input"><option>Entry</option><option>Basic</option><option>Intermediate</option><option>Advanced</option><option>Expert</option></select></label>
+              <label className="space-y-1 text-xs">Difficulty<select value={draft.difficulty} onChange={(e) => setDraft({ ...draft, difficulty: e.target.value })} className="admin-input"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></label>
               <label className="space-y-1 text-xs">Estimated hours<input required type="number" min={1} max={5000} value={draft.estimatedHours} onChange={(e) => setDraft({ ...draft, estimatedHours: Number(e.target.value) })} className="admin-input" /></label>
               <label className="space-y-1 text-xs">Technologies <span className="text-[#81776b]">(comma or newline separated)</span><textarea required rows={2} value={Array.isArray(draft.techStack) ? draft.techStack.join(", ") : draft.techStack} onChange={(e) => setDraft({ ...draft, techStack: splitList(e.target.value) })} className="admin-input" /></label>
               <label className="space-y-1 text-xs">What learners will learn <span className="text-[#81776b]">(one per line)</span><textarea rows={2} value={Array.isArray(draft.whatYouWillLearn) ? draft.whatYouWillLearn.join("\n") : draft.whatYouWillLearn} onChange={(e) => setDraft({ ...draft, whatYouWillLearn: splitList(e.target.value) })} className="admin-input" /></label>

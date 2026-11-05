@@ -73,18 +73,20 @@ export function HeroSection() {
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-[10px] font-mono text-[#5a5450] uppercase tracking-widest mr-1">Tracks:</span>
             {[
-              { name: "Spring Boot", href: "/projects?track=Full-Stack+SpringBoot" },
-              { name: "Golang", href: "/projects?track=Golang" },
-              { name: "Rust", href: "/projects?track=Rust" },
-              { name: "Next.js", href: "/projects?track=Next.js" },
-              { name: "Python", href: "/projects?track=Python" },
+              "Golang",
+              "Next.js & TypeScript",
+              "Node.js & React.js",
+              "PostgreSQL / Distributed Systems",
+              "Python & FastAPI",
+              "Rust",
+              "Spring Boot & React.js",
             ].map((track) => (
               <Link
-                key={track.name}
-                href={track.href}
+                key={track}
+                href={`/projects?track=${encodeURIComponent(track)}`}
                 className="rounded-md border border-border bg-surface-card px-2.5 py-1 text-[11px] font-medium text-[#8a8178] transition-all hover:border-[#333330] hover:text-text"
               >
-                {track.name}
+                {track}
               </Link>
             ))}
           </div>
@@ -120,7 +122,7 @@ export function HeroSection() {
                 </div>
                 <div className="text-right">
                   <div className="font-mono text-[11px] font-bold text-emerald-400">38% Done</div>
-                  <div className="text-[9px] text-[#5a5450]">+350 XP</div>
+                  <div className="text-[9px] text-[#5a5450]">Progress saved</div>
                 </div>
               </div>
 

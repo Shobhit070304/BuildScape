@@ -27,10 +27,17 @@ async function seed() {
   console.log(`\n📦 Seeding ${projectsData.length} projects into MongoDB:`);
 
   for (const p of projectsData as any[]) {
+    // The local seed file may keep its original labels; production uses the three current levels.
+    const difficulty =
+      p.difficulty === "Entry" || p.difficulty === "Basic"
+        ? "Beginner"
+        : p.difficulty === "Expert"
+          ? "Advanced"
+          : p.difficulty;
     await Project.findOneAndUpdate(
       { slug: p.slug },
-      { $set: p },
-      { upsert: true, returnDocument: "after" }
+      { $set: { ...p, difficulty } },
+      { upsert: true, returnDocument: "after", runValidators: true }
     );
     console.log(`  ✔ [${p.track}] ${p.title} (${p.phases?.length || 0} phases)`);
   }

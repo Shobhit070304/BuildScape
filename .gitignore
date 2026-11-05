@@ -11,10 +11,9 @@ node_modules/
 !.yarn/versions
 
 # ──────────────────────────────────────────
-# Data files
+# Local seed and generated data directories
 # ──────────────────────────────────────────
-data/
-**/data/
+backend/data/
 
 # ──────────────────────────────────────────
 # Build output
@@ -28,6 +27,7 @@ out/
 # ──────────────────────────────────────────
 .next/
 next-env.d.ts
+.turbo/
 
 # ──────────────────────────────────────────
 # TypeScript
@@ -47,6 +47,8 @@ next-env.d.ts
 # ──────────────────────────────────────────
 coverage/
 .nyc_output/
+playwright-report/
+test-results/
 
 # ──────────────────────────────────────────
 # Logs

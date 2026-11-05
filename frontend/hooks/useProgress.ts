@@ -5,66 +5,68 @@ import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
 
 interface ProgressState {
+  ownerId: string | null;
   enrolled: boolean;
   currentPhaseIndex: number;
   completed: string[];
   hydrated: boolean;
+  loadError: string | null;
   isVerified: boolean;
   githubRepoUrl?: string;
   liveDemoUrl?: string;
   verifiedAt?: string;
 }
 
-export function useProgress(projectSlug: string) {
-  const { user } = useAuth();
+export function useProgress(projectSlug: string, enabled = true) {
+  const { user, isLoading: authLoading } = useAuth();
 
   const [state, setState] = useState<ProgressState>({
+    ownerId: null,
     enrolled: false,
     currentPhaseIndex: 0,
     completed: [],
     hydrated: false,
+    loadError: null,
     isVerified: false,
   });
   const phaseSaveQueue = useRef<Promise<unknown>>(Promise.resolve());
 
   const fetchDbProgress = useCallback(async () => {
-    if (!user) {
-      setState({
-        enrolled: false,
-        currentPhaseIndex: 0,
-        completed: [],
-        hydrated: true,
-        isVerified: false,
-      });
-      return;
-    }
+    if (!user || !enabled) return;
+    const ownerId = user.id || null;
 
     try {
       const data = await api.getProgress(projectSlug);
       setState({
+        ownerId,
         enrolled: data.enrolled,
         currentPhaseIndex: data.currentPhaseIndex,
         completed: data.completedPhases.map((p) => p.phaseId),
         hydrated: true,
+        loadError: null,
         isVerified: Boolean(data.isVerified),
         githubRepoUrl: data.githubRepoUrl,
         liveDemoUrl: data.liveDemoUrl,
         verifiedAt: data.verifiedAt,
       });
-    } catch {
+    } catch (error) {
       setState({
+        ownerId,
         enrolled: false,
         currentPhaseIndex: 0,
         completed: [],
         hydrated: true,
+        loadError: error instanceof Error ? error.message : "Could not load enrollment status.",
         isVerified: false,
       });
     }
-  }, [projectSlug, user]);
+  }, [projectSlug, user, enabled]);
 
   useEffect(() => {
-    fetchDbProgress();
-  }, [fetchDbProgress]);
+    // Refresh after authentication changes; state updates follow the network response.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!authLoading) void fetchDbProgress();
+  }, [authLoading, fetchDbProgress]);
 
   const togglePhase = useCallback(
     async (phaseId: string) => {
@@ -89,10 +91,12 @@ export function useProgress(projectSlug: string) {
         // Refresh accurate DB progress state (including currentPhaseIndex)
         const fresh = await api.getProgress(projectSlug);
         setState({
+          ownerId: user.id || null,
           enrolled: fresh.enrolled,
           currentPhaseIndex: fresh.currentPhaseIndex,
           completed: fresh.completedPhases.map((p) => p.phaseId),
           hydrated: true,
+          loadError: null,
           isVerified: Boolean(fresh.isVerified),
           githubRepoUrl: fresh.githubRepoUrl,
           liveDemoUrl: fresh.liveDemoUrl,
@@ -139,15 +143,17 @@ export function useProgress(projectSlug: string) {
     }
   }, [user, state.completed, projectSlug, fetchDbProgress]);
 
+  const belongsToCurrentUser = state.ownerId === (user?.id ?? null);
   return {
-    enrolled: state.enrolled,
-    currentPhaseIndex: state.currentPhaseIndex,
-    completed: state.completed,
-    hydrated: state.hydrated,
-    isVerified: state.isVerified,
-    githubRepoUrl: state.githubRepoUrl,
-    liveDemoUrl: state.liveDemoUrl,
-    verifiedAt: state.verifiedAt,
+    enrolled: belongsToCurrentUser && state.enrolled,
+    currentPhaseIndex: belongsToCurrentUser ? state.currentPhaseIndex : 0,
+    completed: belongsToCurrentUser ? state.completed : [],
+    hydrated: enabled && ((!authLoading && !user) || (belongsToCurrentUser && state.hydrated)),
+    loadError: belongsToCurrentUser ? state.loadError : null,
+    isVerified: belongsToCurrentUser && state.isVerified,
+    githubRepoUrl: belongsToCurrentUser ? state.githubRepoUrl : undefined,
+    liveDemoUrl: belongsToCurrentUser ? state.liveDemoUrl : undefined,
+    verifiedAt: belongsToCurrentUser ? state.verifiedAt : undefined,
     togglePhase,
     setActivePhase,
     isCompleted,
@@ -155,3 +161,5 @@ export function useProgress(projectSlug: string) {
     refreshProgress: fetchDbProgress,
   };
 }
+
+export type ProgressController = ReturnType<typeof useProgress>;

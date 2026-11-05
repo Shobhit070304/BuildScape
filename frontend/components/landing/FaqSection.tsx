@@ -48,7 +48,7 @@ export function FaqSection() {
     },
     {
       q: "What skill level do I need?",
-      a: "Projects are clearly tagged across 5 levels: Entry, Basic, Intermediate, Advanced, and Expert. Entry builds only require basic programming knowledge. Intermediate and Advanced builds cover real-world architectures with detailed explanations.",
+      a: "Projects are tagged as Beginner, Intermediate, or Advanced. Each project page explains the skills and architecture you will practice.",
     },
     {
       q: "Can I put these projects on my resume?",
@@ -56,7 +56,7 @@ export function FaqSection() {
     },
     {
       q: "How long does a project take?",
-      a: "Basic projects typically take 8–10 hours across structured phases. Advanced distributed systems take 18–24 hours. Everything is self-paced, so you can build at your own speed.",
+      a: "Project time estimates vary by build and are shown on each project page. Everything is self-paced, so you can build at your own speed.",
     },
     {
       q: "What happens if I get stuck?",

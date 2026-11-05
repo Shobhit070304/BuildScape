@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { User } from "../models/User";
 
 /**
  * Middleware requiring the authenticated user to possess the "admin" role.
@@ -10,10 +11,16 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction): v
     return;
   }
 
-  if (req.user.role !== "admin") {
-    res.status(403).json({ error: "Forbidden: Admin privileges required" });
-    return;
-  }
-
-  next();
+  void User.findById(req.user.userId).select("role").then((user) => {
+    if (!user) {
+      res.status(401).json({ error: "Authentication required" });
+      return;
+    }
+    if (user.role !== "admin") {
+      res.status(403).json({ error: "Forbidden: Admin privileges required" });
+      return;
+    }
+    req.user!.role = "admin";
+    next();
+  }).catch(next);
 }

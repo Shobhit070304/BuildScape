@@ -173,7 +173,7 @@ export async function FeaturedProjectsSection() {
       <div className="mt-4 flex flex-col items-center justify-between gap-2 rounded-xl border border-border bg-surface-card px-5 py-3 text-center sm:flex-row sm:text-left">
         <span className="text-xs text-text-muted">
           More tracks:{" "}
-          <strong className="text-[#d4cbbd]">Python MLOps, Express REST, React, Tokio Async</strong>
+          <strong className="text-[#d4cbbd]">Python &amp; FastAPI, Express APIs, React, Tokio Async</strong>
         </span>
         <Link
           href="/projects"

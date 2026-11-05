@@ -19,7 +19,8 @@ export const googleAuth = asyncHandler(async (req, res) => {
     path: "/",
   });
 
-  res.json(result);
+  // Keep the session token in the httpOnly cookie; browser JavaScript does not need it.
+  res.json({ user: result.user });
 });
 
 export const logout = asyncHandler(async (_req, res) => {
@@ -34,7 +35,17 @@ export const logout = asyncHandler(async (_req, res) => {
 });
 
 export const getMe = asyncHandler(async (req, res) => {
-  res.json({ user: await getUserProfile(req.user!.userId) });
+  const user = await getUserProfile(req.user!.userId);
+  res.json({
+    user: {
+      id: user._id.toString(),
+      email: user.email,
+      name: user.name,
+      username: user.username,
+      avatar: user.avatar,
+      role: user.role,
+    },
+  });
 });
 
 export const changeUsername = asyncHandler(async (req, res) => {

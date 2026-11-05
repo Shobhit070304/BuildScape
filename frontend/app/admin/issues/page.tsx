@@ -33,6 +33,8 @@ export default function AdminIssuesPage() {
   }, [filter]);
 
   useEffect(() => {
+    // Load protected reports after the session role has been restored.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!authLoading && user?.role === "admin") void loadIssues();
   }, [authLoading, user, loadIssues]);
 

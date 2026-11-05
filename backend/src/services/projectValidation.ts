@@ -1,7 +1,7 @@
 import type { IProject } from "../models/Project";
 import { HttpError } from "./httpError";
 
-const difficulties = new Set(["Entry", "Basic", "Intermediate", "Advanced", "Expert"]);
+const difficulties = new Set(["Beginner", "Intermediate", "Advanced"]);
 
 function requiredText(value: unknown, field: string, maxLength: number): asserts value is string {
   if (typeof value !== "string" || !value.trim() || value.trim().length > maxLength) {
@@ -17,7 +17,7 @@ function optionalTextList(value: unknown, field: string): void {
 }
 
 /** Validate the complete project shape used by the admin editor before persistence. */
-export function validateProjectInput(value: unknown): asserts value is Partial<IProject> {
+export function validateProjectInput(value: unknown): asserts value is IProject {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new HttpError(400, "Project data must be an object");
   }

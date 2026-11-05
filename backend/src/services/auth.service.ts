@@ -16,16 +16,17 @@ export async function loginWithGoogle(credential: string) {
     throw new HttpError(401, "Google authentication failed");
   }
   const payload = ticket.getPayload();
-  if (!payload?.sub || !payload.email) throw new HttpError(401, "Invalid Google token");
+  if (!payload?.sub || !payload.email || payload.email_verified !== true) {
+    throw new HttpError(401, "A verified Google account is required");
+  }
 
-  const email = payload.email.toLowerCase();
-  const existingUser = await userRepository.findByGoogleId(payload.sub);
+  const email = payload.email.trim().toLowerCase();
   const isAdmin = Boolean(env.ADMIN_EMAIL && email === env.ADMIN_EMAIL);
-  const role: "user" | "admin" = existingUser?.role === "admin" || isAdmin ? "admin" : "user";
+  const role: "user" | "admin" = isAdmin ? "admin" : "user";
 
   const user = await userRepository.upsertGoogleUser({
     googleId: payload.sub,
-    email: payload.email,
+    email,
     name: payload.name ?? payload.email,
     avatar: payload.picture,
     role,

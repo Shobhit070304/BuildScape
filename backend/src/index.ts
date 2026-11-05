@@ -18,6 +18,8 @@ import adminRouter from "./routes/admin";
 validateEnv();
 
 const app = express();
+// Backend hosting platforms terminate TLS at one trusted reverse proxy.
+app.set("trust proxy", 1);
 
 // Core middleware
 app.use(

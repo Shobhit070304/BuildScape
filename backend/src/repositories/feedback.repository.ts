@@ -15,6 +15,8 @@ export const feedbackRepository = {
     ),
   deleteNote: (userId: string, projectId: Types.ObjectId, phaseId: string) =>
     UserPhaseNote.deleteOne({ userId: objectId(userId), projectId, phaseId }),
+  countNotesByPhaseIds: (projectId: Types.ObjectId, phaseIds: string[]) =>
+    UserPhaseNote.countDocuments({ projectId, phaseId: { $in: phaseIds } }),
   createIssue: (data: {
     userId: string; projectId: Types.ObjectId; phaseId: string;
     phaseTitle: string;

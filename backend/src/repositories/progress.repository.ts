@@ -74,4 +74,7 @@ export const progressRepository = {
     const query = UserTaskProgress.find({ userId: asObjectId(userId), projectId }).select("phaseId completedAt");
     return session ? query.session(session) : query;
   },
+
+  countByPhaseIds: (projectId: Types.ObjectId, phaseIds: string[]) =>
+    UserTaskProgress.countDocuments({ projectId, phaseId: { $in: phaseIds } }),
 };

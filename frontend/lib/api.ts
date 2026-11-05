@@ -10,27 +10,39 @@ async function request<T>(
 ): Promise<T> {
   const apiUrl = getApiUrl();
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  const res = await fetch(`${apiUrl}${cleanPath}`, {
-    ...options,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+  try {
+    const res = await fetch(`${apiUrl}${cleanPath}`, {
+      ...options,
+      signal: options.signal ?? controller.signal,
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(err.message ?? err.error ?? "Request failed");
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ message: res.statusText }));
+      throw new Error(err.message ?? err.error ?? "Request failed");
+    }
+
+    return await res.json() as T;
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error("The server took too long to respond. Check your connection and try again.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
   }
-
-  return res.json() as Promise<T>;
 }
 
 export const api = {
   // Auth
   googleLogin: (credential: string) =>
-    request<{ token: string; user: AuthUser }>("/api/auth/google", {
+    request<{ user: AuthUser }>("/api/auth/google", {
       method: "POST",
       body: JSON.stringify({ credential }),
     }),

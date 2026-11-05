@@ -13,23 +13,25 @@ import {
   Award,
   Loader2,
   PlayCircle,
+  RefreshCw,
 } from "lucide-react";
 import type { Project } from "@/lib/projects";
 import { useAuth } from "@/context/AuthContext";
-import { useProgress } from "@/hooks/useProgress";
+import type { ProgressController } from "@/hooks/useProgress";
 import { api } from "@/lib/api";
 
 interface ProjectEnrollmentBoxProps {
   project: Project;
+  progress: ProgressController;
 }
 
-export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
+export function ProjectEnrollmentBox({ project, progress }: ProjectEnrollmentBoxProps) {
   const { user, login } = useAuth();
-  // enrolled, currentPhaseIndex, and completed all come from a single shared API call.
-  const { enrolled: isEnrolled, completed, hydrated, togglePhase: _t } = useProgress(project.slug);
+  const { enrolled: isEnrolled, completed, hydrated, loadError, refreshProgress } = progress;
 
   const [localEnrolled, setLocalEnrolled] = useState(false);
   const [loadingEnrollment, setLoadingEnrollment] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // Derive effective enrollment: useProgress hydrates from backend; localEnrolled handles
   // optimistic state right after the user clicks "Enroll" before the next re-hydration.
@@ -38,11 +40,13 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
   const handleEnroll = async () => {
     if (!user) return;
     setLoadingEnrollment(true);
+    setActionError(null);
     try {
       await api.enrollProject(project.slug);
       setLocalEnrolled(true);
+      await refreshProgress();
     } catch (err) {
-      console.error("Failed to enroll:", err);
+      setActionError(err instanceof Error ? err.message : "Could not enroll right now. Please try again.");
     } finally {
       setLoadingEnrollment(false);
     }
@@ -156,7 +160,21 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
 
       {/* Action CTA */}
       <div className="space-y-3">
-        {effectivelyEnrolled ? (
+        {actionError && <p role="alert" className="rounded-md border border-red-900/50 bg-red-950/30 p-2 text-center text-xs text-red-200">{actionError}</p>}
+        {loadError && !effectivelyEnrolled && (
+          <p role="alert" className="rounded-md border border-amber-800/50 bg-amber-950/30 p-2 text-center text-xs text-amber-200">
+            Enrollment status could not be checked. {loadError}
+          </p>
+        )}
+        {loadError && !effectivelyEnrolled ? (
+          <button
+            onClick={() => void refreshProgress()}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-amber-700/60 bg-amber-950/60 px-4 py-2.5 text-sm font-semibold text-[#e4ddd3] transition-all hover:bg-amber-900/60"
+          >
+            <RefreshCw className="h-4 w-4" />
+            <span>Retry status check</span>
+          </button>
+        ) : effectivelyEnrolled ? (
           <Link
             href={`/projects/${project.slug}/workspace`}
             className="group flex w-full items-center justify-center gap-2 rounded-lg border border-amber-600/50 bg-linear-to-r from-amber-700 via-amber-600 to-amber-700 px-4 py-2.5 text-sm font-semibold text-stone-950 shadow-md transition-all hover:opacity-95 hover:shadow-amber-900/20 active:scale-[0.99]"
@@ -191,9 +209,15 @@ export function ProjectEnrollmentBox({ project }: ProjectEnrollmentBoxProps) {
             <div className="flex justify-center scale-95 origin-center">
               <GoogleLogin
                 onSuccess={(res) => {
-                  if (res.credential) login(res.credential);
+                  if (!res.credential) {
+                    setActionError("Google did not return a credential. Please try again.");
+                    return;
+                  }
+                  void login(res.credential).then(() => setActionError(null)).catch((error: unknown) => {
+                    setActionError(error instanceof Error ? error.message : "Sign-in failed. Please try again.");
+                  });
                 }}
-                onError={() => console.error("Google sign in failed")}
+                onError={() => setActionError("Google sign-in failed. Please try again.")}
                 shape="rectangular"
                 theme="filled_black"
                 text="signin_with"

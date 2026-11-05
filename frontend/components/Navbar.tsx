@@ -13,6 +13,19 @@ export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [loginError, setLoginError] = useState(false);
 
+  const handleGoogleSuccess = async (credential?: string) => {
+    if (!credential) {
+      setLoginError(true);
+      return;
+    }
+    setLoginError(false);
+    try {
+      await login(credential);
+    } catch {
+      setLoginError(true);
+    }
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 15);
@@ -102,10 +115,7 @@ export function Navbar() {
             <div className="flex flex-col items-end gap-1">
               <div className="scale-[0.8] origin-right">
                 <GoogleLogin
-                  onSuccess={(res) => {
-                    setLoginError(false);
-                    if (res.credential) login(res.credential);
-                  }}
+                  onSuccess={(res) => void handleGoogleSuccess(res.credential)}
                   onError={() => setLoginError(true)}
                   size="medium"
                   shape="pill"

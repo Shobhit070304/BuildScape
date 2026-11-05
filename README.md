@@ -1,117 +1,119 @@
 # BuildScape
 
-> Master modern software engineering by building real-world distributed systems and production architectures phase by phase.
+BuildScape is a learning platform for production software projects. Visitors can browse project blueprints; signed-in learners can enroll, follow phases, save private notes, and share checked public repositories on a developer profile. Administrators can manage projects and review curriculum reports.
 
----
+## Project layout
 
-## ⚡ Tech Stack
+- `frontend/` — Next.js App Router application.
+- `backend/` — Express API, MongoDB models, and seed/migration scripts.
+- `backend/data/projects.json` — local seed input used only by the seed script. Do not commit or push changes to this file.
 
-- **Frontend:** Next.js (App Router), React, Tailwind CSS, TypeScript
-- **Backend:** Node.js, Express, TypeScript, MongoDB (Mongoose), JWT, Google OAuth
+## Requirements
 
----
+- Node.js 22 or newer.
+- npm.
+- MongoDB Atlas or another replica set deployment. Progress clearing and project deletion use transactions.
+- Google OAuth web client credentials, with the frontend and backend origins configured in Google Cloud.
 
-## 🚀 Quick Start (Local Development)
+## Local setup
 
-### 1. Environment Configuration
+1. Copy `backend/.env.example` to `backend/.env` and fill in the required values.
+2. Copy `frontend/.env.local.example` to `frontend/.env.local` and set the same Google client ID and the backend URL.
+3. Install dependencies and start the API:
 
-Create `.env` in both folders:
+   ```bash
+   cd backend
+   npm ci
+   npm run dev
+   ```
 
-**`backend/.env`**
-```env
-PORT=4000
-NODE_ENV=development
-MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret_min_32_chars
-CORS_ORIGIN=http://localhost:3000
-GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
-ADMIN_EMAIL=admin@example.com
-```
+4. In a second terminal, start the frontend:
 
-**`frontend/.env`**
-```env
-NEXT_PUBLIC_API_URL=http://localhost:4000
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
-```
+   ```bash
+   cd frontend
+   npm ci
+   npm run dev
+   ```
 
-### 2. Install & Run
+The frontend runs at `http://localhost:3000`; the API runs at `http://localhost:4000` by default.
+
+## Environment variables
+
+### Backend (`backend/.env`)
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `NODE_ENV` | No | Set to `production` for deployment. |
+| `PORT` | No | API port; defaults to `4000`. |
+| `CORS_ORIGIN` | Yes | One frontend origin, without a path. Use HTTPS in production. |
+| `MONGODB_URI` | Yes | MongoDB connection string. |
+| `JWT_SECRET` | Yes | Random secret of at least 32 characters. |
+| `GOOGLE_CLIENT_ID` | Yes | Google OAuth web client ID. |
+| `ADMIN_EMAIL` | Yes for admin tools | Verified Google account allowed to administer curriculum. |
+
+### Frontend (`frontend/.env.local`)
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `NEXT_PUBLIC_API_URL` | Yes | Backend base URL, without a trailing slash. |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Yes | Same Google OAuth web client ID as the backend. |
+| `NEXT_PUBLIC_SITE_URL` | No | Canonical production site URL. Defaults to the Vercel URL or BuildScape site URL. |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | No | Google Search Console verification token. |
+
+## Curriculum data
+
+The current difficulty levels are **Beginner**, **Intermediate**, and **Advanced**. Run the idempotent migration against an existing database before deploying this version:
 
 ```bash
-# Terminal 1 — Backend (http://localhost:4000)
 cd backend
-npm install
-npm run dev
+npm ci
+npm run migrate:difficulties
+```
 
-# Terminal 2 — Frontend (http://localhost:3000)
+The migration maps `Entry` and `Basic` to `Beginner`, maps `Expert` to `Advanced`, and stops if it finds any other unsupported value. Back up production data before running migrations.
+
+To seed or refresh the local MongoDB database from `backend/data/projects.json`, run `npm run seed` from `backend/`. The seed file is local input; do not commit or push changes to it. The application does not seed the production database on startup.
+
+## Checks
+
+Run the backend type check and unit tests:
+
+```bash
+cd backend
+npm run check
+```
+
+Run frontend lint and production build:
+
+```bash
 cd frontend
-npm install
-npm run dev
+npm run check
 ```
 
-### 3. Seed Database (Optional)
+## Deployment
 
-To seed or refresh the 17 curated production projects into MongoDB:
+### Backend
 
-```bash
-cd backend
-npm run seed
-```
+Deploy `backend/` as a Node.js service (for example, Render or Railway):
 
----
+- Build: `npm ci && npm run build`
+- Start: `npm start`
+- Set the backend environment variables above. Use MongoDB Atlas or a replica set so transaction-based actions work.
+- Set `CORS_ORIGIN` to the exact HTTPS frontend origin.
+- Confirm `GET /health` returns `200` and `GET /health/ready` returns `200` after MongoDB connects.
+- Run the difficulty migration once against the target database before serving this release.
+- Ensure the database already contains the intended curriculum. Seeding is an explicit operation and does not happen at startup.
 
-## 🚢 Deployment Guide
+### Frontend
 
-### Deploy Backend (Render / Railway / Fly.io)
+Deploy `frontend/` to Vercel with the root directory set to `frontend/`:
 
-1. Connect your repository and set the **Root Directory** to `backend`.
-2. Configure build & start commands:
-   - **Build Command:** `npm install && npm run build`
-   - **Start Command:** `npm start`
-3. Add Environment Variables:
-   - `PORT`: `4000` (or leave default assigned by platform)
-   - `NODE_ENV`: `production`
-   - `MONGODB_URI`: Your MongoDB Atlas connection URI
-   - `JWT_SECRET`: Random 32+ character string
-   - `CORS_ORIGIN`: Your deployed frontend URL (e.g. `https://your-app.vercel.app`)
-   - `GOOGLE_CLIENT_ID`: Google OAuth Client ID
-   - `ADMIN_EMAIL`: Google account email allowed to manage projects
+- Build: `npm run build`
+- Set `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID`, and `NEXT_PUBLIC_SITE_URL`.
+- Add the deployed frontend origin to the Google OAuth client configuration.
 
-### Deploy Frontend (Vercel)
+## API overview
 
-1. Import your repository into Vercel and select `frontend` as the **Root Directory**.
-2. Framework preset will automatically be set to **Next.js**.
-3. Add Environment Variables:
-   - `NEXT_PUBLIC_API_URL`: Your deployed backend URL (e.g. `https://your-backend.onrender.com`)
-   - `NEXT_PUBLIC_GOOGLE_CLIENT_ID`: Google OAuth Client ID
+The API provides health/readiness checks, Google sign-in and logout, public project and profile reads, enrollment and phase progress, private phase notes, curriculum issue reports, repository checks, username updates, and admin project/issue management. Protected endpoints use the `bs_token` HTTP-only cookie; admin routes verify the user's current database role.
 
----
-
-## 📡 API Reference
-
-| Method | Endpoint | Description | Auth |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/health` | Health and liveness probe | Public |
-| `GET` | `/health/ready` | Database readiness probe (503 until MongoDB connects) | Public |
-| `GET` | `/api/projects` | List all curated production builds | Public |
-| `GET` | `/api/projects/:slug` | Full project details and phase blueprints | Public |
-| `POST` | `/api/auth/google` | Google OAuth login and session JWT issuance | Public |
-| `POST` | `/api/auth/logout` | Clear the current session | Public |
-| `GET` | `/api/auth/me` | Fetch authenticated user profile | Required |
-| `PUT` | `/api/auth/username` | Change the authenticated user's public username | Required |
-| `GET` | `/api/projects/my/enrolled` | List current user's enrolled projects | Required |
-| `POST` | `/api/projects/:slug/enroll` | Enroll in a project | Required |
-| `POST` | `/api/projects/:slug/verify` | Check a public GitHub repository and list its URL on the profile | Required |
-| `GET` | `/api/projects/:slug/progress` | Get phase completion and repository link status | Required |
-| `POST` | `/api/projects/:slug/phases/:phaseId/complete` | Mark an enrolled user's phase complete | Required |
-| `DELETE` | `/api/projects/:slug/phases/:phaseId/complete` | Undo a phase checkbox while retaining earned completion and repository status | Required |
-| `DELETE` | `/api/projects/:slug/progress` | Clear phase checkboxes and reset the active phase while preserving earned completion and repository status | Required |
-| `GET` | `/api/users/:username` | Fetch a public developer profile | Public |
-| `POST` | `/api/projects` | Create a project | Admin |
-| `PUT` | `/api/projects/:slug` | Update a project | Admin |
-| `DELETE` | `/api/projects/:slug` | Delete a project | Admin |
-
-GitHub repository checks confirm only that the submitted repository is public and exists. They do not confirm repository ownership or inspect its contents.
-
-Progress clearing and project deletion use MongoDB transactions, so the database must support transactions (MongoDB Atlas or a replica set).
-
-Admins can manage curriculum at `/admin` after signing in with the Google account configured by `ADMIN_EMAIL`. Deleting a project permanently deletes its enrollments and phase progress after a confirmation prompt.
+Repository checks confirm that a GitHub repository exists and is public. They do not verify repository ownership or inspect repository contents.

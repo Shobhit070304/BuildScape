@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { FormEvent } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -20,7 +20,7 @@ import {
   Save,
 } from "lucide-react";
 import type { Project, Phase } from "@/lib/projects";
-import { useProgress } from "@/hooks/useProgress";
+import type { ProgressController } from "@/hooks/useProgress";
 import { useAuth } from "@/context/AuthContext";
 import { VerificationModal } from "./VerificationModal";
 import { api, type CurriculumIssueCategory } from "@/lib/api";
@@ -99,9 +99,10 @@ function PhaseSidebarItem({
 interface PhaseViewerProps {
   project: Project;
   initialPhaseId?: string;
+  progress: ProgressController;
 }
 
-export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
+export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerProps) {
   const getInitialIdx = () => {
     if (!initialPhaseId) return 0;
     const idx = project.phases.findIndex(
@@ -122,7 +123,7 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
   const [issueMessage, setIssueMessage] = useState("");
   const [issueSaving, setIssueSaving] = useState(false);
   const [issueFeedback, setIssueFeedback] = useState("");
-  const [savedPhaseRestored, setSavedPhaseRestored] = useState(false);
+  const savedPhaseRestored = useRef(false);
   const { user } = useAuth();
   const {
     enrolled,
@@ -138,7 +139,7 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
     verifiedAt,
     refreshProgress,
     setActivePhase,
-  } = useProgress(project.slug);
+  } = progress;
 
   const activePhase = project.phases[activeIndex];
   const totalPhases = project.phases.length;
@@ -151,21 +152,27 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
       const idx = project.phases.findIndex(
         (p) => p.id === initialPhaseId || String(p.orderIndex) === initialPhaseId
       );
+      // The URL phase is external navigation state and must update the selected phase.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (idx !== -1) setActiveIndex(idx);
     }
   }, [initialPhaseId, project.phases]);
 
   useEffect(() => {
     if (!hydrated || initialPhaseId) return;
-    if (!enrolled) { setSavedPhaseRestored(false); return; }
-    if (savedPhaseRestored) return;
+    if (!enrolled) { savedPhaseRestored.current = false; return; }
+    if (savedPhaseRestored.current) return;
+    // Restore the server-saved active phase after progress hydration.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (currentPhaseIndex >= 0 && currentPhaseIndex < project.phases.length) setActiveIndex(currentPhaseIndex);
-    setSavedPhaseRestored(true);
-  }, [hydrated, enrolled, currentPhaseIndex, initialPhaseId, savedPhaseRestored, project.phases.length]);
+    savedPhaseRestored.current = true;
+  }, [hydrated, enrolled, currentPhaseIndex, initialPhaseId, project.phases.length]);
 
   useEffect(() => {
     if (!notesOpen || !user || !enrolled || !activePhase) return;
     let cancelled = false;
+    // Entering a phase starts an asynchronous note request.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setNoteLoading(true);
     setNoteMessage("");
     api.getPhaseNote(project.slug, activePhase.id)
@@ -173,7 +180,7 @@ export function PhaseViewer({ project, initialPhaseId }: PhaseViewerProps) {
       .catch((error) => { if (!cancelled) setNoteMessage(error instanceof Error ? error.message : "Could not load note"); })
       .finally(() => { if (!cancelled) setNoteLoading(false); });
     return () => { cancelled = true; };
-  }, [notesOpen, user, enrolled, activePhase?.id, project.slug]);
+  }, [notesOpen, user, enrolled, activePhase, project.slug]);
 
   const goTo = (i: number) => {
     if (i >= 0 && i < totalPhases) {

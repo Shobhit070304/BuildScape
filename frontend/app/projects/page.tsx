@@ -6,226 +6,29 @@ import {
   X,
   Database,
   Layers,
-  ChevronDown,
-  ChevronUp,
   AlertTriangle,
   RefreshCw,
   Loader2,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { ProjectCard } from "@/components/ProjectCard";
-import { getAllTracks, mapApiProject } from "@/lib/projects";
+import { mapApiProject } from "@/lib/projects";
 import { api } from "@/lib/api";
 import type { Project } from "@/lib/projects";
 
-// Track brand icons matching Image 1
 function renderTrackIcon(track: string) {
-  switch (track) {
-    case "Web Development":
-      return (
-        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-[#e34f26] text-[9px] font-black text-white">
-          5
-        </span>
-      );
-    case "Full-Stack SpringBoot":
-    case "Spring Boot":
-      return (
-        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#6db33f]/25 text-[#6db33f]">
-          <svg className="h-3 w-3 fill-current" viewBox="0 0 24 24">
-            <path d="M21.5 13.5c-1.5 5.5-6.5 9-12 7.5S.5 14.5 2 9s6.5-9 12-7.5c2.5.7 4.7 2.2 6.2 4.3l-3.2 2.3c-1.1-1.4-2.6-2.3-4.3-2.7-4-.9-7.9 1.6-8.9 5.6s1.6 7.9 5.6 8.9c3.4.8 6.9-1 8.2-4.2l3.9 2.1z" />
-          </svg>
-        </span>
-      );
-    case "Machine Learning":
-      return (
-        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-purple-500/20 text-purple-300">
-          <svg className="h-2.5 w-2.5 fill-current" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="3" />
-            <circle cx="5" cy="8" r="2" />
-            <circle cx="19" cy="8" r="2" />
-            <circle cx="7" cy="17" r="2" />
-            <circle cx="17" cy="17" r="2" />
-          </svg>
-        </span>
-      );
-    case "React & Node.js":
-      return (
-        <span className="flex h-4 w-4 shrink-0 items-center justify-center text-[#61dafb]">
-          <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 24 24">
-            <ellipse cx="12" cy="12" rx="4" ry="10" transform="rotate(30 12 12)" fill="none" stroke="currentColor" strokeWidth="1.5" />
-            <ellipse cx="12" cy="12" rx="4" ry="10" transform="rotate(90 12 12)" fill="none" stroke="currentColor" strokeWidth="1.5" />
-            <ellipse cx="12" cy="12" rx="4" ry="10" transform="rotate(150 12 12)" fill="none" stroke="currentColor" strokeWidth="1.5" />
-            <circle cx="12" cy="12" r="1.5" />
-          </svg>
-        </span>
-      );
-    case "C++":
-      return (
-        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#00599c] text-[8px] font-bold text-white">
-          C+
-        </span>
-      );
-    case "Python":
-      return (
-        <span className="flex h-4 w-4 shrink-0 items-center justify-center text-amber-400">
-          <svg className="h-3 w-3 fill-current" viewBox="0 0 24 24">
-            <path d="M12 2C6.5 2 6.5 4.5 6.5 4.5V7h5.5v1H5s-3 0-3 5.5 2.5 5.5 2.5 5.5h1.5v-2.5c0-1.5 1.5-1.5 1.5-1.5h5.5c1.5 0 1.5-1.5 1.5-1.5V7c0-2-2.5-5-6-5zm-1.5 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm1.5 18c5.5 0 5.5-2.5 5.5-2.5V17H12v-1h7s3 0 3-5.5-2.5-5.5-2.5-5.5h-1.5v2.5c0 1.5-1.5 1.5-1.5 1.5H11c-1.5 0-1.5 1.5-1.5 1.5V17c0 2 2.5 5 6 5zm1.5-2a1 1 0 1 1 0-2 1 1 0 0 1 0 2z" />
-          </svg>
-        </span>
-      );
-    case "Ethereum dApps":
-      return (
-        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-zinc-300">
-          <svg className="h-2.5 w-2.5 fill-current" viewBox="0 0 24 24">
-            <polygon points="12 2 4 13 12 17 20 13 12 2" />
-            <polygon points="12 18 4 14 12 22 20 14 12 18" />
-          </svg>
-        </span>
-      );
-    case "Rust":
-      return (
-        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-stone-800 text-stone-200 text-[9px] font-bold">
-          ⚙
-        </span>
-      );
-    case "Golang":
-      return (
-        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-[#00add8] text-[8px] font-black text-white">
-          GO
-        </span>
-      );
-    case "Java":
-      return (
-        <span className="flex h-4 w-4 shrink-0 items-center justify-center text-rose-400">
-          ☕
-        </span>
-      );
-    case "C Language":
-      return (
-        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-[#00599c]/90 text-[8px] font-bold text-white">
-          C
-        </span>
-      );
-    case "Next.js":
-      return (
-        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white text-[8px] font-bold text-black">
-          N
-        </span>
-      );
-    case "C#":
-      return (
-        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-[#9b4993] text-[7px] font-bold text-white">
-          C#
-        </span>
-      );
-    case "Node.js":
-      return (
-        <span className="flex h-4 w-4 shrink-0 items-center justify-center text-emerald-400 text-[9px] font-bold">
-          ⬢
-        </span>
-      );
-    default:
-      return (
-        <span className="flex h-4 w-4 shrink-0 items-center justify-center text-zinc-400 text-[10px]">
-          ✦
-        </span>
-      );
-  }
+  return (
+    <span aria-hidden="true" className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-[9px] font-bold text-zinc-300">
+      {track.replace(/[^a-z0-9]/gi, "").slice(0, 1).toUpperCase()}
+    </span>
+  );
 }
 
-const ALL_PRIMARY_TRACKS = [
-  "Web Development",
-  "Full-Stack SpringBoot",
-  "Machine Learning",
-  "React & Node.js",
-  "C++",
-  "Python",
-  "Ethereum dApps",
-  "Rust",
-  "Golang",
-  "Java",
-  "C Language",
-  "Next.js",
-  "C#",
-];
-
 const LEVEL_OPTIONS = [
-  { label: "Entry", difficulty: "Entry" },
-  { label: "Basic", difficulty: "Basic" },
+  { label: "Beginner", difficulty: "Beginner" },
   { label: "Intermediate", difficulty: "Intermediate" },
   { label: "Advanced", difficulty: "Advanced" },
-  { label: "Expert", difficulty: "Expert" },
 ];
-
-const COMING_SOON_TRACKS: Record<
-  string,
-  { desc: string; builds: string[]; quarter: string }
-> = {
-  "Web Development": {
-    desc: "Modern frontend mastery with responsive layout systems, animation engines, and production web standards.",
-    builds: [
-      "E-Commerce Storefront with Next.js & Stripe Checkout",
-      "Interactive Canvas Graphics & 2D Physics Engine",
-    ],
-    quarter: "Q4 2026",
-  },
-  "Machine Learning": {
-    desc: "From training neural networks to production inferencing, vector search, and distributed model pipelines.",
-    builds: [
-      "Transformer Attention Architecture from Scratch in PyTorch",
-      "Production MLOps Feature Store & Latency Benchmarker",
-    ],
-    quarter: "Q4 2026",
-  },
-  "React & Node.js": {
-    desc: "Full-stack single-page application development with modern React hooks, server streaming, and Express microservices.",
-    builds: [
-      "Real-Time Collaborative Canvas (Figma Lite) with WebSockets",
-      "High-Throughput GraphQL Subscriptions Gateway",
-    ],
-    quarter: "Q4 2026",
-  },
-  "C++": {
-    desc: "High-performance systems programming, memory safety management, and game runtime foundations.",
-    builds: [
-      "High-Performance 2D Game Physics Engine with SIMD",
-      "Thread-Safe Lock-Free Memory Allocator & Pool",
-    ],
-    quarter: "Q1 2027",
-  },
-  "Ethereum dApps": {
-    desc: "Decentralized finance protocols, smart contract security, and Web3 EVM applications.",
-    builds: [
-      "Decentralized Liquidity Pool & Automated Market Maker (AMM)",
-      "ERC-721 NFT Minting Engine with Merkle Proofs",
-    ],
-    quarter: "Q1 2027",
-  },
-  Java: {
-    desc: "Enterprise core systems with Jakarta EE, multithreading, and reactive streams.",
-    builds: [
-      "Distributed Banking Ledger with Jakarta EE & Kafka",
-      "Reactive Microservice Mesh with Quarkus",
-    ],
-    quarter: "Q4 2026",
-  },
-  "C Language": {
-    desc: "Low-level computer architecture, operating system interfaces, and bare-metal programming.",
-    builds: [
-      "Linux Shell & Process Manager with Signals from Scratch",
-      "Lightweight Embedded RTOS Kernel & Task Scheduler",
-    ],
-    quarter: "Q1 2027",
-  },
-  "C#": {
-    desc: "Modern cross-platform .NET 9 backends, cloud APIs, and game development.",
-    builds: [
-      "High-Throughput ASP.NET Core 9 Microservices Platform",
-      "Cross-Platform 2D Game Engine in C#",
-    ],
-    quarter: "Q1 2027",
-  },
-};
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -233,14 +36,12 @@ export default function ProjectsPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isFromDb, setIsFromDb] = useState(false);
   const [search, setSearch] = useState("");
-  const [selectedTrack, setSelectedTrack] = useState<string | null>(null);
+  const [selectedTrack, setSelectedTrack] = useState<string | null>(() =>
+    typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("track")
+  );
   const [selectedLevelLabel, setSelectedLevelLabel] = useState<string | null>(null);
-  const [isExpanded, setIsExpanded] = useState(true);
-  const [notifiedTracks, setNotifiedTracks] = useState<string[]>([]);
 
   const loadProjects = useCallback(() => {
-    setIsLoading(true);
-    setLoadError(null);
     api
       .getProjects()
       .then((data) => {
@@ -261,7 +62,14 @@ export default function ProjectsPage() {
       });
   }, []);
 
+  const retryProjects = () => {
+    setIsLoading(true);
+    setLoadError(null);
+    loadProjects();
+  };
+
   useEffect(() => {
+    // Initial loading is represented by the initial state; this effect only starts the request.
     loadProjects();
   }, [loadProjects]);
 
@@ -272,11 +80,11 @@ export default function ProjectsPage() {
         !q ||
         p.title.toLowerCase().includes(q) ||
         p.tagline.toLowerCase().includes(q) ||
+        p.track.toLowerCase().includes(q) ||
         p.techStack.some((t) => t.toLowerCase().includes(q));
       const matchTrack =
         !selectedTrack ||
-        p.track.toLowerCase().includes(selectedTrack.toLowerCase()) ||
-        selectedTrack.toLowerCase().includes(p.track.toLowerCase()) ||
+        p.track === selectedTrack ||
         p.techStack.some((t) => t.toLowerCase() === selectedTrack.toLowerCase());
       const matchLevel = !selectedLevelLabel ||
         p.difficulty.toLowerCase() === selectedLevelLabel.toLowerCase();
@@ -292,8 +100,10 @@ export default function ProjectsPage() {
     setSelectedLevelLabel(null);
   }
 
-  // Slice tracks for Image 1 toggle
-  const visibleTracks = isExpanded ? ALL_PRIMARY_TRACKS : ALL_PRIMARY_TRACKS.slice(0, 9);
+  const availableTracks = useMemo(
+    () => Array.from(new Set(projects.map((project) => project.track))).sort((a, b) => a.localeCompare(b)),
+    [projects]
+  );
 
   return (
     <>
@@ -338,7 +148,7 @@ export default function ProjectsPage() {
                 </button>
 
                 {/* Track Pills with brand icons */}
-                {visibleTracks.map((track) => {
+                {availableTracks.map((track) => {
                   const isSelected = selectedTrack === track;
                   return (
                     <button
@@ -355,23 +165,6 @@ export default function ProjectsPage() {
                   );
                 })}
 
-                {/* ^ Less / v More button */}
-                <button
-                  onClick={() => setIsExpanded((prev) => !prev)}
-                  className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-[#8a8178] border border-[#24211b] bg-[#14120f] hover:text-[#e4ddd3] hover:border-[#38332a] transition-all cursor-pointer"
-                >
-                  {isExpanded ? (
-                    <>
-                      <ChevronUp className="h-3 w-3" />
-                      <span>Less</span>
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDown className="h-3 w-3" />
-                      <span>More</span>
-                    </>
-                  )}
-                </button>
               </div>
             </div>
 
@@ -438,6 +231,7 @@ export default function ProjectsPage() {
               <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-500" />
               <input
                 type="text"
+                aria-label="Search projects"
                 placeholder="Search..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -454,7 +248,7 @@ export default function ProjectsPage() {
             </div>
           </div>
 
-          {/* Results Grid or Coming Soon Component */}
+          {/* Project results */}
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-24 gap-3">
               <Loader2 className="h-7 w-7 animate-spin text-accent" />
@@ -472,7 +266,7 @@ export default function ProjectsPage() {
                 {loadError}
               </p>
               <button
-                onClick={loadProjects}
+                onClick={retryProjects}
                 className="inline-flex items-center gap-2 rounded-lg bg-amber-600 hover:bg-amber-500 px-4 py-2 text-xs font-semibold text-white transition-all shadow-md cursor-pointer"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
@@ -480,105 +274,17 @@ export default function ProjectsPage() {
               </button>
             </div>
           ) : filtered.length === 0 ? (
-            selectedTrack && COMING_SOON_TRACKS[selectedTrack] ? (
-              <div className="rounded-2xl border border-amber-900/40 bg-linear-to-b from-[#18130e] via-[#100e0c] to-[#0a0a0a] p-6 sm:p-8 shadow-2xl">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#24211b] pb-5 mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-700/50 bg-amber-950/50 shadow-md">
-                      {renderTrackIcon(selectedTrack)}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h2 className="font-serif text-base sm:text-lg font-bold text-[#f0eae1]">
-                          {selectedTrack} Curriculum
-                        </h2>
-                        <span className="inline-flex items-center rounded-full border border-amber-700/50 bg-amber-950/50 px-2.5 py-0.5 text-[10px] font-semibold text-accent">
-                          ✦ In Active Development
-                        </span>
-                      </div>
-                      <p className="text-xs text-[#8a8178] mt-0.5">
-                        {COMING_SOON_TRACKS[selectedTrack].desc}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-text-muted">
-                      Target: {COMING_SOON_TRACKS[selectedTrack].quarter}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Planned Builds Roadmap Preview */}
-                <div className="mb-6">
-                  <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-accent mb-3">
-                    Upcoming Production Builds In This Track
-                  </h3>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {COMING_SOON_TRACKS[selectedTrack].builds.map(
-                      (buildTitle, idx) => (
-                        <div
-                          key={buildTitle}
-                          className="flex items-start gap-3 rounded-xl border border-[#221f1a] bg-[#12100d] p-3.5"
-                        >
-                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-[#2e2a24] bg-[#181613] font-mono text-[10px] font-bold text-[#a0978c]">
-                            0{idx + 1}
-                          </div>
-                          <div>
-                            <h4 className="text-xs sm:text-sm font-semibold text-[#e4ddd3]">
-                              {buildTitle}
-                            </h4>
-                            <span className="mt-1 inline-block text-[10px] font-mono text-accent">
-                              Phase breakdown &amp; blueprints in progress
-                            </span>
-                          </div>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex flex-wrap items-center gap-3 pt-2">
-                  <button
-                    onClick={() => {
-                      if (!notifiedTracks.includes(selectedTrack)) {
-                        setNotifiedTracks([...notifiedTracks, selectedTrack]);
-                      }
-                    }}
-                    className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-semibold transition-all cursor-pointer ${notifiedTracks.includes(selectedTrack)
-                        ? "bg-emerald-950 border border-emerald-700 text-emerald-300"
-                        : "bg-linear-to-r from-amber-700 to-amber-600 text-stone-950 border border-amber-500/50 hover:brightness-105"
-                      }`}
-                  >
-                    <span>
-                      {notifiedTracks.includes(selectedTrack)
-                        ? "✓ You're on the Early Access List"
-                        : "🔔 Notify Me When Track Drops"}
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => setSelectedTrack(null)}
-                    className="rounded-lg border border-[#262420] bg-[#14120f] px-4 py-2 text-xs font-medium text-[#a0978c] hover:text-[#e4ddd3] hover:border-[#3a352c] transition-all cursor-pointer"
-                  >
-                    Browse Live Tracks (Spring Boot, Go, Rust, Next.js, Python, Node)
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="py-14 text-center rounded-xl border border-dashed border-[#24211b] bg-[#0e0d0b]">
-                <p className="mb-2 text-xs text-[#8a8178]">
-                  No projects matched your criteria.
-                </p>
-                <button
-                  onClick={clearFilters}
-                  className="cursor-pointer text-xs text-accent hover:text-accent-hover hover:underline"
-                >
-                  Clear all filters
-                </button>
-              </div>
-            )
+            <div className="py-14 text-center rounded-xl border border-dashed border-[#24211b] bg-[#0e0d0b">
+              <p className="mb-2 text-xs text-[#8a8178]">
+                No projects matched your criteria.
+              </p>
+              <button
+                onClick={clearFilters}
+                className="cursor-pointer text-xs text-accent hover:text-accent-hover hover:underline"
+              >
+                Clear all filters
+              </button>
+            </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {filtered.map((project) => (

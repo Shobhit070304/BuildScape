@@ -1,16 +1,17 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useProgress } from "@/hooks/useProgress";
 import { Loader2, Lock, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import type { Project } from "@/lib/projects";
+import type { ProgressController } from "@/hooks/useProgress";
 
 interface WorkspaceEnrollmentGuardProps {
   project: Project;
-  children: React.ReactNode;
+  children: (progress: ProgressController) => React.ReactNode;
 }
 
 /**
@@ -28,37 +29,65 @@ export function WorkspaceEnrollmentGuard({
 }: WorkspaceEnrollmentGuardProps) {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
-  // Shares the same single API call as any other useProgress consumer on this page.
-  const { enrolled, hydrated } = useProgress(project.slug);
-  const [deniedReason, setDeniedReason] = useState<string | null>(null);
+  // Own the workspace progress state and pass it to the phase viewer.
+  const progress = useProgress(project.slug);
+  const { enrolled, hydrated, loadError, refreshProgress } = progress;
+  const deniedReason = !user
+    ? "Authentication required. Please sign in and enroll to access this workspace."
+    : !enrolled
+      ? "Enrollment required. You must enroll in this project to access the workspace."
+      : null;
 
   useEffect(() => {
     if (authLoading) return;
 
     if (!user) {
-      setDeniedReason("Authentication required. Please sign in and enroll to access this workspace.");
       const timer = setTimeout(() => {
         router.replace(`/projects/${project.slug}?access=login_required`);
       }, 1500);
       return () => clearTimeout(timer);
     }
 
-    if (!hydrated) return;
+    if (!hydrated || loadError) return;
 
     if (!enrolled) {
-      setDeniedReason("Enrollment required. You must enroll in this project to access the workspace.");
       const timer = setTimeout(() => {
         router.replace(`/projects/${project.slug}?access=enrollment_required`);
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [user, authLoading, enrolled, hydrated, project.slug, router]);
+  }, [user, authLoading, enrolled, hydrated, loadError, project.slug, router]);
 
   if (authLoading || (user && !hydrated)) {
     return (
       <div className="flex h-screen w-screen flex-col items-center justify-center bg-[#0a0a0a] text-stone-300">
         <Loader2 className="h-6 w-6 animate-spin text-amber-500 mb-3" />
         <p className="text-xs text-stone-400">Verifying project enrollment status...</p>
+      </div>
+    );
+  }
+
+  if (user && loadError) {
+    return (
+      <div className="flex h-screen w-screen flex-col items-center justify-center bg-[#0a0a0a] px-4 text-center">
+        <div className="max-w-md rounded-xl border border-amber-900/50 bg-[#12100d] p-6 shadow-2xl">
+          <h2 className="mb-2 text-base font-semibold text-[#f0eae1]">Could not check enrollment</h2>
+          <p role="alert" className="mb-5 text-xs leading-relaxed text-[#9a9187]">{loadError}</p>
+          <button
+            type="button"
+            onClick={() => void refreshProgress()}
+            className="mr-2 rounded-lg bg-amber-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-amber-500"
+          >
+            Retry
+          </button>
+          <Link
+            href={`/projects/${project.slug}`}
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-amber-800/50 px-4 py-2 text-xs font-semibold text-amber-200 transition-colors hover:bg-amber-950/40"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Project overview
+          </Link>
+        </div>
       </div>
     );
   }
@@ -88,5 +117,5 @@ export function WorkspaceEnrollmentGuard({
     );
   }
 
-  return <>{children}</>;
+  return <>{children(progress)}</>;
 }
