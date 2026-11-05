@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import type { FormEvent } from "react";
+import type { FormEvent, ReactNode } from "react";
+import { createPortal } from "react-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -18,6 +19,7 @@ import {
   FileText,
   Flag,
   Save,
+  X,
 } from "lucide-react";
 import type { Project, Phase } from "@/lib/projects";
 import type { ProgressController } from "@/hooks/useProgress";
@@ -93,6 +95,90 @@ function PhaseSidebarItem({
         {phase.title}
       </span>
     </button>
+  );
+}
+
+function WorkspaceDialog({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const focusable = () => Array.from(dialog.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), textarea:not([disabled]), select:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    ));
+    (focusable()[0] ?? dialog).focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = focusable();
+      if (!items.length) {
+        event.preventDefault();
+        dialog.focus();
+      } else if (event.shiftKey && document.activeElement === items[0]) {
+        event.preventDefault();
+        items[items.length - 1].focus();
+      } else if (!event.shiftKey && document.activeElement === items[items.length - 1]) {
+        event.preventDefault();
+        items[0].focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus();
+    };
+  }, []);
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/75 p-4 backdrop-blur-xs"
+      onMouseDown={(event) => { if (event.target === event.currentTarget) onCloseRef.current(); }}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="workspace-dialog-title"
+        tabIndex={-1}
+        className="relative max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto rounded-xl border border-[#342f27] bg-[#11100e] p-4 shadow-2xl sm:p-6"
+      >
+        <button
+          type="button"
+          onClick={() => onCloseRef.current()}
+          aria-label="Close dialog"
+          className="absolute right-3 top-3 rounded-md p-1 text-text-muted transition-colors hover:bg-[#24211b] hover:text-[#e4ddd3]"
+        >
+          <X className="h-4 w-4" />
+        </button>
+        <h2 id="workspace-dialog-title" className="pr-8 font-serif text-base font-semibold text-[#e4ddd3]">{title}</h2>
+        {children}
+      </div>
+    </div>,
+    document.body
   );
 }
 
@@ -185,6 +271,8 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
   const goTo = (i: number) => {
     if (i >= 0 && i < totalPhases) {
       setActiveIndex(i);
+      setNotesOpen(false);
+      setIssueOpen(false);
       if (hydrated && enrolled) setActivePhase(project.phases[i].id, i);
       setNoteMessage("");
       setIssueFeedback("");
@@ -234,9 +322,9 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
   };
 
   return (
-    <div className="flex h-[calc(100vh-3rem)] overflow-hidden">
+    <div className="flex h-[calc(100dvh-2.75rem)] overflow-hidden">
       {/* ── Sidebar ── */}
-      <aside className="flex w-64 shrink-0 flex-col overflow-hidden border-r border-[#1a1a1a] bg-[#0d0d0d]">
+      <aside className="hidden w-64 shrink-0 flex-col overflow-hidden border-r border-[#1a1a1a] bg-[#0d0d0d] md:flex">
         {/* Project info header */}
         <div className="shrink-0 border-b border-[#1a1a1a] p-4">
           <div className="mb-2 flex items-center gap-1.5">
@@ -297,8 +385,8 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
       {/* ── Main content ── */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Phase header bar */}
-        <div className="flex h-11 shrink-0 items-center justify-between gap-4 border-b border-[#1a1a1a] bg-[#0e0e0e] px-6">
-          <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-h-11 shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[#1a1a1a] bg-[#0e0e0e] px-3 py-2 sm:px-4 md:flex-nowrap md:gap-4 md:px-6 md:py-0">
+          <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-3">
             <span className="whitespace-nowrap font-mono text-[0.7rem] text-text-faint">
               Phase {activeIndex + 1}/{totalPhases}
             </span>
@@ -307,13 +395,13 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
             </h1>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
             {enrolled && hydrated && (
               <>
-                <button onClick={() => { setNotesOpen((open) => !open); setIssueOpen(false); }} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[#373128] px-2.5 py-1.5 text-xs text-text-muted hover:bg-[#1a1814]" aria-expanded={notesOpen}>
+                <button type="button" onClick={() => { setNotesOpen((open) => !open); setIssueOpen(false); }} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[#373128] px-2.5 py-1.5 text-xs text-text-muted hover:bg-[#1a1814]" aria-haspopup="dialog" aria-expanded={notesOpen}>
                   <FileText className="h-3.5 w-3.5" /> Notes
                 </button>
-                <button onClick={() => { setIssueOpen((open) => !open); setNotesOpen(false); }} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[#373128] px-2.5 py-1.5 text-xs text-text-muted hover:bg-[#1a1814]" aria-expanded={issueOpen}>
+                <button type="button" onClick={() => { setIssueOpen((open) => !open); setNotesOpen(false); }} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[#373128] px-2.5 py-1.5 text-xs text-text-muted hover:bg-[#1a1814]" aria-haspopup="dialog" aria-expanded={issueOpen}>
                   <Flag className="h-3.5 w-3.5" /> Report issue
                 </button>
               </>
@@ -354,7 +442,7 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
         </div>
 
         {/* Markdown content */}
-        <div className="flex-1 overflow-y-auto px-8 py-10">
+        <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
           {/* Centered content wrapper */}
           <div className="mx-auto max-w-208">
             {allDone && hydrated && (
@@ -403,33 +491,33 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
             </div>
 
             {notesOpen && enrolled && (
-              <section className="mt-8 rounded-xl border border-[#342f27] bg-[#11100e] p-4">
-                <h2 className="font-serif text-base font-semibold text-[#e4ddd3]">My notes for this phase</h2>
+              <WorkspaceDialog title="My notes for this phase" onClose={() => setNotesOpen(false)}>
                 <p className="mb-3 mt-1 text-xs text-text-faint">Private to your account. Notes stay saved if you reset phase checkboxes.</p>
-                {noteLoading ? <p className="text-xs text-text-muted">Loading note…</p> : <textarea maxLength={10000} rows={6} value={note} onChange={(event) => { setNote(event.target.value); setNoteMessage(""); }} className="w-full rounded-lg border border-[#342f27] bg-[#0d0c0a] p-3 text-sm text-[#e4ddd3] outline-none focus:border-amber-700" placeholder="Save key ideas, links, or questions for this phase…" />}
-                <div className="mt-2 flex items-center justify-between gap-3">
+                {noteLoading ? <p className="text-xs text-text-muted">Loading note…</p> : <textarea aria-label="Private phase notes" maxLength={10000} rows={6} value={note} onChange={(event) => { setNote(event.target.value); setNoteMessage(""); }} className="w-full rounded-lg border border-[#342f27] bg-[#0d0c0a] p-3 text-sm text-[#e4ddd3] outline-none focus:border-amber-700" placeholder="Save key ideas, links, or questions for this phase…" />}
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
                   <p aria-live="polite" className="text-xs text-text-muted">{noteMessage || `${note.length}/10,000 characters`}</p>
-                  <button onClick={() => void saveNote()} disabled={noteSaving || noteLoading} className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-2 text-xs font-semibold text-black disabled:opacity-50"><Save className="h-3.5 w-3.5" />{noteSaving ? "Saving…" : "Save note"}</button>
+                  <button type="button" onClick={() => void saveNote()} disabled={noteSaving || noteLoading} className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-2 text-xs font-semibold text-black disabled:opacity-50"><Save className="h-3.5 w-3.5" />{noteSaving ? "Saving…" : "Save note"}</button>
                 </div>
-              </section>
+              </WorkspaceDialog>
             )}
 
             {issueOpen && enrolled && (
-              <form onSubmit={(event) => void submitIssue(event)} className="mt-8 rounded-xl border border-[#342f27] bg-[#11100e] p-4">
-                <h2 className="font-serif text-base font-semibold text-[#e4ddd3]">Report a curriculum issue</h2>
-                <p className="mb-3 mt-1 text-xs text-text-faint">Tell the team what needs fixing in this phase.</p>
-                <div className="grid gap-3 sm:grid-cols-[180px_1fr]">
-                  <select value={issueCategory} onChange={(event) => setIssueCategory(event.target.value as CurriculumIssueCategory)} className="rounded-lg border border-[#342f27] bg-[#0d0c0a] p-2 text-xs text-[#e4ddd3]"><option value="unclear">Unclear instructions</option><option value="broken">Broken link or code</option><option value="outdated">Outdated information</option><option value="other">Other</option></select>
-                  <textarea required minLength={1} maxLength={2000} rows={4} value={issueMessage} onChange={(event) => setIssueMessage(event.target.value)} className="rounded-lg border border-[#342f27] bg-[#0d0c0a] p-3 text-sm text-[#e4ddd3] outline-none focus:border-amber-700" placeholder="Describe the problem (up to 2,000 characters)…" />
-                </div>
-                <div className="mt-2 flex items-center justify-between gap-3"><p aria-live="polite" className="text-xs text-text-muted">{issueFeedback}</p><button type="submit" disabled={issueSaving || !issueMessage.trim()} className="rounded-lg border border-amber-800/50 bg-amber-950/25 px-3 py-2 text-xs font-semibold text-accent disabled:opacity-50">{issueSaving ? "Sending…" : "Send report"}</button></div>
-              </form>
+              <WorkspaceDialog title="Report a curriculum issue" onClose={() => setIssueOpen(false)}>
+                <form onSubmit={(event) => void submitIssue(event)}>
+                  <p className="mb-3 mt-1 text-xs text-text-faint">Tell the team what needs fixing in this phase.</p>
+                  <div className="grid gap-3 sm:grid-cols-[180px_1fr]">
+                    <select aria-label="Issue category" value={issueCategory} onChange={(event) => setIssueCategory(event.target.value as CurriculumIssueCategory)} className="rounded-lg border border-[#342f27] bg-[#0d0c0a] p-2 text-xs text-[#e4ddd3]"><option value="unclear">Unclear instructions</option><option value="broken">Broken link or code</option><option value="outdated">Outdated information</option><option value="other">Other</option></select>
+                    <textarea aria-label="Describe the curriculum issue" required minLength={1} maxLength={2000} rows={4} value={issueMessage} onChange={(event) => setIssueMessage(event.target.value)} className="rounded-lg border border-[#342f27] bg-[#0d0c0a] p-3 text-sm text-[#e4ddd3] outline-none focus:border-amber-700" placeholder="Describe the problem (up to 2,000 characters)…" />
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3"><p aria-live="polite" className="text-xs text-text-muted">{issueFeedback}</p><button type="submit" disabled={issueSaving || !issueMessage.trim()} className="rounded-lg border border-amber-800/50 bg-amber-950/25 px-3 py-2 text-xs font-semibold text-accent disabled:opacity-50">{issueSaving ? "Sending…" : "Send report"}</button></div>
+                </form>
+              </WorkspaceDialog>
             )}
           </div>
         </div>
 
         {/* Navigation footer */}
-        <div className="flex h-11 shrink-0 items-center justify-between border-t border-[#1a1a1a] bg-[#0e0e0e] px-6">
+        <div className="flex h-11 shrink-0 items-center justify-between border-t border-[#1a1a1a] bg-[#0e0e0e] px-3 sm:px-4 md:px-6">
           <button
             onClick={() => goTo(activeIndex - 1)}
             disabled={activeIndex === 0}
@@ -444,7 +532,7 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
           </button>
 
           {/* Dot indicators */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex max-w-[45vw] items-center gap-1.5 overflow-x-auto px-1">
             {project.phases.map((phase, i) => (
               <button
                 key={phase.id}
