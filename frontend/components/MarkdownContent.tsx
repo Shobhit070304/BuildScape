@@ -30,7 +30,7 @@ function CopyablePre({ children, className, ...props }: ComponentProps<"pre">) {
   };
 
   return (
-    <div className="group/code relative my-4">
+    <div className="group/code relative my-4 w-full max-w-full overflow-hidden rounded-lg">
       <button
         type="button"
         onClick={() => void copyCode()}
@@ -41,7 +41,7 @@ function CopyablePre({ children, className, ...props }: ComponentProps<"pre">) {
         {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
         {copied ? "Copied" : "Copy"}
       </button>
-      <pre {...props} className={`!mt-0 !pt-10 ${className ?? ""}`}>
+      <pre {...props} className={`!mt-0 !pt-10 overflow-x-auto ${className ?? ""}`}>
         {children}
       </pre>
     </div>
@@ -50,6 +50,24 @@ function CopyablePre({ children, className, ...props }: ComponentProps<"pre">) {
 
 const components: Components = {
   pre: CopyablePre,
+  table({ children, ...props }) {
+    return (
+      <div className="my-5 w-full overflow-x-auto rounded-lg border border-[#262420]">
+        <table {...props}>{children}</table>
+      </div>
+    );
+  },
+  img({ alt, ...props }) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        {...props}
+        alt={alt || ""}
+        className="my-4 h-auto max-w-full rounded-lg border border-[#262420]"
+        loading="lazy"
+      />
+    );
+  },
   a({ href, children, ...props }) {
     const isExternal = href?.startsWith("http");
     return (

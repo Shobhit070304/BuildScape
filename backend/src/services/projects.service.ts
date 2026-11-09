@@ -116,10 +116,6 @@ export const projectsService = {
       currentPhaseIndex: enrollment?.currentPhaseIndex ?? 0,
       completedAt: enrollment?.completedAt,
       completedPhases: completedPhases.map(({ phaseId, completedAt }) => ({ phaseId, completedAt })),
-      isVerified: Boolean(enrollment?.isVerified),
-      githubRepoUrl: enrollment?.githubRepoUrl,
-      liveDemoUrl: enrollment?.liveDemoUrl,
-      verifiedAt: enrollment?.verifiedAt,
     };
   },
 
@@ -131,105 +127,6 @@ export const projectsService = {
     if (!enrollment) throw new HttpError(403, "Enroll in this project before updating your active phase");
     await progressRepository.setCurrentPhase(userId, project._id, phaseIndex);
     return phaseIndex;
-  },
-
-  async verifyProject(
-    userId: string,
-    slug: string,
-    data: { githubRepoUrl: string; liveDemoUrl?: string }
-  ) {
-    if (!data || typeof data.githubRepoUrl !== "string" || !data.githubRepoUrl.trim()) {
-      throw new HttpError(400, "GitHub repository URL is required");
-    }
-
-    const githubRegex = /^https:\/\/github\.com\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+?)(?:\.git)?\/?$/i;
-    const match = data.githubRepoUrl.trim().match(githubRegex);
-    if (!match) {
-      throw new HttpError(
-        400,
-        "Please provide a valid GitHub repository URL (e.g. https://github.com/username/project)"
-      );
-    }
-
-    const owner = match[1];
-    const repo = match[2];
-    const project = await this.getBySlug(slug);
-    const enrollment = await progressRepository.findEnrollment(userId, project._id);
-    if (!enrollment) {
-      throw new HttpError(400, "You must be enrolled in this project before linking a repository");
-    }
-
-    const completed = await progressRepository.listCompletedPhases(userId, project._id);
-    const totalPhases = project.phases?.length ?? 0;
-    const achievementAlreadyEarned = Boolean(enrollment.completedAt || enrollment.isVerified);
-    if (!achievementAlreadyEarned && completed.length < totalPhases && totalPhases > 0) {
-      throw new HttpError(
-        400,
-        `All phases must be completed before linking a repository (${completed.length}/${totalPhases} completed)`
-      );
-    }
-
-    const liveDemoUrl = data.liveDemoUrl?.trim();
-    if (liveDemoUrl) {
-      try {
-        const parsed = new URL(liveDemoUrl);
-        if (!["http:", "https:"].includes(parsed.protocol) || liveDemoUrl.length > 2048) throw new Error();
-      } catch {
-        throw new HttpError(400, "Live demo URL must be a valid HTTP or HTTPS URL");
-      }
-    }
-
-    // Confirm the submitted repository is public; this does not assess ownership or contents.
-    try {
-      const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
-        signal: AbortSignal.timeout(8000),
-        headers: {
-          "User-Agent": "BuildScape-Verifier",
-          Accept: "application/vnd.github.v3+json",
-        },
-      });
-
-      if (response.status === 404) {
-        throw new HttpError(
-          400,
-          "GitHub repository was not found or is private. Please ensure the repository is public."
-        );
-      }
-      if (response.status !== 200) {
-        throw new HttpError(503, "GitHub could not verify the repository right now. Please try again later.");
-      }
-    } catch (err: unknown) {
-      if (err instanceof HttpError) throw err;
-      throw new HttpError(503, "GitHub verification is unavailable. Please try again later.");
-    }
-
-    const session = await mongoose.startSession();
-    try {
-      let updated: Awaited<ReturnType<typeof progressRepository.updateVerification>> = null;
-      await session.withTransaction(async () => {
-        const currentEnrollment = await progressRepository.findEnrollment(userId, project._id, session);
-        if (!currentEnrollment) {
-          throw new HttpError(400, "You must be enrolled in this project before linking a repository");
-        }
-        const currentCompletions = await progressRepository.listCompletedPhases(userId, project._id, session);
-        const achievementAlreadyEarned = Boolean(currentEnrollment.completedAt || currentEnrollment.isVerified);
-        if (!achievementAlreadyEarned && currentCompletions.length < totalPhases && totalPhases > 0) {
-          throw new HttpError(400, "Complete all phases before linking a repository");
-        }
-
-        const now = new Date();
-        await progressRepository.setProjectCompletedIfMissing(userId, project._id, now, session);
-        updated = await progressRepository.updateVerification(userId, project._id, {
-          githubRepoUrl: `https://github.com/${owner}/${repo}`,
-          liveDemoUrl: liveDemoUrl || undefined,
-          isVerified: true,
-          verifiedAt: now,
-        }, session);
-      });
-      return updated;
-    } finally {
-      await session.endSession();
-    }
   },
 
   async getEnrolled(userId: string) {
@@ -249,10 +146,6 @@ export const projectsService = {
         completedCount: completed.length,
         totalPhases: project.phases?.length ?? 0,
         completedPhases: completed.map(({ phaseId }) => phaseId),
-        isVerified: Boolean(enrollment.isVerified),
-        githubRepoUrl: enrollment.githubRepoUrl,
-        liveDemoUrl: enrollment.liveDemoUrl,
-        verifiedAt: enrollment.verifiedAt,
         project: {
           _id: project._id, slug: project.slug, title: project.title, tagline: project.tagline,
           track: project.track, difficulty: project.difficulty,

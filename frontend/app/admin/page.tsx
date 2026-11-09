@@ -5,7 +5,7 @@ import type { FormEvent } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ArrowLeft, Eye, Loader2, Plus, Save, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, Eye, Loader2, Plus, Save, Trash2 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
@@ -111,6 +111,26 @@ export default function AdminPage() {
         phaseIndex === index ? { ...phase, ...changes } : phase
       ),
     }));
+  };
+
+  const movePhase = (index: number, direction: -1 | 1) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= draft.phases.length) return;
+    setDraft((current) => {
+      const nextPhases = [...current.phases];
+      const temp = nextPhases[index];
+      nextPhases[index] = nextPhases[newIndex];
+      nextPhases[newIndex] = temp;
+      return {
+        ...current,
+        phases: nextPhases.map((item, idx) => ({ ...item, orderIndex: idx + 1 })),
+      };
+    });
+    setPreviewPhase((currentPreview) => {
+      if (currentPreview === index) return newIndex;
+      if (currentPreview === newIndex) return index;
+      return currentPreview;
+    });
   };
 
   const handleSave = async (event: FormEvent<HTMLFormElement>) => {
@@ -229,7 +249,33 @@ export default function AdminPage() {
             <div className="space-y-3 border-t border-[#29251f] pt-5">
               <div className="flex items-center justify-between"><div><h3 className="font-serif text-lg font-semibold">Phases</h3><p className="text-[11px] text-[#81776b]">Order follows the list; content supports Markdown.</p></div><button type="button" onClick={() => setDraft((current) => ({ ...current, phases: [...current.phases, { id: `phase-${current.phases.length + 1}`, orderIndex: current.phases.length + 1, title: "", content: "" }] }))} className="inline-flex items-center gap-1 rounded-lg border border-[#373128] px-2.5 py-1.5 text-xs hover:bg-[#1a1814]"><Plus className="h-3.5 w-3.5" />Add phase</button></div>
               {draft.phases.map((phase, index) => <div key={`${phase.id}-${index}`} className="rounded-lg border border-[#2b2720] bg-[#0d0c0a] p-3 sm:p-4">
-                <div className="mb-3 flex items-center justify-between"><span className="font-mono text-[11px] uppercase tracking-wider text-[#9b8d7c]">Phase {index + 1}</span><div className="flex items-center gap-2"><button type="button" onClick={() => setPreviewPhase(previewPhase === index ? null : index)} className="inline-flex items-center gap-1 text-[11px] text-accent"><Eye className="h-3 w-3" />{previewPhase === index ? "Edit content" : "Preview"}</button><button type="button" disabled={draft.phases.length === 1} onClick={() => { setDraft((current) => ({ ...current, phases: current.phases.filter((_, phaseIndex) => phaseIndex !== index).map((item, phaseIndex) => ({ ...item, orderIndex: phaseIndex + 1 })) })); setPreviewPhase(null); }} className="rounded p-1 text-red-300 hover:bg-red-950/40 disabled:opacity-30" aria-label={`Remove phase ${index + 1}`}><Trash2 className="h-3.5 w-3.5" /></button></div></div>
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-[#9b8d7c]">Phase {index + 1}</span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      disabled={index === 0}
+                      onClick={() => movePhase(index, -1)}
+                      className="rounded p-1 text-[#8a8178] hover:bg-[#1a1814] hover:text-[#f0ede8] disabled:opacity-20 disabled:hover:bg-transparent"
+                      title="Move phase up"
+                      aria-label={`Move phase ${index + 1} up`}
+                    >
+                      <ArrowUp className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={index === draft.phases.length - 1}
+                      onClick={() => movePhase(index, 1)}
+                      className="rounded p-1 text-[#8a8178] hover:bg-[#1a1814] hover:text-[#f0ede8] disabled:opacity-20 disabled:hover:bg-transparent"
+                      title="Move phase down"
+                      aria-label={`Move phase ${index + 1} down`}
+                    >
+                      <ArrowDown className="h-3.5 w-3.5" />
+                    </button>
+                    <button type="button" onClick={() => setPreviewPhase(previewPhase === index ? null : index)} className="inline-flex items-center gap-1 text-[11px] text-accent"><Eye className="h-3 w-3" />{previewPhase === index ? "Edit content" : "Preview"}</button>
+                    <button type="button" disabled={draft.phases.length === 1} onClick={() => { setDraft((current) => ({ ...current, phases: current.phases.filter((_, phaseIndex) => phaseIndex !== index).map((item, phaseIndex) => ({ ...item, orderIndex: phaseIndex + 1 })) })); setPreviewPhase(null); }} className="rounded p-1 text-red-300 hover:bg-red-950/40 disabled:opacity-30" aria-label={`Remove phase ${index + 1}`}><Trash2 className="h-3.5 w-3.5" /></button>
+                  </div>
+                </div>
                 <div className="grid gap-3 sm:grid-cols-[180px_minmax(0,1fr)]"><label className="space-y-1 text-[11px]">Phase ID<input required maxLength={64} pattern="[A-Za-z0-9]+(-[A-Za-z0-9]+)*" value={phase.id} onChange={(e) => updatePhase(index, { id: e.target.value })} className="admin-input" /></label><label className="space-y-1 text-[11px]">Title<input required maxLength={160} value={phase.title} onChange={(e) => updatePhase(index, { title: e.target.value })} className="admin-input" /></label></div>
                 {previewPhase === index ? <article className="prose mt-4 max-h-96 overflow-y-auto rounded-md border border-[#29251f] p-4 text-sm"><ReactMarkdown remarkPlugins={[remarkGfm]}>{phase.content || "Nothing to preview yet."}</ReactMarkdown></article> : <label className="mt-3 block space-y-1 text-[11px]">Markdown content<textarea required rows={12} maxLength={100000} value={phase.content} onChange={(e) => updatePhase(index, { content: e.target.value })} className="admin-input font-mono leading-relaxed" /></label>}
               </div>)}

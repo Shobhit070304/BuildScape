@@ -11,10 +11,6 @@ interface ProgressState {
   completed: string[];
   hydrated: boolean;
   loadError: string | null;
-  isVerified: boolean;
-  githubRepoUrl?: string;
-  liveDemoUrl?: string;
-  verifiedAt?: string;
 }
 
 export function useProgress(projectSlug: string, enabled = true) {
@@ -27,7 +23,6 @@ export function useProgress(projectSlug: string, enabled = true) {
     completed: [],
     hydrated: false,
     loadError: null,
-    isVerified: false,
   });
   const phaseSaveQueue = useRef<Promise<unknown>>(Promise.resolve());
   const requestVersion = useRef(0);
@@ -48,10 +43,6 @@ export function useProgress(projectSlug: string, enabled = true) {
         completed: data.completedPhases.map((p) => p.phaseId),
         hydrated: true,
         loadError: null,
-        isVerified: Boolean(data.isVerified),
-        githubRepoUrl: data.githubRepoUrl,
-        liveDemoUrl: data.liveDemoUrl,
-        verifiedAt: data.verifiedAt,
       });
     } catch (error) {
       if (requestId !== requestVersion.current) return;
@@ -62,7 +53,6 @@ export function useProgress(projectSlug: string, enabled = true) {
         completed: [],
         hydrated: true,
         loadError: error instanceof Error ? error.message : "Could not load enrollment status.",
-        isVerified: false,
       });
     }
   }, [projectSlug, user, enabled]);
@@ -107,10 +97,6 @@ export function useProgress(projectSlug: string, enabled = true) {
               completed: fresh.completedPhases.map((p) => p.phaseId),
               hydrated: true,
               loadError: null,
-              isVerified: Boolean(fresh.isVerified),
-              githubRepoUrl: fresh.githubRepoUrl,
-              liveDemoUrl: fresh.liveDemoUrl,
-              verifiedAt: fresh.verifiedAt,
             });
           }
         } catch (refreshError) {
@@ -168,10 +154,6 @@ export function useProgress(projectSlug: string, enabled = true) {
     completed: belongsToCurrentUser ? state.completed : [],
     hydrated: enabled && ((!authLoading && !user) || (belongsToCurrentUser && state.hydrated)),
     loadError: belongsToCurrentUser ? state.loadError : null,
-    isVerified: belongsToCurrentUser && state.isVerified,
-    githubRepoUrl: belongsToCurrentUser ? state.githubRepoUrl : undefined,
-    liveDemoUrl: belongsToCurrentUser ? state.liveDemoUrl : undefined,
-    verifiedAt: belongsToCurrentUser ? state.verifiedAt : undefined,
     togglePhase,
     setActivePhase,
     isCompleted,

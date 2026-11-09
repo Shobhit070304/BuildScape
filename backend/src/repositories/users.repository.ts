@@ -29,10 +29,12 @@ export const userRepository = {
         .slice(0, 20);
 
       // Verify uniqueness
-      let candidate = slug || "builder";
-      const taken = await User.findOne({ username: candidate });
-      if (taken && taken.googleId !== values.googleId) {
-        candidate = `${candidate}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const baseHandle = slug || "builder";
+      let candidate = baseHandle;
+      let taken = await User.findOne({ username: candidate });
+      while (taken && taken.googleId !== values.googleId) {
+        candidate = `${baseHandle}-${Math.floor(1000 + Math.random() * 9000)}`;
+        taken = await User.findOne({ username: candidate });
       }
       username = candidate;
     }

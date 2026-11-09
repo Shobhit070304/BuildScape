@@ -59,6 +59,10 @@ export const feedbackService = {
     return feedbackRepository.listIssues(status as typeof statuses[number] | undefined);
   },
 
+  async listUserIssues(userId: string) {
+    return feedbackRepository.listUserIssues(userId);
+  },
+
   async updateIssueStatus(id: string, status: unknown) {
     if (!Types.ObjectId.isValid(id)) throw new HttpError(404, "Issue not found");
     if (typeof status !== "string" || !statuses.includes(status as typeof statuses[number])) {

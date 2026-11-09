@@ -14,23 +14,59 @@ import {
   FolderOpen,
   Clock,
   CheckCircle2,
-  ShieldCheck,
-  ExternalLink,
   Pencil,
   Check,
   X,
+  Flag,
+  User as UserIcon,
+  ShieldCheck,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
-import { api, EnrolledProjectItem } from "@/lib/api";
+import {
+  api,
+  type EnrolledProjectItem,
+  type UserReportedIssue,
+  type CurriculumIssueCategory,
+  type CurriculumIssueStatus,
+} from "@/lib/api";
 import { DIFFICULTY_COLORS, getTrackColor } from "@/lib/projects";
-import { VerificationModal } from "@/components/VerificationModal";
+
+const STATUS_STYLES: Record<
+  CurriculumIssueStatus,
+  { label: string; badge: string; icon: typeof CheckCircle2 }
+> = {
+  open: {
+    label: "Pending Review",
+    badge: "border-amber-800/50 bg-amber-950/30 text-amber-300",
+    icon: Clock,
+  },
+  in_review: {
+    label: "In Review",
+    badge: "border-sky-800/50 bg-sky-950/30 text-sky-300",
+    icon: Clock,
+  },
+  resolved: {
+    label: "Resolved",
+    badge: "border-emerald-800/50 bg-emerald-950/30 text-emerald-300",
+    icon: CheckCircle2,
+  },
+};
+
+const CATEGORY_LABELS: Record<CurriculumIssueCategory, string> = {
+  unclear: "Unclear instructions",
+  broken: "Broken link or code",
+  outdated: "Outdated information",
+  other: "Other issue",
+};
 
 export default function ProfilePage() {
   const { user, isLoading: authLoading, login, logout, updateUsername } = useAuth();
+  const [activeTab, setActiveTab] = useState<"projects" | "issues" | "account">("projects");
   const [enrollments, setEnrollments] = useState<EnrolledProjectItem[]>([]);
   const [loadingEnrollments, setLoadingEnrollments] = useState(false);
-  const [selectedVerifyProject, setSelectedVerifyProject] = useState<EnrolledProjectItem | null>(null);
+  const [issues, setIssues] = useState<UserReportedIssue[]>([]);
+  const [loadingIssues, setLoadingIssues] = useState(false);
   const [editingUsername, setEditingUsername] = useState(false);
   const [usernameDraft, setUsernameDraft] = useState("");
   const [usernameError, setUsernameError] = useState<string | null>(null);
@@ -44,6 +80,8 @@ export default function ProfilePage() {
     // The first authenticated profile load should show its loading state immediately.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoadingEnrollments(true);
+    setLoadingIssues(true);
+
     api
       .getEnrolledProjects()
       .then((data) => {
@@ -55,13 +93,32 @@ export default function ProfilePage() {
       .finally(() => {
         if (!cancelled) setLoadingEnrollments(false);
       });
-    return () => { cancelled = true; };
+
+    api
+      .getMyIssues()
+      .then((data) => {
+        if (!cancelled) setIssues(data.issues ?? []);
+      })
+      .catch((err) => {
+        if (!cancelled) console.error("Failed to load reported issues:", err);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingIssues(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   const totalCompletedPhases = enrollments.reduce(
     (sum, item) => sum + item.completedCount,
     0
   );
+
+  const completedProjectsCount = enrollments.filter(
+    (item) => Boolean(item.completedAt) || item.completedCount >= (item.totalPhases || 1)
+  ).length;
 
   const handleUsernameSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -105,7 +162,7 @@ export default function ProfilePage() {
                 Your BuildScape Profile
               </h1>
               <p className="mb-5 text-xs text-[#8a8178]">
-                Sign in with Google to view your enrolled projects and track your learning progress.
+                Sign in with Google to view your enrolled projects, track your learning progress, and see reported issues.
               </p>
               <div className="flex justify-center scale-95 origin-center">
                 <GoogleLogin
@@ -114,9 +171,13 @@ export default function ProfilePage() {
                       setSignInError("Google did not return a credential. Please try again.");
                       return;
                     }
-                    void login(res.credential).then(() => setSignInError(null)).catch((error: unknown) => {
-                      setSignInError(error instanceof Error ? error.message : "Sign-in failed. Please try again.");
-                    });
+                    void login(res.credential)
+                      .then(() => setSignInError(null))
+                      .catch((error: unknown) => {
+                        setSignInError(
+                          error instanceof Error ? error.message : "Sign-in failed. Please try again."
+                        );
+                      });
                   }}
                   onError={() => setSignInError("Google sign-in failed. Please try again.")}
                   shape="pill"
@@ -128,317 +189,587 @@ export default function ProfilePage() {
               {signInError && <p role="alert" className="mt-3 text-xs text-rose-300">{signInError}</p>}
             </div>
           ) : (
-            /* Logged in User Profile (Clean, compact, slightly smaller) */
-            <div className="space-y-8">
-              {/* Profile Header Card */}
-              <div className="rounded-xl border border-[#221f1a] bg-linear-to-b from-[#14120f] to-[#0e0d0b] p-4 sm:p-5 shadow-md">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  {/* Avatar & User Details */}
-                  <div className="flex items-center gap-3">
-                    {user.avatar ? (
-                      <Image
-                        src={user.avatar}
-                        alt={user.name}
-                        width={48}
-                        height={48}
-                        className="rounded-full border border-amber-700/40 shadow-sm"
-                      />
-                    ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-amber-700/40 bg-amber-950/60 font-serif text-lg font-bold text-accent">
-                        {user.name[0]?.toUpperCase()}
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h1 className="font-serif text-lg font-bold text-[#e4ddd3]">
-                          {user.name}
-                        </h1>
-                        <span
-                          className={`rounded-full border px-2 py-0.2 text-[0.62rem] font-medium ${
-                            user.role === "admin"
-                              ? "border-purple-800/50 bg-purple-950/50 text-purple-300"
-                              : "border-amber-800/40 bg-amber-950/40 text-accent"
-                          }`}
-                        >
-                          {user.role === "admin" ? "Admin" : "Learner"}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#8a8178]">{user.email}</p>
-                      <div className="mt-1 flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-[11px] text-[#b59a69]">@{user.username}</span>
-                        {!editingUsername && <button onClick={() => { setUsernameDraft(user.username ?? ""); setUsernameError(null); setEditingUsername(true); }} className="inline-flex items-center gap-1 text-[10px] text-[#8a8178] hover:text-accent"><Pencil className="h-3 w-3" />Edit username</button>}
-                      </div>
-                      {editingUsername && <form onSubmit={handleUsernameSave} className="mt-2 flex max-w-sm flex-wrap items-center gap-2">
-                        <label className="sr-only" htmlFor="profile-username">Public username</label>
-                        <span className="text-xs text-[#81776b]">@</span>
-                        <input id="profile-username" required minLength={3} maxLength={24} pattern="[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*" autoComplete="off" value={usernameDraft} onChange={(event) => setUsernameDraft(event.target.value)} className="min-w-0 flex-1 rounded-md border border-[#342f27] bg-[#0d0c0a] px-2 py-1 text-xs text-[#e4ddd3] outline-none focus:border-amber-700" />
-                        <button type="submit" disabled={savingUsername} className="inline-flex items-center gap-1 rounded-md bg-amber-700 px-2 py-1 text-[10px] font-semibold text-black disabled:opacity-50">{savingUsername ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}Save</button>
-                        <button type="button" disabled={savingUsername} onClick={() => { setEditingUsername(false); setUsernameDraft(user.username ?? ""); setUsernameError(null); }} className="rounded-md border border-[#342f27] p-1 text-[#8a8178] hover:text-white" aria-label="Cancel username edit"><X className="h-3 w-3" /></button>
-                        {usernameError && <p role="alert" className="w-full text-[10px] text-red-300">{usernameError}</p>}
-                        <p className="w-full text-[10px] text-[#6b6256]">3–24 letters or numbers; use single hyphens between words.</p>
-                      </form>}
-                    </div>
-                  </div>
-
-                  {/* Action buttons */}
-                  <div className="flex items-center gap-2">
-                    {user.role === "admin" && <Link href="/admin" className="rounded border border-purple-800/40 bg-purple-950/30 px-3 py-1.5 text-xs text-purple-200 hover:bg-purple-900/40">Manage projects</Link>}
-                    {user.username && (
-                      <Link
-                        href={`/u/${user.username}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 rounded border border-amber-800/40 bg-amber-950/30 px-3 py-1.5 text-xs font-medium text-accent transition-all hover:border-amber-700/60 hover:bg-amber-900/40 cursor-pointer"
-                        title="View your public developer profile"
-                      >
-                        <ShieldCheck className="h-3.5 w-3.5 text-accent" />
-                        <span>Public Portfolio</span>
-                        <ExternalLink className="h-2.5 w-2.5 opacity-70" />
-                      </Link>
-                    )}
-                    <button
-                      onClick={() => void handleLogout()}
-                      className="flex items-center gap-1.5 rounded border border-[#2a2620] bg-[#14120f] px-3 py-1.5 text-xs font-medium text-[#a0978c] transition-all hover:border-[#3a342c] hover:bg-[#1a1814] hover:text-[#e4ddd3] cursor-pointer"
-                      title="Sign out of your account"
-                    >
-                      <LogOut className="h-3 w-3 text-text-muted" />
-                      <span>Log out</span>
-                    </button>
-                  </div>
+            /* Logged in User Profile */
+            <div className="space-y-6">
+              {/* High-level Stats Overview Bar */}
+              <div className="grid grid-cols-2 gap-3 rounded-xl border border-[#221f1a] bg-[#11100e] p-4 sm:grid-cols-4">
+                <div className="border-r border-[#1e1c18] pr-2 last:border-r-0">
+                  <span className="text-[0.62rem] uppercase tracking-wider text-[#6b6256] font-mono">
+                    Enrolled Projects
+                  </span>
+                  <p className="mt-0.5 font-mono text-lg font-bold text-[#e4ddd3]">
+                    {enrollments.length}
+                  </p>
                 </div>
-                {logoutError && <p role="alert" className="mt-3 text-xs text-rose-300">{logoutError}</p>}
-
-                {/* Stats Bar */}
-                <div className="mt-5 grid grid-cols-2 gap-3 border-t border-[#1e1c18] pt-4 sm:grid-cols-4">
-                  <div className="rounded-lg border border-[#221f1a] bg-[#11100e] p-3">
-                    <span className="text-[0.62rem] uppercase tracking-wider text-[#6b6256] font-mono">
-                      Enrolled Projects
-                    </span>
-                    <p className="mt-0.5 font-mono text-lg font-bold text-[#e4ddd3]">
-                      {enrollments.length}
-                    </p>
-                  </div>
-                  <div className="rounded-lg border border-[#221f1a] bg-[#11100e] p-3">
-                    <span className="text-[0.62rem] uppercase tracking-wider text-[#6b6256] font-mono">
-                      Completed Phases
-                    </span>
-                    <p className="mt-0.5 font-mono text-lg font-bold text-accent">
-                      {totalCompletedPhases}
-                    </p>
-                  </div>
-                  <div className="rounded-lg border border-[#221f1a] bg-[#11100e] p-3">
-                    <span className="text-[0.62rem] uppercase tracking-wider text-[#6b6256] font-mono">
-                      Public Repositories Linked
-                    </span>
-                    <p className="mt-0.5 font-mono text-lg font-bold text-emerald-400">
-                      {enrollments.filter((item) => item.isVerified).length}
-                    </p>
-                  </div>
-                  <div className="rounded-lg border border-[#221f1a] bg-[#11100e] p-3">
-                    <span className="text-[0.62rem] uppercase tracking-wider text-[#6b6256] font-mono">
-                      Learning Status
-                    </span>
-                    <p className="mt-0.5 font-mono text-sm font-bold text-emerald-400 flex items-center gap-1.5">
-                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      Active
-                    </p>
-                  </div>
+                <div className="border-r border-[#1e1c18] pr-2 last:border-r-0">
+                  <span className="text-[0.62rem] uppercase tracking-wider text-[#6b6256] font-mono">
+                    Completed Phases
+                  </span>
+                  <p className="mt-0.5 font-mono text-lg font-bold text-accent">
+                    {totalCompletedPhases}
+                  </p>
+                </div>
+                <div className="border-r border-[#1e1c18] pr-2 last:border-r-0">
+                  <span className="text-[0.62rem] uppercase tracking-wider text-[#6b6256] font-mono">
+                    Completed Blueprints
+                  </span>
+                  <p className="mt-0.5 font-mono text-lg font-bold text-emerald-400">
+                    {completedProjectsCount}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-[0.62rem] uppercase tracking-wider text-[#6b6256] font-mono">
+                    Learning Status
+                  </span>
+                  <p className="mt-0.5 font-mono text-sm font-bold text-emerald-400 flex items-center gap-1.5">
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Active
+                  </p>
                 </div>
               </div>
 
-              {/* Enrolled Projects Section */}
-              <div>
-                <div className="mb-4 flex items-center justify-between">
-                  <div>
-                    <h2 className="font-serif text-lg font-bold text-[#e4ddd3]">
-                      My Enrolled Projects
-                    </h2>
-                    <p className="text-[11px] text-text-muted">
-                      Pick up right where you left off in your active projects.
-                    </p>
+              {/* 2-Column Dashboard Layout with Sidebar */}
+              <div className="flex flex-col gap-6 md:flex-row md:items-start">
+                {/* ── Left Sidebar Navigation ── */}
+                <aside className="w-full shrink-0 md:w-60">
+                  {/* User Profile Mini Card */}
+                  <div className="mb-3 rounded-xl border border-[#221f1a] bg-[#12110e] p-3.5 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      {user.avatar ? (
+                        <Image
+                          src={user.avatar}
+                          alt={user.name}
+                          width={42}
+                          height={42}
+                          className="rounded-full border border-amber-700/40 shadow-sm shrink-0"
+                        />
+                      ) : (
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-amber-700/40 bg-amber-950/60 font-serif text-base font-bold text-accent">
+                          {user.name[0]?.toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <h2 className="truncate font-serif text-sm font-semibold text-[#e4ddd3]">
+                            {user.name}
+                          </h2>
+                          {user.role === "admin" && (
+                            <span className="rounded-full border border-purple-800/50 bg-purple-950/50 px-1.5 py-0.2 text-[9px] font-medium text-purple-300">
+                              Admin
+                            </span>
+                          )}
+                        </div>
+                        <p className="truncate font-mono text-[11px] text-[#b59a69]">
+                          @{user.username}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
-                  <Link
-                    href="/projects"
-                    className="inline-flex items-center gap-1 text-xs text-accent transition-colors hover:text-accent-hover hover:underline"
+                  {/* Tab Navigation buttons */}
+                  <nav
+                    className="flex flex-row gap-1.5 overflow-x-auto pb-2 md:flex-col md:overflow-visible md:pb-0"
+                    aria-label="Profile tabs"
                   >
-                    <span>Browse More Projects</span>
-                    <ArrowRight className="h-3 w-3" />
-                  </Link>
-                </div>
-
-                {loadingEnrollments ? (
-                  <div className="flex h-36 items-center justify-center">
-                    <Loader2 className="h-5 w-5 animate-spin text-accent" />
-                  </div>
-                ) : enrollments.length === 0 ? (
-                  /* Empty state */
-                  <div className="rounded-xl border border-dashed border-[#26221c] bg-[#11100e] p-8 text-center">
-                    <div className="mx-auto mb-2.5 flex h-10 w-10 items-center justify-center rounded-lg border border-[#2a2620] bg-[#161411]">
-                      <FolderOpen className="h-5 w-5 text-[#6b6256]" />
-                    </div>
-                    <h3 className="font-serif text-sm font-semibold text-[#e4ddd3]">
-                      No Enrolled Projects Yet
-                    </h3>
-                    <p className="mx-auto mt-1 max-w-sm text-xs text-[#8a8178]">
-                      You haven’t enrolled in any projects. Browse the curriculum library to start building production-ready apps.
-                    </p>
-                    <div className="mt-4">
-                      <Link
-                        href="/projects"
-                        className="inline-flex items-center gap-1.5 rounded border border-amber-700/60 bg-amber-950/60 px-3 py-1.5 text-xs font-semibold text-[#e4ddd3] transition-all hover:bg-amber-900/60 hover:text-white"
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("projects")}
+                      className={`flex shrink-0 items-center justify-between gap-3 rounded-lg px-3 py-2 text-xs font-medium transition-all cursor-pointer ${
+                        activeTab === "projects"
+                          ? "border border-amber-800/60 bg-amber-950/30 text-accent font-semibold shadow-xs"
+                          : "border border-transparent text-[#9a9187] hover:border-[#2b2720] hover:bg-[#14120f] hover:text-[#e4ddd3]"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Layers className="h-4 w-4" />
+                        <span>Enrolled Projects</span>
+                      </span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 font-mono text-[10px] ${
+                          activeTab === "projects"
+                            ? "bg-amber-800/40 text-amber-200"
+                            : "bg-[#1c1a16] text-[#81776b]"
+                        }`}
                       >
-                        <Sparkles className="h-3 w-3 text-accent" />
-                        <span>Explore Projects</span>
-                      </Link>
-                    </div>
+                        {enrollments.length}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("issues")}
+                      className={`flex shrink-0 items-center justify-between gap-3 rounded-lg px-3 py-2 text-xs font-medium transition-all cursor-pointer ${
+                        activeTab === "issues"
+                          ? "border border-amber-800/60 bg-amber-950/30 text-accent font-semibold shadow-xs"
+                          : "border border-transparent text-[#9a9187] hover:border-[#2b2720] hover:bg-[#14120f] hover:text-[#e4ddd3]"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Flag className="h-4 w-4" />
+                        <span>Reported Issues</span>
+                      </span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 font-mono text-[10px] ${
+                          activeTab === "issues"
+                            ? "bg-amber-800/40 text-amber-200"
+                            : "bg-[#1c1a16] text-[#81776b]"
+                        }`}
+                      >
+                        {issues.length}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("account")}
+                      className={`flex shrink-0 items-center justify-between gap-3 rounded-lg px-3 py-2 text-xs font-medium transition-all cursor-pointer ${
+                        activeTab === "account"
+                          ? "border border-amber-800/60 bg-amber-950/30 text-accent font-semibold shadow-xs"
+                          : "border border-transparent text-[#9a9187] hover:border-[#2b2720] hover:bg-[#14120f] hover:text-[#e4ddd3]"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <UserIcon className="h-4 w-4" />
+                        <span>Account Details</span>
+                      </span>
+                    </button>
+                  </nav>
+
+                  {/* Sidebar Footer Logout */}
+                  <div className="mt-4 hidden border-t border-[#1e1c18] pt-3 md:block">
+                    <button
+                      type="button"
+                      onClick={() => void handleLogout()}
+                      className="flex w-full cursor-pointer items-center gap-2 rounded-lg border border-transparent px-3 py-2 text-xs text-[#8a8178] transition-colors hover:border-[#2b2720] hover:bg-[#14120f] hover:text-red-300"
+                    >
+                      <LogOut className="h-3.5 w-3.5" />
+                      <span>Sign out</span>
+                    </button>
                   </div>
-                ) : (
-                  /* List of enrolled projects */
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    {enrollments.map((item) => {
-                      const p = item.project;
-                      const total = item.totalPhases || 5;
-                      const percent = Math.round((item.completedCount / total) * 100);
-                      const isComplete = Boolean(item.completedAt) || item.completedCount >= total;
+                </aside>
 
-                      const diffColor =
-                        DIFFICULTY_COLORS[p.difficulty] ??
-                        "text-amber-400 bg-amber-950/60 border-amber-900";
-                      const trackColor = getTrackColor(p.track);
+                {/* ── Right Content Area ── */}
+                <section className="min-w-0 flex-1">
+                  {logoutError && (
+                    <p role="alert" className="mb-4 text-xs text-rose-300">
+                      {logoutError}
+                    </p>
+                  )}
 
-                      return (
-                        <div
-                          key={item.enrollmentId}
-                          className="flex flex-col justify-between rounded-xl border border-[#221f1a] bg-[#11100e] p-4 shadow-sm transition-all hover:border-[#332e26]"
+                  {/* ───────────────── Tab 1: Enrolled Projects ───────────────── */}
+                  {activeTab === "projects" && (
+                    <div>
+                      <div className="mb-4 flex items-center justify-between">
+                        <div>
+                          <h2 className="font-serif text-lg font-bold text-[#e4ddd3]">
+                            My Enrolled Projects
+                          </h2>
+                          <p className="text-[11px] text-text-muted">
+                            Pick up right where you left off in your active projects.
+                          </p>
+                        </div>
+
+                        <Link
+                          href="/projects"
+                          className="inline-flex items-center gap-1 text-xs text-accent transition-colors hover:text-accent-hover hover:underline"
                         >
-                          <div>
-                            {/* Badges */}
-                            <div className="mb-2.5 flex items-center justify-between">
-                              <div className="flex items-center gap-1.5">
-                                <span
-                                  className={`rounded border px-2 py-0.5 text-[10px] font-medium ${trackColor}`}
-                                >
-                                  {p.track}
-                                </span>
-                                <span
-                                  className={`rounded border px-2 py-0.5 text-[10px] font-medium ${diffColor}`}
-                                >
-                                  {p.difficulty}
-                                </span>
-                              </div>
-                              <span className="flex items-center gap-1 text-[11px] text-[#6b6256]">
-                                <Clock className="h-2.5 w-2.5" />
-                                {p.estimatedHours}h
-                              </span>
-                            </div>
+                          <span>Browse More Projects</span>
+                          <ArrowRight className="h-3 w-3" />
+                        </Link>
+                      </div>
 
-                            {/* Title & Tagline with font-serif */}
-                            <h3 className="font-serif text-sm font-semibold text-[#e4ddd3] mb-1">
-                              {p.title}
-                            </h3>
-                            <p className="text-[11px] text-[#8a8178] line-clamp-2 mb-3 leading-relaxed">
-                              {p.tagline}
-                            </p>
-
-                            {/* Progress bar */}
-                            <div className="mb-3.5 rounded-lg border border-[#221f1a] bg-[#14120f] p-2.5">
-                              <div className="mb-1 flex items-center justify-between text-[11px]">
-                                <span className="text-[#8a8178]">
-                                      {isComplete ? (
-                                    <span className="text-emerald-400 font-medium flex items-center gap-1">
-                                      <CheckCircle2 className="h-3 w-3" /> Completion earned
-                                    </span>
-                                  ) : (
-                                    `Progress: ${item.completedCount} of ${total} phases`
-                                  )}
-                                </span>
-                                <span className="font-mono text-accent">
-                                  {percent}%
-                                </span>
-                              </div>
-                              <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#221f1a]">
-                                <div
-                                  className={`h-full rounded-full transition-all duration-300 ${
-                                    isComplete
-                                      ? "bg-emerald-500"
-                                      : "bg-linear-to-r from-amber-700 to-accent"
-                                  }`}
-                                  style={{ width: `${percent}%` }}
-                                />
-                              </div>
-                            </div>
-                            {isComplete && item.completedCount < total && (
-                              <p className="-mt-2 mb-3 text-[10px] text-[#81776b]">Some phase checkboxes are now unchecked; earned completion and repository status remain on your profile.</p>
-                            )}
-                            {/* Public repository link status */}
-                            {isComplete && (
-                              <div className="mb-3 flex items-center justify-between rounded-lg border border-emerald-900/40 bg-emerald-950/20 px-3 py-1.5 text-xs">
-                                <span className="flex items-center gap-1.5 font-medium text-emerald-400">
-                                  <ShieldCheck className="h-3.5 w-3.5" />
-                                  {item.isVerified ? "Public Repo Checked" : "Ready to Link Repo"}
-                                </span>
-                                <button
-                                  onClick={() => setSelectedVerifyProject(item)}
-                                  className="flex items-center gap-1 font-semibold text-accent hover:underline cursor-pointer"
-                                >
-                                  <span>{item.isVerified ? "View Links" : "Check Public Repo"}</span>
-                                  <ArrowRight className="h-2.5 w-2.5" />
-                                </button>
-                              </div>
-                            )}
+                      {loadingEnrollments ? (
+                        <div className="flex h-36 items-center justify-center">
+                          <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                        </div>
+                      ) : enrollments.length === 0 ? (
+                        /* Empty state */
+                        <div className="rounded-xl border border-dashed border-[#26221c] bg-[#11100e] p-8 text-center">
+                          <div className="mx-auto mb-2.5 flex h-10 w-10 items-center justify-center rounded-lg border border-[#2a2620] bg-[#161411]">
+                            <FolderOpen className="h-5 w-5 text-[#6b6256]" />
                           </div>
-
-                          {/* Action Buttons matching Image 5 */}
-                          <div className="flex items-center gap-2 pt-1">
+                          <h3 className="font-serif text-sm font-semibold text-[#e4ddd3]">
+                            No Enrolled Projects Yet
+                          </h3>
+                          <p className="mx-auto mt-1 max-w-sm text-xs text-[#8a8178]">
+                            You haven’t enrolled in any projects. Browse the curriculum library to start building production-ready apps.
+                          </p>
+                          <div className="mt-4">
                             <Link
-                              href={`/projects/${p.slug}/workspace`}
-                              className="flex flex-1 items-center justify-center gap-1 rounded border border-amber-600/50 bg-[#d97706] hover:bg-[#b45309] px-3 py-1.5 text-xs font-semibold text-stone-950 transition-all shadow-xs"
+                              href="/projects"
+                              className="inline-flex items-center gap-1.5 rounded border border-amber-700/60 bg-amber-950/60 px-3 py-1.5 text-xs font-semibold text-[#e4ddd3] transition-all hover:bg-amber-900/60 hover:text-white"
                             >
-                              <span>{isComplete ? "Review Workspace" : "Continue Project"}</span>
-                              <ArrowRight className="h-3 w-3" />
-                            </Link>
-
-                            <Link
-                              href={`/projects/${p.slug}`}
-                              className="rounded border border-[#262420] bg-transparent px-2.5 py-1.5 text-xs text-[#8a8178] transition-colors hover:border-[#3a352c] hover:text-[#e4ddd3]"
-                            >
-                              Overview
+                              <Sparkles className="h-3 w-3 text-accent" />
+                              <span>Explore Projects</span>
                             </Link>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
+                      ) : (
+                        /* List of enrolled projects */
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          {enrollments.map((item) => {
+                            const p = item.project;
+                            const total = item.totalPhases || 5;
+                            const percent = Math.round((item.completedCount / total) * 100);
+                            const isComplete = Boolean(item.completedAt) || item.completedCount >= total;
+
+                            const diffColor =
+                              DIFFICULTY_COLORS[p.difficulty] ??
+                              "text-amber-400 bg-amber-950/60 border-amber-900";
+                            const trackColor = getTrackColor(p.track);
+
+                            return (
+                              <div
+                                key={item.enrollmentId}
+                                className="flex flex-col justify-between rounded-xl border border-[#221f1a] bg-[#11100e] p-4 shadow-sm transition-all hover:border-[#332e26]"
+                              >
+                                <div>
+                                  {/* Badges */}
+                                  <div className="mb-2.5 flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5">
+                                      <span
+                                        className={`rounded border px-2 py-0.5 text-[10px] font-medium ${trackColor}`}
+                                      >
+                                        {p.track}
+                                      </span>
+                                      <span
+                                        className={`rounded border px-2 py-0.5 text-[10px] font-medium ${diffColor}`}
+                                      >
+                                        {p.difficulty}
+                                      </span>
+                                    </div>
+                                    <span className="flex items-center gap-1 text-[11px] text-[#6b6256]">
+                                      <Clock className="h-2.5 w-2.5" />
+                                      {p.estimatedHours}h
+                                    </span>
+                                  </div>
+
+                                  {/* Title & Tagline with font-serif */}
+                                  <h3 className="font-serif text-sm font-semibold text-[#e4ddd3] mb-1">
+                                    {p.title}
+                                  </h3>
+                                  <p className="text-xs text-[#8a8178] line-clamp-2 mb-3">
+                                    {p.tagline}
+                                  </p>
+
+                                  {/* Progress bar */}
+                                  <div className="space-y-1 mb-4">
+                                    <div className="flex justify-between text-[11px]">
+                                      <span className="text-[#6b6256]">Progress</span>
+                                      <span className="font-mono text-accent">
+                                        {item.completedCount}/{total} phases ({percent}%)
+                                      </span>
+                                    </div>
+                                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#1b1916]">
+                                      <div
+                                        className={`h-full rounded-full transition-all duration-300 ${
+                                          isComplete ? "bg-emerald-500" : "bg-amber-600"
+                                        }`}
+                                        style={{ width: `${percent}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="pt-2 border-t border-[#1a1815]">
+                                  <Link
+                                    href={`/workspace/${p.slug}`}
+                                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-amber-800/40 bg-amber-950/25 py-2 text-xs font-semibold text-accent transition-all hover:border-amber-700/60 hover:bg-amber-900/35"
+                                  >
+                                    <span>Continue Blueprint</span>
+                                    <ArrowRight className="h-3 w-3" />
+                                  </Link>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ───────────────── Tab 2: Reported Issues ───────────────── */}
+                  {activeTab === "issues" && (
+                    <div>
+                      <div className="mb-4 flex items-center justify-between">
+                        <div>
+                          <h2 className="font-serif text-lg font-bold text-[#e4ddd3]">
+                            Curriculum Issue Reports
+                          </h2>
+                          <p className="text-[11px] text-text-muted">
+                            Track the status of curriculum issues, typos, and broken links you reported.
+                          </p>
+                        </div>
+                      </div>
+
+                      {loadingIssues ? (
+                        <div className="flex h-36 items-center justify-center">
+                          <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                        </div>
+                      ) : issues.length === 0 ? (
+                        /* Empty state */
+                        <div className="rounded-xl border border-dashed border-[#26221c] bg-[#11100e] p-8 text-center">
+                          <div className="mx-auto mb-2.5 flex h-10 w-10 items-center justify-center rounded-lg border border-[#2a2620] bg-[#161411]">
+                            <Flag className="h-5 w-5 text-[#6b6256]" />
+                          </div>
+                          <h3 className="font-serif text-sm font-semibold text-[#e4ddd3]">
+                            No Issues Reported Yet
+                          </h3>
+                          <p className="mx-auto mt-1 max-w-sm text-xs text-[#8a8178]">
+                            If you ever encounter unclear instructions, broken links, or outdated code while building in the workspace, click &quot;Report issue&quot; in the workspace header. You can track progress on fixes right here.
+                          </p>
+                        </div>
+                      ) : (
+                        /* List of issues */
+                        <div className="space-y-3.5">
+                          {issues.map((issue) => {
+                            const statusInfo =
+                              STATUS_STYLES[issue.status] || STATUS_STYLES.open;
+                            const StatusIcon = statusInfo.icon;
+                            const categoryLabel =
+                              CATEGORY_LABELS[issue.category] || issue.category;
+                            const projectTitle =
+                              typeof issue.projectId === "object" && issue.projectId !== null
+                                ? issue.projectId.title
+                                : "Curriculum Phase";
+                            const projectSlug =
+                              typeof issue.projectId === "object" && issue.projectId !== null
+                                ? issue.projectId.slug
+                                : null;
+
+                            return (
+                              <div
+                                key={issue._id}
+                                className="rounded-xl border border-[#221f1a] bg-[#11100e] p-4 shadow-sm transition-all hover:border-[#332e26]"
+                              >
+                                <div className="mb-2.5 flex flex-wrap items-start justify-between gap-2.5">
+                                  <div>
+                                    <div className="flex flex-wrap items-center gap-1.5">
+                                      <span className="font-serif text-sm font-semibold text-[#e4ddd3]">
+                                        {projectTitle}
+                                      </span>
+                                      <span className="text-[#5a5247]">•</span>
+                                      <span className="font-mono text-xs text-[#b9ae9f]">
+                                        {issue.phaseTitle}
+                                      </span>
+                                    </div>
+                                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                                      <span className="rounded border border-[#342f27] bg-[#161411] px-2 py-0.5 text-[10px] text-[#b9ae9f]">
+                                        {categoryLabel}
+                                      </span>
+                                      <span className="text-[11px] text-[#6b6256]">
+                                        {new Date(issue.createdAt).toLocaleDateString(undefined, {
+                                          year: "numeric",
+                                          month: "short",
+                                          day: "numeric",
+                                        })}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <span
+                                    className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-medium ${statusInfo.badge}`}
+                                  >
+                                    <StatusIcon className="h-3 w-3" />
+                                    {statusInfo.label}
+                                  </span>
+                                </div>
+
+                                <div className="rounded-lg border border-[#1e1c18] bg-[#0c0b09] p-3 text-xs leading-relaxed text-[#c8c0b4]">
+                                  <p className="whitespace-pre-wrap">{issue.message}</p>
+                                </div>
+
+                                {projectSlug && (
+                                  <div className="mt-3 flex justify-end">
+                                    <Link
+                                      href={`/workspace/${projectSlug}?phase=${encodeURIComponent(issue.phaseId)}`}
+                                      className="inline-flex items-center gap-1 text-[11px] font-medium text-accent hover:text-accent-hover hover:underline"
+                                    >
+                                      <span>View Phase in Workspace</span>
+                                      <ArrowRight className="h-3 w-3" />
+                                    </Link>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ───────────────── Tab 3: Account Details & Settings ───────────────── */}
+                  {activeTab === "account" && (
+                    <div className="space-y-4">
+                      <div>
+                        <h2 className="font-serif text-lg font-bold text-[#e4ddd3]">
+                          Account Details & Settings
+                        </h2>
+                        <p className="text-[11px] text-text-muted">
+                          Manage your public username handle and account preferences.
+                        </p>
+                      </div>
+
+                      {/* Profile Card */}
+                      <div className="rounded-xl border border-[#221f1a] bg-[#11100e] p-5 shadow-sm">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex items-center gap-3.5">
+                            {user.avatar ? (
+                              <Image
+                                src={user.avatar}
+                                alt={user.name}
+                                width={52}
+                                height={52}
+                                className="rounded-full border border-amber-700/40 shadow-sm"
+                              />
+                            ) : (
+                              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-amber-700/40 bg-amber-950/60 font-serif text-lg font-bold text-accent">
+                                {user.name[0]?.toUpperCase()}
+                              </div>
+                            )}
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-serif text-base font-semibold text-[#e4ddd3]">
+                                  {user.name}
+                                </h3>
+                                <span
+                                  className={`rounded-full border px-2 py-0.2 text-[10px] font-medium ${
+                                    user.role === "admin"
+                                      ? "border-purple-800/50 bg-purple-950/50 text-purple-300"
+                                      : "border-amber-800/40 bg-amber-950/40 text-accent"
+                                  }`}
+                                >
+                                  {user.role === "admin" ? "Admin" : "Learner"}
+                                </span>
+                              </div>
+                              <p className="text-xs text-[#8a8178]">{user.email}</p>
+                              <p className="mt-0.5 font-mono text-xs text-[#b59a69]">
+                                @{user.username}
+                              </p>
+                            </div>
+                          </div>
+
+                          {user.role === "admin" && (
+                            <Link
+                              href="/admin"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-purple-800/40 bg-purple-950/30 px-3 py-1.5 text-xs text-purple-200 hover:bg-purple-900/40"
+                            >
+                              <ShieldCheck className="h-3.5 w-3.5" />
+                              <span>Admin Dashboard</span>
+                            </Link>
+                          )}
+                        </div>
+
+                        {/* Username Customization */}
+                        <div className="mt-5 border-t border-[#1e1c18] pt-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="text-xs font-semibold text-[#e4ddd3]">
+                                Public Username Handle
+                              </h4>
+                              <p className="text-[11px] text-[#8a8178]">
+                                Customize your unique username across Buildscape.
+                              </p>
+                            </div>
+                            {!editingUsername && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setUsernameDraft(user.username ?? "");
+                                  setUsernameError(null);
+                                  setEditingUsername(true);
+                                }}
+                                className="inline-flex cursor-pointer items-center gap-1 text-xs text-accent hover:text-accent-hover hover:underline"
+                              >
+                                <Pencil className="h-3 w-3" />
+                                <span>Edit handle</span>
+                              </button>
+                            )}
+                          </div>
+
+                          {editingUsername && (
+                            <form
+                              onSubmit={handleUsernameSave}
+                              className="mt-3 flex max-w-md flex-wrap items-center gap-2"
+                            >
+                              <label className="sr-only" htmlFor="profile-username">
+                                Public username
+                              </label>
+                              <span className="text-xs text-[#81776b]">@</span>
+                              <input
+                                id="profile-username"
+                                required
+                                minLength={3}
+                                maxLength={24}
+                                pattern="[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*"
+                                autoComplete="off"
+                                value={usernameDraft}
+                                onChange={(event) => setUsernameDraft(event.target.value)}
+                                className="min-w-0 flex-1 rounded-md border border-[#342f27] bg-[#0d0c0a] px-2.5 py-1.5 text-xs text-[#e4ddd3] outline-none focus:border-amber-700"
+                              />
+                              <button
+                                type="submit"
+                                disabled={savingUsername}
+                                className="inline-flex cursor-pointer items-center gap-1 rounded-md bg-amber-700 px-3 py-1.5 text-xs font-semibold text-black hover:bg-amber-600 disabled:opacity-50"
+                              >
+                                {savingUsername ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <Check className="h-3.5 w-3.5" />
+                                )}
+                                <span>Save</span>
+                              </button>
+                              <button
+                                type="button"
+                                disabled={savingUsername}
+                                onClick={() => {
+                                  setEditingUsername(false);
+                                  setUsernameDraft(user.username ?? "");
+                                  setUsernameError(null);
+                                }}
+                                className="cursor-pointer rounded-md border border-[#342f27] p-1.5 text-[#8a8178] hover:text-white"
+                                aria-label="Cancel username edit"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                              {usernameError && (
+                                <p role="alert" className="w-full text-[11px] text-red-300">
+                                  {usernameError}
+                                </p>
+                              )}
+                              <p className="w-full text-[10px] text-[#6b6256]">
+                                3–24 letters or numbers; use single hyphens between words.
+                              </p>
+                            </form>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Sign Out Card */}
+                      <div className="rounded-xl border border-[#221f1a] bg-[#11100e] p-4 shadow-sm flex items-center justify-between">
+                        <div>
+                          <h4 className="text-xs font-semibold text-[#e4ddd3]">Sign Out</h4>
+                          <p className="text-[11px] text-[#8a8178]">
+                            Securely log out of your session on this device.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => void handleLogout()}
+                          className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#2a2620] bg-[#14120f] px-3 py-1.5 text-xs font-medium text-[#a0978c] transition-all hover:border-[#3a342c] hover:bg-[#1a1814] hover:text-red-300"
+                        >
+                          <LogOut className="h-3 w-3" />
+                          <span>Log out</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </section>
               </div>
             </div>
           )}
         </div>
       </main>
-
-      {/* Verification Modal for Profile Page */}
-      {selectedVerifyProject && user && (
-        <VerificationModal
-          key={selectedVerifyProject.project.slug}
-          isOpen={Boolean(selectedVerifyProject)}
-          onClose={() => setSelectedVerifyProject(null)}
-          projectSlug={selectedVerifyProject.project.slug}
-          projectTitle={selectedVerifyProject.project.title}
-          isVerified={selectedVerifyProject.isVerified}
-          verifiedAt={selectedVerifyProject.verifiedAt}
-          initialGithubUrl={selectedVerifyProject.githubRepoUrl}
-          initialDemoUrl={selectedVerifyProject.liveDemoUrl}
-          username={user.username}
-          onVerifiedSuccess={() => {
-            void api.getEnrolledProjects().then((data) => {
-              setEnrollments(data.enrollments ?? []);
-            }).catch((error: unknown) => {
-              console.error("Failed to refresh enrolled projects:", error);
-            });
-          }}
-        />
-      )}
     </>
   );
 }

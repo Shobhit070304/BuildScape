@@ -11,8 +11,8 @@ import {
   getPhaseNote,
   savePhaseNote,
   reportPhaseIssue,
+  getMyIssues,
   getEnrolledProjects,
-  verifyProject,
   createProject,
   updateProject,
   deleteProject,
@@ -29,16 +29,10 @@ const feedbackLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: "Too many submissions. Please try again later." },
 });
-const verificationLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: "Too many verification attempts. Please try again later." },
-});
 
 // User enrolled projects (must be before /:slug)
 router.get("/my/enrolled", authenticate, getEnrolledProjects);
+router.get("/my/issues", authenticate, getMyIssues);
 
 // Public project browsing
 router.get("/", listProjects);
@@ -56,7 +50,6 @@ router.delete("/:slug/phases/:phaseId/complete", authenticate, uncompletePhase);
 router.get("/:slug/phases/:phaseId/note", authenticate, getPhaseNote);
 router.put("/:slug/phases/:phaseId/note", authenticate, savePhaseNote);
 router.post("/:slug/phases/:phaseId/issues", authenticate, feedbackLimiter, reportPhaseIssue);
-router.post("/:slug/verify", authenticate, verificationLimiter, verifyProject);
 router.get("/:slug/progress", authenticate, getProgress);
 router.put("/:slug/progress/active-phase", authenticate, setCurrentPhase);
 router.delete("/:slug/progress", authenticate, clearProgress);

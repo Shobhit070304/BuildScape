@@ -8,13 +8,13 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/projects", "/u/"],
-        disallow: ["/api/", "/profile", "/projects/*/workspace"],
+        allow: ["/", "/projects"],
+        disallow: ["/api/", "/profile", "/admin", "/admin/*", "/projects/*/workspace"],
       },
       {
         userAgent: "Googlebot",
-        allow: ["/", "/projects", "/u/"],
-        disallow: ["/api/", "/profile", "/projects/*/workspace"],
+        allow: ["/", "/projects"],
+        disallow: ["/api/", "/profile", "/admin", "/admin/*", "/projects/*/workspace"],
       },
     ],
     sitemap: `${siteUrl}/sitemap.xml`,

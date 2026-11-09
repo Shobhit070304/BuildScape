@@ -57,17 +57,13 @@ export const reportPhaseIssue = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, issue });
 });
 
-export const getEnrolledProjects = asyncHandler(async (req, res) => {
-  res.json({ enrollments: await projectsService.getEnrolled(req.user!.userId) });
+export const getMyIssues = asyncHandler(async (req, res) => {
+  const issues = await feedbackService.listUserIssues(req.user!.userId);
+  res.json({ issues });
 });
 
-export const verifyProject = asyncHandler(async (req, res) => {
-  const result = await projectsService.verifyProject(
-    req.user!.userId,
-    String(req.params.slug),
-    req.body ?? {}
-  );
-  res.json({ success: true, verification: result });
+export const getEnrolledProjects = asyncHandler(async (req, res) => {
+  res.json({ enrollments: await projectsService.getEnrolled(req.user!.userId) });
 });
 
 export const createProject = asyncHandler(async (req, res) => {

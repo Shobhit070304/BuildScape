@@ -67,22 +67,6 @@ export const progressRepository = {
     await UserTaskProgress.deleteMany({ projectId }, { session });
   },
 
-  updateVerification: (
-    userId: string,
-    projectId: Types.ObjectId,
-    data: { githubRepoUrl: string; liveDemoUrl?: string; isVerified: boolean; verifiedAt: Date },
-    session?: ClientSession
-  ) => {
-    const { liveDemoUrl, ...verification } = data;
-    return UserProjectEnrollment.findOneAndUpdate(
-      { userId: asObjectId(userId), projectId },
-      liveDemoUrl
-        ? { $set: { ...verification, liveDemoUrl } }
-        : { $set: verification, $unset: { liveDemoUrl: 1 } },
-      { returnDocument: "after", session }
-    );
-  },
-
   listCompletedPhases: (userId: string, projectId: Types.ObjectId, session?: ClientSession) => {
     const query = UserTaskProgress.find({ userId: asObjectId(userId), projectId }).select("phaseId completedAt");
     return session ? query.session(session) : query;

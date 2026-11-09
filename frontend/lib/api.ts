@@ -194,6 +194,9 @@ export const api = {
   getEnrolledProjects: () =>
     request<{ enrollments: EnrolledProjectItem[] }>("/api/projects/my/enrolled"),
 
+  getMyIssues: () =>
+    request<{ issues: UserReportedIssue[] }>("/api/projects/my/issues"),
+
   createProject: (project: ProjectPayload) =>
     request<{ success: boolean; project: ApiProject }>("/api/projects", {
       method: "POST",
@@ -210,15 +213,6 @@ export const api = {
     request<{ success: boolean; message: string }>(`/api/projects/${encodeURIComponent(slug)}`, {
       method: "DELETE",
     }),
-
-  verifyProject: (slug: string, data: { githubRepoUrl: string; liveDemoUrl?: string }) =>
-    request<{ success: boolean; verification: unknown }>(`/api/projects/${slug}/verify`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-
-  getPublicProfile: (username: string) =>
-    request<PublicUserProfile>(`/api/users/${username}`),
 
   getAssistantHistory: (projectSlug: string, phaseId: string) =>
     request<{ messages: AssistantChatMessage[] }>(`/api/assistant/history/${encodeURIComponent(projectSlug)}/${encodeURIComponent(phaseId)}`),
@@ -245,10 +239,6 @@ export interface EnrolledProjectItem {
   completedCount: number;
   totalPhases: number;
   completedPhases: string[];
-  isVerified?: boolean;
-  githubRepoUrl?: string;
-  liveDemoUrl?: string;
-  verifiedAt?: string;
   project: {
     _id: string;
     slug: string;
@@ -301,10 +291,6 @@ export interface ProgressResponse {
   currentPhaseIndex: number;
   completedAt?: string;
   completedPhases: { phaseId: string; completedAt: string }[];
-  isVerified?: boolean;
-  githubRepoUrl?: string;
-  liveDemoUrl?: string;
-  verifiedAt?: string;
 }
 
 export type CurriculumIssueCategory = "outdated" | "broken" | "unclear" | "other";
@@ -323,30 +309,14 @@ export interface AdminCurriculumIssue {
   userId: { _id: string; name: string; username?: string };
 }
 
-export interface PublicVerifiedProject {
-  slug: string;
-  title: string;
-  tagline: string;
-  track: string;
-  difficulty: string;
-  estimatedHours: number;
-  techStack: string[];
-  githubRepoUrl?: string;
-  liveDemoUrl?: string;
-  verifiedAt?: string;
-}
-
-export interface PublicUserProfile {
-  user: {
-    name: string;
-    username: string;
-    avatar?: string;
-    createdAt?: string;
-  };
-  stats: {
-    verifiedBuildsCount: number;
-    totalEngineeringHours: number;
-    masteredTechStack: string[];
-  };
-  verifiedProjects: PublicVerifiedProject[];
+export interface UserReportedIssue {
+  _id: string;
+  phaseId: string;
+  phaseTitle: string;
+  category: CurriculumIssueCategory;
+  message: string;
+  status: CurriculumIssueStatus;
+  createdAt: string;
+  updatedAt?: string;
+  projectId?: { _id: string; slug: string; title: string } | null;
 }

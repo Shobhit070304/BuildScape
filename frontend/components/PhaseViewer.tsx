@@ -11,17 +11,17 @@ import {
   RotateCcw,
   BookOpen,
   Trophy,
-  ShieldCheck,
   FileText,
   Flag,
   Save,
   X,
   Sparkles,
+  Layers,
+  Trash2,
 } from "lucide-react";
 import type { Project, Phase } from "@/lib/projects";
 import type { ProgressController } from "@/hooks/useProgress";
 import { useAuth } from "@/context/AuthContext";
-import { VerificationModal } from "./VerificationModal";
 import { AssistantDrawer } from "./AssistantDrawer";
 import { MarkdownContent } from "./MarkdownContent";
 import { TechBadge } from "./TechBadge";
@@ -181,9 +181,10 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
   };
 
   const [activeIndex, setActiveIndex] = useState(getInitialIdx);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const [note, setNote] = useState("");
+  const [savedNote, setSavedNote] = useState("");
   const [noteLoading, setNoteLoading] = useState(false);
   const [noteSaving, setNoteSaving] = useState(false);
   const [noteMessage, setNoteMessage] = useState("");
@@ -203,11 +204,6 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
     togglePhase,
     isCompleted,
     clearProgress,
-    isVerified,
-    githubRepoUrl,
-    liveDemoUrl,
-    verifiedAt,
-    refreshProgress,
     setActivePhase,
   } = progress;
 
@@ -223,10 +219,15 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
         (p) => p.id === initialPhaseId || String(p.orderIndex) === initialPhaseId
       );
       // The URL phase is external navigation state and must update the selected phase.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (idx !== -1) setActiveIndex(idx);
+      if (idx !== -1) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setActiveIndex(idx);
+        if (hydrated && enrolled) {
+          setActivePhase(project.phases[idx].id, idx);
+        }
+      }
     }
-  }, [initialPhaseId, project.phases]);
+  }, [initialPhaseId, project.phases, hydrated, enrolled, setActivePhase]);
 
   useEffect(() => {
     if (!hydrated || initialPhaseId) return;
@@ -246,7 +247,12 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
     setNoteLoading(true);
     setNoteMessage("");
     api.getPhaseNote(project.slug, activePhase.id)
-      .then((result) => { if (!cancelled) setNote(result.content); })
+      .then((result) => {
+        if (!cancelled) {
+          setNote(result.content);
+          setSavedNote(result.content);
+        }
+      })
       .catch((error) => { if (!cancelled) setNoteMessage(error instanceof Error ? error.message : "Could not load note"); })
       .finally(() => { if (!cancelled) setNoteLoading(false); });
     return () => { cancelled = true; };
@@ -255,6 +261,7 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
   const goTo = (i: number) => {
     if (i >= 0 && i < totalPhases) {
       setActiveIndex(i);
+      setMobileDrawerOpen(false);
       setNotesOpen(false);
       setIssueOpen(false);
       if (hydrated && enrolled) setActivePhase(project.phases[i].id, i);
@@ -285,10 +292,34 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
     setNoteMessage("");
     try {
       await api.savePhaseNote(project.slug, activePhase.id, note);
+      setSavedNote(note);
       setNoteMessage("Note saved.");
     } catch (error) {
       setNoteMessage(error instanceof Error ? error.message : "Could not save note");
     } finally { setNoteSaving(false); }
+  };
+
+  const clearNote = async () => {
+    if (!note && !savedNote) return;
+    if (!window.confirm("Are you sure you want to delete your note for this phase?")) return;
+    if (!activePhase) return;
+    setNoteSaving(true);
+    setNoteMessage("");
+    try {
+      await api.savePhaseNote(project.slug, activePhase.id, "");
+      setNote("");
+      setSavedNote("");
+      setNoteMessage("Note deleted.");
+    } catch (error) {
+      setNoteMessage(error instanceof Error ? error.message : "Could not delete note");
+    } finally { setNoteSaving(false); }
+  };
+
+  const handleCloseNotes = () => {
+    if (note !== savedNote) {
+      if (!window.confirm("You have unsaved changes in your note. Discard them?")) return;
+    }
+    setNotesOpen(false);
   };
 
   const submitIssue = async (event: FormEvent<HTMLFormElement>) => {
@@ -360,8 +391,11 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
         {/* Reset progress */}
         {hydrated && completedCount > 0 && (
           <div className="shrink-0 border-t border-[#1a1a1a] p-3 px-4">
-          <button
-              onClick={async () => { if (await clearProgress()) goTo(0); }}
+            <button
+              onClick={async () => {
+                if (!window.confirm("Are you sure you want to reset your completed phase checkboxes for this project?")) return;
+                if (await clearProgress()) goTo(0);
+              }}
               className="flex cursor-pointer items-center gap-1.5 text-xs text-text-faint transition-colors hover:text-text-muted"
             >
               <RotateCcw className="h-3 w-3" />
@@ -376,7 +410,18 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
         {/* Phase header bar */}
         <div className="flex min-h-11 shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[#1a1a1a] bg-[#0e0e0e] px-3 py-2 sm:px-4 md:flex-nowrap md:gap-4 md:px-6 md:py-0">
           <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-3">
-            <span className="whitespace-nowrap font-mono text-[0.7rem] text-text-faint">
+            {/* Mobile drawer trigger */}
+            <button
+              type="button"
+              onClick={() => setMobileDrawerOpen(true)}
+              className="inline-flex md:hidden shrink-0 items-center gap-1.5 rounded-lg border border-[#373128] bg-[#14120f] px-2.5 py-1 text-xs text-[#d4cfc8] hover:border-amber-800/70 hover:text-white"
+              aria-label="Open phase navigation drawer"
+            >
+              <Layers className="h-3.5 w-3.5 text-accent" />
+              <span>Phases ({activeIndex + 1}/{totalPhases})</span>
+            </button>
+
+            <span className="hidden whitespace-nowrap font-mono text-[0.7rem] text-text-faint md:inline">
               Phase {activeIndex + 1}/{totalPhases}
             </span>
             <h1 className="truncate font-serif text-[0.9375rem] font-semibold text-[#e4ddd3]">
@@ -397,15 +442,6 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
                   <Sparkles className="h-3.5 w-3.5" /> AI Help
                 </button>
               </>
-            )}
-            {allDone && hydrated && (
-              <button
-                onClick={() => setModalOpen(true)}
-                className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-emerald-700/60 bg-emerald-950/40 px-3 py-1.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-900/50 transition-all shadow-xs"
-              >
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-                <span>{isVerified ? "Public Repo Linked" : "Check Public Repo"}</span>
-              </button>
             )}
 
             {hydrated && (
@@ -436,7 +472,7 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
         {/* Markdown content */}
         <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
           {/* Centered content wrapper */}
-          <div className="mx-auto max-w-208">
+          <div className="mx-auto max-w-5xl">
             {allDone && hydrated && (
               <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3.5 rounded-xl border border-emerald-700/40 bg-linear-to-r from-emerald-950/30 to-[#0e1713] p-4 shadow-md">
                 <div className="flex items-center gap-3">
@@ -444,43 +480,67 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
                     <Trophy className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-semibold text-emerald-300">
-                        All Phases Completed!
-                      </h4>
-                      {isVerified && (
-                        <span className="rounded-full border border-emerald-700/50 bg-emerald-950/70 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
-                          Public repo checked
-                        </span>
-                      )}
-                    </div>
+                    <h4 className="text-sm font-semibold text-emerald-300">
+                      All Phases Completed!
+                    </h4>
                     <p className="text-xs text-[#a0978c] mt-0.5">
-                      {isVerified
-                        ? "Your public GitHub repository is listed on your developer profile. BuildScape checks that it is public, not who owns it or what it contains."
-                        : "Link a public GitHub repository to your developer profile. BuildScape checks that the repository is public."}
+                      Congratulations! You have completed every architectural phase in this project blueprint.
                     </p>
                   </div>
                 </div>
-
-                <button
-                  onClick={() => setModalOpen(true)}
-                  className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-emerald-600/50 bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-xs font-semibold text-stone-950 transition-all cursor-pointer shadow-xs"
-                >
-                  <ShieldCheck className="h-4 w-4" />
-                  <span>{isVerified ? "View Profile & Links" : "Check Public Repository"}</span>
-                </button>
               </div>
             )}
 
             <MarkdownContent>{activePhase.content}</MarkdownContent>
 
             {notesOpen && enrolled && (
-              <WorkspaceDialog title="My notes for this phase" onClose={() => setNotesOpen(false)}>
+              <WorkspaceDialog title="My notes for this phase" onClose={handleCloseNotes}>
                 <p className="mb-3 mt-1 text-xs text-text-faint">Private to your account. Notes stay saved if you reset phase checkboxes.</p>
-                {noteLoading ? <p className="text-xs text-text-muted">Loading note…</p> : <textarea aria-label="Private phase notes" maxLength={10000} rows={6} value={note} onChange={(event) => { setNote(event.target.value); setNoteMessage(""); }} className="w-full rounded-lg border border-[#342f27] bg-[#0d0c0a] p-3 text-sm text-[#e4ddd3] outline-none focus:border-amber-700" placeholder="Save key ideas, links, or questions for this phase…" />}
+                {noteLoading ? (
+                  <p className="text-xs text-text-muted">Loading note…</p>
+                ) : (
+                  <textarea
+                    aria-label="Private phase notes"
+                    maxLength={10000}
+                    rows={6}
+                    value={note}
+                    onChange={(event) => { setNote(event.target.value); setNoteMessage(""); }}
+                    className="w-full rounded-lg border border-[#342f27] bg-[#0d0c0a] p-3 text-sm text-[#e4ddd3] outline-none focus:border-amber-700"
+                    placeholder="Save key ideas, links, or questions for this phase…"
+                  />
+                )}
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-                  <p aria-live="polite" className="text-xs text-text-muted">{noteMessage || `${note.length}/10,000 characters`}</p>
-                  <button type="button" onClick={() => void saveNote()} disabled={noteSaving || noteLoading} className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-2 text-xs font-semibold text-black disabled:opacity-50"><Save className="h-3.5 w-3.5" />{noteSaving ? "Saving…" : "Save note"}</button>
+                  <div className="flex items-center gap-2">
+                    <p aria-live="polite" className="text-xs text-text-muted">
+                      {noteMessage || `${note.length}/10,000 characters`}
+                    </p>
+                    {note !== savedNote && (
+                      <span className="text-[10px] font-medium text-amber-400">● Unsaved draft</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {(note || savedNote) && (
+                      <button
+                        type="button"
+                        onClick={() => void clearNote()}
+                        disabled={noteSaving || noteLoading}
+                        className="inline-flex items-center gap-1 rounded-lg border border-red-900/50 px-2.5 py-1.5 text-xs text-red-300 hover:bg-red-950/30 disabled:opacity-30"
+                        title="Delete note"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Clear note
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => void saveNote()}
+                      disabled={noteSaving || noteLoading || note === savedNote}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-black hover:bg-amber-500 disabled:opacity-50"
+                    >
+                      <Save className="h-3.5 w-3.5" />
+                      {noteSaving ? "Saving…" : "Save note"}
+                    </button>
+                  </div>
                 </div>
               </WorkspaceDialog>
             )}
@@ -548,21 +608,6 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
         </div>
       </div>
 
-      {/* Public repository check modal */}
-      <VerificationModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        projectSlug={project.slug}
-        projectTitle={project.title}
-        isVerified={isVerified}
-        verifiedAt={verifiedAt}
-        initialGithubUrl={githubRepoUrl}
-        initialDemoUrl={liveDemoUrl}
-        username={user?.username}
-        onVerifiedSuccess={() => {
-          refreshProgress();
-        }}
-      />
       {assistantOpen && activePhase && (
         <AssistantDrawer
           key={activePhase.id}
@@ -570,6 +615,92 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
           phase={activePhase}
           onClose={() => setAssistantOpen(false)}
         />
+      )}
+
+      {/* Mobile Phases Navigation Drawer */}
+      {mobileDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex md:hidden" role="dialog" aria-modal="true" aria-label="Project phases navigation">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/75 backdrop-blur-xs transition-opacity"
+            onClick={() => setMobileDrawerOpen(false)}
+          />
+          {/* Slide-out drawer */}
+          <div className="relative flex w-full max-w-xs flex-1 flex-col border-r border-[#262420] bg-[#0c0b09] shadow-2xl">
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between border-b border-[#221f1a] p-4">
+              <div className="min-w-0 pr-2">
+                <span className="text-[0.65rem] font-medium uppercase tracking-widest text-text-faint">
+                  {project.track}
+                </span>
+                <h3 className="truncate font-serif text-sm font-semibold text-[#e4ddd3]">
+                  {project.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileDrawerOpen(false)}
+                className="shrink-0 rounded-lg p-1.5 text-text-muted hover:bg-[#1f1d19] hover:text-white"
+                aria-label="Close phases menu"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Progress bar in drawer */}
+            <div className="border-b border-[#1f1d19] px-4 py-3">
+              <div className="mb-1.5 flex justify-between text-[0.7rem] text-text-faint">
+                <span>Progress</span>
+                <span className="font-mono text-accent">
+                  {hydrated ? completedCount : 0}/{totalPhases}
+                </span>
+              </div>
+              <div className="h-1 w-full overflow-hidden rounded-full bg-[#1e1e1e]">
+                <div
+                  className="h-full rounded-full bg-amber-700 transition-all duration-300"
+                  style={{ width: hydrated ? `${progressPct}%` : "0%" }}
+                />
+              </div>
+            </div>
+
+            {/* Phase list in drawer */}
+            <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+              {project.phases.map((phase, i) => (
+                <PhaseSidebarItem
+                  key={phase.id}
+                  phase={phase}
+                  index={i}
+                  isActive={i === activeIndex}
+                  isCompleted={hydrated && isCompleted(phase.id)}
+                  onClick={() => {
+                    goTo(i);
+                    setMobileDrawerOpen(false);
+                  }}
+                />
+              ))}
+            </nav>
+
+            {/* Reset progress button if applicable */}
+            {hydrated && completedCount > 0 && (
+              <div className="shrink-0 border-t border-[#1f1d19] p-3 px-4">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!window.confirm("Are you sure you want to reset your completed phase checkboxes for this project?")) return;
+                    if (await clearProgress()) {
+                      goTo(0);
+                      setMobileDrawerOpen(false);
+                    }
+                  }}
+                  className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[#2b2720] py-2 text-xs text-text-faint transition-colors hover:text-text-muted"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  Reset phase checkboxes
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

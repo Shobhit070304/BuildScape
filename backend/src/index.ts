@@ -12,7 +12,6 @@ import { notFound } from "./middleware/notFound";
 import healthRouter from "./routes/health";
 import authRouter from "./routes/auth";
 import projectsRouter from "./routes/projects";
-import usersRouter from "./routes/users";
 import adminRouter from "./routes/admin";
 import assistantRouter from "./routes/assistant";
 
@@ -40,7 +39,6 @@ app.use(requestLogger);
 app.use("/health", healthRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/projects", projectsRouter);
-app.use("/api/users", usersRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/assistant", assistantRouter);
 

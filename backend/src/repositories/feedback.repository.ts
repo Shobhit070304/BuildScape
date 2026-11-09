@@ -29,6 +29,10 @@ export const feedbackRepository = {
       .populate("projectId", "slug title")
       .populate("userId", "name username");
   },
+  listUserIssues: (userId: string) =>
+    CurriculumIssue.find({ userId: objectId(userId) })
+      .sort({ createdAt: -1 })
+      .populate("projectId", "slug title"),
   updateIssueStatus: (id: Types.ObjectId, status: CurriculumIssueStatus) =>
     CurriculumIssue.findByIdAndUpdate(id, { $set: { status } }, { returnDocument: "after", runValidators: true })
       .populate("projectId", "slug title")
