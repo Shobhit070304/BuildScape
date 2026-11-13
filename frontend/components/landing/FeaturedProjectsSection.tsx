@@ -6,46 +6,41 @@ import {
   Clock,
   Server,
   Database,
-  Video,
-  HardDrive,
+  Cpu,
+  Layout,
 } from "lucide-react";
-import { fetchProjectBySlugFromDb, DIFFICULTY_COLORS } from "@/lib/projects";
+import { fetchProjectBySlugFromDb } from "@/lib/projects";
+import { TechBadge } from "@/components/TechBadge";
 import type { ReactNode } from "react";
 
 interface FeaturedSlug {
   slug: string;
   icon: ReactNode;
-  accentHover: string;
   highlight: string;
 }
 
 const FEATURED: FeaturedSlug[] = [
   {
-    slug: "spring-kafka-banking-ledger",
-    icon: <Server className="h-4 w-4 text-emerald-400" />,
-    accentHover: "hover:border-emerald-800/50",
-    highlight: "Event-Driven Microservices & Kafka",
+    slug: "spendwise-react-typescript",
+    icon: <Layout className="h-4 w-4 text-white" />,
+    highlight: "React 19, TypeScript, Zod & Recharts",
   },
   {
-    slug: "go-raft-distributed-kv-store",
-    icon: <Database className="h-4 w-4 text-cyan-400" />,
-    accentHover: "hover:border-cyan-800/50",
-    highlight: "Distributed Raft Consensus & gRPC",
+    slug: "habitly-go-rest-api",
+    icon: <Server className="h-4 w-4 text-white" />,
+    highlight: "Go 1.23, Chi, PostgreSQL & JWT Auth",
   },
   {
-    slug: "nextjs-collaborative-canvas",
-    icon: <Video className="h-4 w-4 text-amber-400" />,
-    accentHover: "hover:border-amber-800/50",
-    highlight: "WebSocket Realtime Collaboration",
+    slug: "jobtrail-springboot-react",
+    icon: <Database className="h-4 w-4 text-white" />,
+    highlight: "Spring Boot 3.5, JPA & React TanStack",
   },
   {
-    slug: "rust-lsm-tree-kv-engine",
-    icon: <HardDrive className="h-4 w-4 text-orange-400" />,
-    accentHover: "hover:border-orange-800/50",
-    highlight: "LSM Storage Engine, WAL & MemTable",
+    slug: "cardforge-fastapi-ai",
+    icon: <Cpu className="h-4 w-4 text-white" />,
+    highlight: "FastAPI, Anthropic SDK & Spaced Repetition",
   },
 ];
-
 
 export async function FeaturedProjectsSection() {
   const resolved = await Promise.all(
@@ -59,127 +54,120 @@ export async function FeaturedProjectsSection() {
   return (
     <section id="projects" className="mb-20 sm:mb-28 lg:mb-32 scroll-mt-24">
       {/* Header */}
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="mb-2 inline-flex">
-            <span className="pill-amber">
-              <Sparkles className="h-2.5 w-2.5" />
-              Curated Production Builds
+          <div className="mb-2.5 inline-flex">
+            <span className="pill-mono">
+              <Sparkles className="h-3 w-3 text-white" />
+              <span>FLAGSHIP BLUEPRINTS</span>
             </span>
           </div>
-          <h2 className="font-serif text-2xl font-semibold tracking-tight text-text sm:text-3xl">
+          <h2 className="font-sans text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
             Featured Systems You Can Build
           </h2>
-          <p className="mt-1 text-[0.8125rem] text-text-muted">
-            Real software architectures. No basic to-do apps.
+          <p className="mt-1.5 text-sm text-neutral-400">
+            Real software architectures with full source code guidance. No generic toy to-do apps.
           </p>
         </div>
         <Link
           href="/projects"
-          className="group inline-flex items-center gap-1.5 text-[0.8125rem] font-semibold text-accent transition-colors hover:text-accent-hover whitespace-nowrap"
+          className="group inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-white transition-opacity hover:opacity-80 whitespace-nowrap"
         >
-          Browse All Projects
+          Browse All 7 Blueprints
           <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
         </Link>
       </div>
 
       {/* Grid or Fallback */}
       {projects.length === 0 ? (
-        <div className="rounded-2xl border border-zinc-800/80 bg-[#100e0c] p-8 text-center">
-          <p className="text-xs text-[#8a8178] mb-3">
-            Curriculum database connecting. Explore our complete library of production systems.
+        <div className="rounded-2xl border border-white/10 bg-[#0A0A0E] p-8 text-center">
+          <p className="text-xs text-neutral-400 mb-3">
+            Loading blueprints from database. Explore our complete curriculum library.
           </p>
           <Link href="/projects" className="btn-primary text-xs">
-            <span>Explore All Projects</span>
+            <span>Explore All Blueprints</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           {projects.map((p) => {
             if (!p) return null;
-          const diffColor =
-            DIFFICULTY_COLORS[p.difficulty] ?? "text-amber-400 bg-amber-950/50 border-amber-800/60";
 
-          return (
-            <div
-              key={p.id}
-              className={`group flex flex-col justify-between rounded-2xl border border-border bg-surface-card p-4 sm:p-5 transition-all duration-200 hover:bg-[#141413] ${p.accentHover}`}
-            >
-              <div>
-                {/* Meta */}
-                <div className="mb-3 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border-subtle bg-[#161615]">
-                      {p.icon}
+            return (
+              <div
+                key={p.id}
+                className="group flex flex-col justify-between rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-6 sm:p-7 transition-all duration-200 hover:-translate-y-1 hover:border-white/20 hover:bg-[#0E0E14] shadow-2xl shadow-black/60 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
+              >
+                <div>
+                  {/* Meta */}
+                  <div className="mb-4 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] shadow-xs">
+                        {p.icon}
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400">
+                          {p.track}
+                        </span>
+                        <div className="text-xs font-semibold text-white">{p.highlight}</div>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-[#5a5450]">
-                        {p.track}
-                      </span>
-                      <div className="text-[10px] font-medium text-accent">{p.highlight}</div>
-                    </div>
-                  </div>
-                  <span className={`rounded border px-2 py-0.5 text-[9px] font-semibold ${diffColor}`}>
-                    {p.difficulty}
-                  </span>
-                </div>
-
-                <h3 className="mb-1.5 font-serif text-base font-semibold leading-snug text-text group-hover:text-white transition-colors line-clamp-1">
-                  {p.title}
-                </h3>
-                <p className="mb-3.5 text-xs leading-relaxed text-text-muted line-clamp-2">{p.tagline}</p>
-
-                {/* Tech stack */}
-                <div className="mb-3.5 flex flex-wrap items-center gap-1">
-                  {p.techStack.slice(0, 5).map((tech) => (
-                    <span
-                      key={tech}
-                      className="rounded border border-border bg-[#141413] px-1.5 py-0.5 font-mono text-[9px] text-[#8a8178]"
-                    >
-                      {tech}
+                    <span className="rounded border border-white/10 bg-white/[0.04] px-2 py-0.5 font-mono text-[10px] font-medium text-neutral-300">
+                      {p.difficulty}
                     </span>
-                  ))}
-                </div>
-              </div>
+                  </div>
 
-              {/* Footer */}
-              <div className="flex items-center justify-between border-t border-border pt-3">
-                <div className="flex items-center gap-3 text-[10px] text-[#5a5450] font-mono">
-                  <span className="flex items-center gap-1">
-                    <Layers className="h-3 w-3 text-accent" />
-                    {p.phases.length} Phases
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    ~{p.estimatedHours}h
-                  </span>
+                  <h3 className="mb-2 font-sans text-lg font-bold leading-snug text-white group-hover:text-neutral-100 transition-colors line-clamp-1">
+                    {p.title}
+                  </h3>
+                  <p className="mb-5 text-xs sm:text-sm leading-relaxed text-neutral-400 line-clamp-2">{p.tagline}</p>
+
+                  {/* Tech stack with Real Icons */}
+                  <div className="mb-5 flex flex-wrap items-center gap-1.5">
+                    {p.techStack.slice(0, 4).map((tech) => (
+                      <TechBadge key={tech} name={tech} size="xs" showIcon={true} />
+                    ))}
+                  </div>
                 </div>
-                <Link
-                  href={`/projects/${p.slug}`}
-                  className="btn-primary py-1.5! px-3! text-xs!"
-                >
-                  Start Project
-                  <ArrowRight className="h-3 w-3" />
-                </Link>
+
+                {/* Footer */}
+                <div className="flex items-center justify-between border-t border-white/[0.08] pt-4">
+                  <div className="flex items-center gap-3 text-xs text-neutral-400 font-mono">
+                    <span className="flex items-center gap-1 text-neutral-300">
+                      <Layers className="h-3.5 w-3.5 text-white" />
+                      {p.phases.length} Phases
+                    </span>
+                    <span className="flex items-center gap-1 text-neutral-500">
+                      <Clock className="h-3.5 w-3.5" />
+                      ~{p.estimatedHours}h
+                    </span>
+                  </div>
+                  <Link
+                    href={`/projects/${p.slug}`}
+                    className="btn-primary py-1.5! px-3.5! text-xs!"
+                  >
+                    Start Blueprint
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
       )}
 
       {/* More tracks banner */}
-      <div className="mt-4 flex flex-col items-center justify-between gap-2 rounded-xl border border-border bg-surface-card px-5 py-3 text-center sm:flex-row sm:text-left">
-        <span className="text-xs text-text-muted">
-          More tracks:{" "}
-          <strong className="text-[#d4cbbd]">Python &amp; FastAPI, Express APIs, React, Tokio Async</strong>
+      <div className="mt-6 flex flex-col items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-[#0A0A0E] px-6 py-4 text-center sm:flex-row sm:text-left shadow-lg shadow-black/40">
+        <span className="text-xs text-neutral-400 font-mono">
+          Also available:{" "}
+          <strong className="text-neutral-200 font-semibold">LogScope (Rust CLI), SnipURL (Go), and WriteSpace (Next.js Blog)</strong>
         </span>
         <Link
           href="/projects"
-          className="text-xs font-semibold text-accent hover:text-accent-hover transition-colors whitespace-nowrap"
+          className="text-xs font-semibold text-white hover:underline transition-colors whitespace-nowrap"
         >
-          Explore All Tracks →
+          View all 7 curriculum projects →
         </Link>
       </div>
     </section>

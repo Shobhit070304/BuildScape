@@ -4,16 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { GoogleLogin } from "@react-oauth/google";
 import {
-  CheckCircle2,
   Clock,
   Layers,
   Sparkles,
   ArrowRight,
-  BookOpen,
-  Award,
   Loader2,
   PlayCircle,
   RefreshCw,
+  ShieldCheck,
 } from "lucide-react";
 import type { Project } from "@/lib/projects";
 import { useAuth } from "@/context/AuthContext";
@@ -33,8 +31,6 @@ export function ProjectEnrollmentBox({ project, progress }: ProjectEnrollmentBox
   const [loadingEnrollment, setLoadingEnrollment] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  // Derive effective enrollment: useProgress hydrates from backend; localEnrolled handles
-  // optimistic state right after the user clicks "Enroll" before the next re-hydration.
   const localEnrolled = Boolean(user && localEnrolledOwner === user.id);
   const effectivelyEnrolled = isEnrolled || localEnrolled;
 
@@ -59,180 +55,164 @@ export function ProjectEnrollmentBox({ project, progress }: ProjectEnrollmentBox
     totalPhases > 0 ? Math.round((completedCount / totalPhases) * 100) : 0;
   const hasStarted = completedCount > 0;
 
-  // Show a loading skeleton until useProgress has hydrated.
-  if (!hydrated) {
-    return (
-      <div className="rounded-xl border border-zinc-800 bg-[#0e0e0e] p-4 sm:p-5 shadow-xl">
-        <div className="flex h-48 items-center justify-center">
-          <Loader2 className="h-5 w-5 animate-spin text-accent" />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div id="enrollment-box" className="rounded-xl border border-zinc-800 bg-[#0e0e0e] p-4 sm:p-5 shadow-xl">
-      {/* Box Header */}
-      <div className="mb-3.5 flex items-center justify-between border-b border-zinc-800/80 pb-3">
-        <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
-          Project Access
+    <div
+      id="enrollment-box"
+      className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0A0A0E] p-6 shadow-2xl shadow-black/80 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
+    >
+      {/* Ambient gradient top glow */}
+      <div className="pointer-events-none absolute -top-10 left-1/2 h-20 w-44 -translate-x-1/2 rounded-full bg-white/[0.04] blur-xl" />
+
+      {/* Header */}
+      <div className="mb-4">
+        <span className="font-mono text-[0.6875rem] font-bold uppercase tracking-wider text-neutral-400">
+          BUILD TRACKER
         </span>
-        {effectivelyEnrolled ? (
-          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-800/40 bg-emerald-950/40 px-2.5 py-0.5 text-[0.7rem] font-medium text-emerald-400">
-            <CheckCircle2 className="h-3 w-3" />
-            Enrolled
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 rounded-full border border-amber-800/30 bg-amber-950/30 px-2.5 py-0.5 text-[0.7rem] font-medium text-accent">
-            <Sparkles className="h-3 w-3" />
-            Free Curriculum
-          </span>
-        )}
+        <h3 className="font-sans text-lg font-bold text-white mt-0.5">
+          {effectivelyEnrolled ? "Your Blueprint Progress" : "Start This Blueprint"}
+        </h3>
+        <p className="text-xs text-neutral-400 mt-1 leading-relaxed">
+          {effectivelyEnrolled
+            ? "Complete milestones and check off checkpoints in the step-by-step workspace."
+            : "Enroll to save your checkpoints, take notes, and launch the interactive phase workspace."}
+        </p>
       </div>
 
-      {/* Project Quick Specs */}
-      <div className="mb-6 space-y-2.5 text-xs text-[#a39a8c]">
-        <div className="flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <BookOpen className="h-3.5 w-3.5 text-[#6b6256]" />
-            Curriculum
-          </span>
-          <span className="font-medium text-[#e4ddd3]">
-            {totalPhases} Structured Phases
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <Clock className="h-3.5 w-3.5 text-[#6b6256]" />
-            Time to Complete
-          </span>
-          <span className="font-medium text-[#e4ddd3]">
-            ~{project.estimatedHours} Hours
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <Layers className="h-3.5 w-3.5 text-[#6b6256]" />
-            Difficulty Level
-          </span>
-          <span className="font-medium text-[#e4ddd3]">{project.difficulty}</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <Award className="h-3.5 w-3.5 text-[#6b6256]" />
-            Deliverable
-          </span>
-          <span className="font-medium text-[#e4ddd3]">Production Deployment</span>
-        </div>
-      </div>
-
-      {/* Progress or Enrollment Status */}
-      {effectivelyEnrolled ? (
-        <div className="mb-6 rounded-lg border border-[#24211b] bg-[#161411] p-3.5">
-          <div className="mb-2 flex items-center justify-between text-xs">
-            <span className="text-[#8a8178]">Your Progress</span>
-            <span className="font-semibold text-accent">
-              {completedCount}/{totalPhases} completed ({progressPercent}%)
-            </span>
-          </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#24211b]">
-            <div
-              className="h-full rounded-full bg-linear-to-r from-amber-700 to-accent transition-all duration-300"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-        </div>
-      ) : (
-        <div className="mb-6 space-y-2 rounded-lg border border-[#24211b] bg-[#161411] p-3.5 text-xs text-[#8a8178]">
-          <p className="font-medium text-[#c4bbb0]">Includes with enrollment:</p>
-          <ul className="space-y-1 text-[0.75rem]">
-            <li className="flex items-center gap-1.5">
-              <span className="text-emerald-400">✓</span> Complete code walkthroughs &amp; explanation
-            </li>
-            <li className="flex items-center gap-1.5">
-              <span className="text-emerald-400">✓</span> Step-by-step phase checklists
-            </li>
-            <li className="flex items-center gap-1.5">
-              <span className="text-emerald-400">✓</span> Cloud progress saved to your profile
-            </li>
-          </ul>
+      {/* Load error recovery banner */}
+      {loadError && (
+        <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-950/20 p-3 text-xs text-rose-300">
+          <p className="font-medium">Could not sync progress</p>
+          <p className="text-[11px] text-rose-400/80 mt-0.5">{loadError}</p>
+          <button
+            type="button"
+            onClick={() => void refreshProgress()}
+            className="mt-2 inline-flex items-center gap-1 rounded bg-rose-900/40 px-2 py-0.5 text-[11px] font-medium text-rose-200 hover:bg-rose-900/60 cursor-pointer"
+          >
+            <RefreshCw className="h-3 w-3" />
+            Retry
+          </button>
         </div>
       )}
 
-      {/* Action CTA */}
-      <div className="space-y-3">
-        {actionError && <p role="alert" className="rounded-md border border-red-900/50 bg-red-950/30 p-2 text-center text-xs text-red-200">{actionError}</p>}
-        {loadError && !effectivelyEnrolled && (
-          <p role="alert" className="rounded-md border border-amber-800/50 bg-amber-950/30 p-2 text-center text-xs text-amber-200">
-            Enrollment status could not be checked. {loadError}
-          </p>
-        )}
-        {loadError && !effectivelyEnrolled ? (
-          <button
-            onClick={() => void refreshProgress()}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-amber-700/60 bg-amber-950/60 px-4 py-2.5 text-sm font-semibold text-[#e4ddd3] transition-all hover:bg-amber-900/60"
-          >
-            <RefreshCw className="h-4 w-4" />
-            <span>Retry status check</span>
-          </button>
-        ) : effectivelyEnrolled ? (
+      {/* Enrollment Action / Progress Display */}
+      {!hydrated ? (
+        <div className="flex items-center justify-center py-6 text-neutral-400 gap-2">
+          <Loader2 className="h-4 w-4 animate-spin text-white" />
+          <span className="text-xs font-mono">Syncing blueprint state...</span>
+        </div>
+      ) : !user ? (
+        /* Sign-in prompt */
+        <div className="space-y-3 pt-2">
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3.5 text-xs text-neutral-300">
+            <div className="flex items-center gap-2 mb-1 text-white font-semibold">
+              <Sparkles className="h-4 w-4 text-white" />
+              <span>100% Free & Open Access</span>
+            </div>
+            <p className="text-[11px] text-neutral-400 leading-relaxed">
+              Sign in with Google in one click to unlock the workspace, track completed phases, and save private notes.
+            </p>
+          </div>
+          <div className="w-full flex justify-center py-1">
+            <GoogleLogin
+              onSuccess={(credentialResponse) => {
+                if (credentialResponse.credential) {
+                  void login(credentialResponse.credential);
+                }
+              }}
+              onError={() => {
+                setActionError("Google sign-in was interrupted. Please try again.");
+              }}
+              size="large"
+              shape="rectangular"
+              theme="filled_black"
+              text="continue_with"
+              width="100%"
+            />
+          </div>
+        </div>
+      ) : effectivelyEnrolled ? (
+        /* Already Enrolled: Show Progress & Launch Button */
+        <div className="space-y-4 pt-1">
+          {/* Progress bar */}
+          <div>
+            <div className="flex items-center justify-between text-xs mb-1.5 font-mono">
+              <span className="text-neutral-400">Completion</span>
+              <span className="font-bold text-white">{progressPercent}%</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-[#060608] border border-white/10">
+              <div
+                className="h-full rounded-full bg-white transition-all duration-500 shadow-sm"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-neutral-400 mt-1.5 font-mono">
+              <span>{completedCount} of {totalPhases} phases</span>
+              <span>{totalPhases - completedCount} remaining</span>
+            </div>
+          </div>
+
+          {/* Launch Workspace Button */}
           <Link
             href={`/projects/${project.slug}/workspace`}
-            className="group flex w-full items-center justify-center gap-2 rounded-lg border border-amber-600/50 bg-linear-to-r from-amber-700 via-amber-600 to-amber-700 px-4 py-2.5 text-sm font-semibold text-stone-950 shadow-md transition-all hover:opacity-95 hover:shadow-amber-900/20 active:scale-[0.99]"
+            className="btn-primary w-full py-3! text-xs! font-bold!"
           >
-            <PlayCircle className="h-4 w-4 transition-transform group-hover:scale-110" />
-            <span>{hasStarted ? "Continue Project" : "Start this Project"}</span>
-            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+            <PlayCircle className="h-4 w-4" />
+            <span>{hasStarted ? "Continue Workspace" : "Launch Phase 1 Workspace"}</span>
+            <ArrowRight className="h-4 w-4" />
           </Link>
-        ) : user ? (
+        </div>
+      ) : (
+        /* Authenticated but not yet enrolled */
+        <div className="space-y-3 pt-2">
           <button
-            onClick={handleEnroll}
+            type="button"
+            onClick={() => void handleEnroll()}
             disabled={loadingEnrollment}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-amber-700/60 bg-amber-950/60 px-4 py-2.5 text-sm font-semibold text-[#e4ddd3] transition-all hover:bg-amber-900/60 hover:text-white active:scale-[0.99] disabled:opacity-50"
+            className="btn-primary w-full py-3! text-xs! font-bold! cursor-pointer disabled:opacity-50"
           >
             {loadingEnrollment ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin text-accent" />
-                <span>Enrolling...</span>
+                <Loader2 className="h-4 w-4 animate-spin text-black" />
+                <span>Enrolling in Blueprint...</span>
               </>
             ) : (
               <>
-                <Sparkles className="h-4 w-4 text-accent" />
-                <span>Enroll in Project</span>
+                <Sparkles className="h-4 w-4" />
+                <span>Enroll &amp; Start Building</span>
+                <ArrowRight className="h-4 w-4" />
               </>
             )}
           </button>
-        ) : (
-          <div className="space-y-2.5">
-            <p className="text-center text-[0.72rem] text-[#8a8178]">
-              Sign in with Google to enroll and save your progress:
-            </p>
-            <div className="flex justify-center scale-95 origin-center">
-              <GoogleLogin
-                onSuccess={(res) => {
-                  if (!res.credential) {
-                    setActionError("Google did not return a credential. Please try again.");
-                    return;
-                  }
-                  void login(res.credential).then(() => setActionError(null)).catch((error: unknown) => {
-                    setActionError(error instanceof Error ? error.message : "Sign-in failed. Please try again.");
-                  });
-                }}
-                onError={() => setActionError("Google sign-in failed. Please try again.")}
-                shape="rectangular"
-                theme="filled_black"
-                text="signin_with"
-                size="medium"
-              />
-            </div>
-          </div>
-        )}
+        </div>
+      )}
 
-        {typeof project.learnerCount === "number" && (
-          <p className="text-center text-[0.7rem] text-[#8a8178]">
-            {project.learnerCount.toLocaleString()} {project.learnerCount === 1 ? "learner" : "learners"} enrolled
-          </p>
-        )}
+      {actionError && (
+        <p className="mt-2 text-center text-xs text-rose-400">{actionError}</p>
+      )}
+
+      {/* Blueprint Info Specs */}
+      <div className="mt-5 border-t border-white/[0.08] pt-4 space-y-2.5 text-xs text-neutral-400">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-neutral-400">
+            <Clock className="h-3.5 w-3.5 text-white" />
+            Estimated Build Time
+          </span>
+          <span className="font-mono text-neutral-200 font-medium">{project.estimatedHours} hours</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-neutral-400">
+            <Layers className="h-3.5 w-3.5 text-white" />
+            Curriculum Structure
+          </span>
+          <span className="font-mono text-neutral-200 font-medium">{totalPhases} Phases</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-neutral-400">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+            Prerequisites
+          </span>
+          <span className="font-mono text-neutral-200 font-medium">{project.difficulty} Level</span>
+        </div>
       </div>
     </div>
   );

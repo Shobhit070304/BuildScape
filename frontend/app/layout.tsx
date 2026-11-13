@@ -100,7 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: serializeStructuredData(rootJsonLd) }}
         />
       </head>
-      <body className="bg-bg text-stone-100 font-sans antialiased selection:bg-amber-900/50 selection:text-amber-200">
+      <body className="bg-[#0F172A] text-slate-100 font-sans antialiased selection:bg-indigo-500/30 selection:text-indigo-200 min-h-screen">
         {/* Subtle film grain */}
         <div
           className="pointer-events-none fixed inset-0 z-50 opacity-[0.015] bg-grain"

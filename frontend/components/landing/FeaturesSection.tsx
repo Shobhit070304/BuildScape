@@ -2,157 +2,145 @@ import {
   Code2,
   Terminal,
   CheckCircle2,
-  GitBranch,
   Cloud,
   Sparkles,
+  GitBranch,
 } from "lucide-react";
 
 export function FeaturesSection() {
   return (
     <section id="features" className="mb-20 sm:mb-28 lg:mb-32 scroll-mt-24">
       {/* Section Header */}
-      <div className="mb-6 text-center">
-        <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full border border-amber-800/40 bg-amber-950/30 px-2.5 py-0.5">
-          <Sparkles className="h-3 w-3 text-accent" />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-accent">
-            Engineering Bento
+      <div className="mb-12 text-center">
+        <div className="mb-3 inline-flex">
+          <span className="pill-mono">
+            <Sparkles className="h-3 w-3 text-white" />
+            <span>ENGINEERING CAPABILITIES</span>
           </span>
         </div>
-        <h2 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-[#e4ddd3] mb-1">
-          Designed for developers who learn by building
+        <h2 className="font-sans text-3xl sm:text-4xl font-extrabold tracking-tight text-white mb-3">
+          Built for engineers who demand rigor.
         </h2>
-        <p className="mx-auto max-w-md text-xs leading-relaxed text-[#8a8178]">
-          Clean architecture blueprints, verified commands, and structured phase checklists ensure you never get stuck.
+        <p className="mx-auto max-w-xl text-sm sm:text-base leading-relaxed text-neutral-400">
+          No shallow toy examples. Every blueprint covers production telemetry, real database transactions, concurrency safety, and cloud deployments.
         </p>
       </div>
 
-      {/* Bento Grid (Compact, clearly visible) */}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      {/* Bento Grid */}
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
         {/* Bento 1: Wide Card (span 2) */}
-        <div className="group relative overflow-hidden rounded-xl border border-[#201d18] bg-[#11100e] p-4 md:col-span-2 transition-all duration-200 hover:border-[#332e26] hover:bg-[#14120f]">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#2a2620] bg-[#161411] text-accent">
-              <Code2 className="h-4 w-4" />
+        <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-7 md:col-span-2 transition-all duration-200 hover:border-white/20 hover:bg-[#0E0E14] shadow-2xl shadow-black/60 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+          <div className="mb-5 flex items-center justify-between">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white shadow-xs">
+              <Code2 className="h-5 w-5" />
             </div>
-            <span className="rounded border border-amber-800/40 bg-amber-950/40 px-2 py-0.2 font-mono text-[9px] font-semibold text-accent">
+            <span className="rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-300">
               Architecture First
             </span>
           </div>
 
-          <h3 className="mb-1 font-serif text-sm sm:text-base font-semibold text-[#e4ddd3] group-hover:text-white transition-colors">
+          <h3 className="mb-2.5 font-sans text-xl font-bold text-white group-hover:text-neutral-100 transition-colors">
             Understand the system before writing code
           </h3>
-          <p className="mb-3 max-w-lg text-[11px] leading-relaxed text-[#8a8178]">
-            Every phase starts with mental models and architectural decisions. You understand why entities are modeled, how data streams between services, and why specific patterns are chosen.
+          <p className="mb-6 max-w-xl text-xs sm:text-sm leading-relaxed text-neutral-400">
+            Every phase starts with mental models and architectural decisions. You learn why entities are modeled, how data streams between services, and why specific patterns are chosen over alternatives.
           </p>
 
           {/* Mini Interactive Architecture Preview */}
-          <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-[#1e1c18] bg-[#090807] p-2 text-[10px] font-mono text-[#a0978c]">
-            <span className="rounded bg-[#14120f] border border-[#221f1a] px-1.5 py-0.5 text-accent">
-              [Client Request]
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/[0.08] bg-[#060608] p-3.5 text-xs font-mono text-neutral-300">
+            <span className="rounded-md bg-white/[0.06] border border-white/10 px-2.5 py-1 text-white font-semibold">
+              [HTTP Request]
             </span>
-            <span className="text-[#6b6256]">➔</span>
-            <span className="rounded bg-[#14120f] border border-[#221f1a] px-1.5 py-0.5 text-sky-300">
-              [API Gateway]
+            <span className="text-neutral-600">➔</span>
+            <span className="rounded-md bg-white/[0.06] border border-white/10 px-2.5 py-1 text-neutral-200 font-semibold">
+              [Chi Router &amp; Auth]
             </span>
-            <span className="text-[#6b6256]">➔</span>
-            <span className="rounded bg-[#14120f] border border-[#221f1a] px-1.5 py-0.5 text-emerald-300">
-              [Kafka Topic]
+            <span className="text-neutral-600">➔</span>
+            <span className="rounded-md bg-white/[0.06] border border-white/10 px-2.5 py-1 text-neutral-200 font-semibold">
+              [Domain Service]
             </span>
-            <span className="text-[#6b6256]">➔</span>
-            <span className="rounded bg-[#14120f] border border-[#221f1a] px-1.5 py-0.5 text-amber-300">
-              [Worker Service]
-            </span>
-          </div>
-        </div>
-
-        {/* Bento 2: Commands & Setup (span 1) */}
-        <div className="group relative flex flex-col justify-between rounded-xl border border-[#201d18] bg-[#11100e] p-4 transition-all duration-200 hover:border-[#332e26] hover:bg-[#14120f]">
-          <div>
-            <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg border border-[#2a2620] bg-[#161411] text-sky-400">
-              <Terminal className="h-4 w-4" />
-            </div>
-            <h3 className="mb-1 font-serif text-sm font-semibold text-[#e4ddd3] group-hover:text-white transition-colors">
-              Every command included
-            </h3>
-            <p className="mb-3 text-[11px] leading-relaxed text-[#8a8178]">
-              No guessing or missing dependencies. All package versions, Docker configs, and setup steps are verified.
-            </p>
-          </div>
-
-          <div className="rounded border border-[#1e1c18] bg-[#090807] p-2 font-mono text-[10px] text-[#a0978c]">
-            <span className="text-emerald-400">$</span> docker compose up -d postgres
-          </div>
-        </div>
-
-        {/* Bento 3: Checkpoints (span 1) */}
-        <div className="group relative flex flex-col justify-between rounded-xl border border-[#201d18] bg-[#11100e] p-4 transition-all duration-200 hover:border-[#332e26] hover:bg-[#14120f]">
-          <div>
-            <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg border border-[#2a2620] bg-[#161411] text-emerald-400">
-              <CheckCircle2 className="h-4 w-4" />
-            </div>
-            <h3 className="mb-1 font-serif text-sm font-semibold text-[#e4ddd3] group-hover:text-white transition-colors">
-              Phase verification
-            </h3>
-            <p className="mb-3 text-[11px] leading-relaxed text-[#8a8178]">
-              Checklists test each phase so you never proceed with broken code or confusing bugs.
-            </p>
-          </div>
-
-          <div className="space-y-1 rounded border border-[#1e1c18] bg-[#090807] p-2 text-[10px]">
-            <div className="flex items-center gap-1.5 text-emerald-400">
-              <span>✓</span> Unit & Integration Tests Pass
-            </div>
-            <div className="flex items-center gap-1.5 text-emerald-400">
-              <span>✓</span> Database schema cleanly synced
-            </div>
-          </div>
-        </div>
-
-        {/* Bento 4: Real SaaS Architectures (span 1) */}
-        <div className="group relative flex flex-col justify-between rounded-xl border border-[#201d18] bg-[#11100e] p-4 transition-all duration-200 hover:border-[#332e26] hover:bg-[#14120f]">
-          <div>
-            <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg border border-[#2a2620] bg-[#161411] text-accent">
-              <GitBranch className="h-4 w-4" />
-            </div>
-            <h3 className="mb-1 font-serif text-sm font-semibold text-[#e4ddd3] group-hover:text-white transition-colors">
-              Production patterns
-            </h3>
-            <p className="mb-3 text-[11px] leading-relaxed text-[#8a8178]">
-              Learn industry standards: layered services, DTO validation, stateless JWT, and Redis caching.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-1">
-            <span className="rounded bg-[#14120f] border border-[#221f1a] px-1.5 py-0.5 font-mono text-[9px] text-[#a0978c]">
-              Saga Pattern
-            </span>
-            <span className="rounded bg-[#14120f] border border-[#221f1a] px-1.5 py-0.5 font-mono text-[9px] text-[#a0978c]">
-              Raft Consensus
-            </span>
-            <span className="rounded bg-[#14120f] border border-[#221f1a] px-1.5 py-0.5 font-mono text-[9px] text-[#a0978c]">
-              LSM-Tree
+            <span className="text-neutral-600">➔</span>
+            <span className="rounded-md bg-white/[0.06] border border-white/10 px-2.5 py-1 text-emerald-300 font-semibold">
+              [PostgreSQL / pgx]
             </span>
           </div>
         </div>
 
-        {/* Bento 5: Instant Database & Cloud Sync (span 1) */}
-        <div className="group relative flex flex-col justify-between rounded-xl border border-[#201d18] bg-[#11100e] p-4 transition-all duration-200 hover:border-[#332e26] hover:bg-[#14120f]">
-          <div>
-            <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg border border-[#2a2620] bg-[#161411] text-accent">
-              <Cloud className="h-4 w-4" />
+        {/* Bento 2: Standard Card (span 1) */}
+        <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-7 transition-all duration-200 hover:border-white/20 hover:bg-[#0E0E14] shadow-xl shadow-black/60 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+          <div className="mb-5 flex items-center justify-between">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white shadow-xs">
+              <Terminal className="h-5 w-5" />
             </div>
-            <h3 className="mb-1 font-serif text-sm font-semibold text-[#e4ddd3] group-hover:text-white transition-colors">
-              Seamless Cloud Sync
-            </h3>
-            <p className="mb-3 text-[11px] leading-relaxed text-[#8a8178]">
-              Sign in with Google to automatically track phase completions and persist your journey in the cloud.
-            </p>
+            <span className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 font-mono text-[10px] text-neutral-300">
+              CLI &amp; Shell
+            </span>
           </div>
 
-          <div className="flex items-center gap-1.5 rounded border border-[#1e1c18] bg-[#090807] p-2 text-[10px] text-[#a0978c]">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Database Synced • 100% Free</span>
+          <h3 className="mb-2 font-sans text-base font-bold text-white">
+            Tested commands that just work
+          </h3>
+          <p className="mb-4 text-xs leading-relaxed text-neutral-400">
+            No version drift or missing flags. Every single command is pinned and verified against modern runtimes.
+          </p>
+
+          <div className="rounded-xl border border-white/[0.08] bg-[#060608] p-3 font-mono text-[11px] text-emerald-400">
+            $ go test -v -race ./internal/...<br />
+            <span className="text-neutral-500">PASS: TestStreakEngine (0.03s)</span>
+          </div>
+        </div>
+
+        {/* Bento 3: Standard Card (span 1) */}
+        <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-7 transition-all duration-200 hover:border-white/20 hover:bg-[#0E0E14] shadow-xl shadow-black/60 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+          <div className="mb-5 flex items-center justify-between">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-emerald-400 shadow-xs">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+            <span className="rounded-md border border-emerald-500/30 bg-emerald-950/40 px-2 py-0.5 font-mono text-[10px] text-emerald-300">
+              Strict Quality
+            </span>
+          </div>
+
+          <h3 className="mb-2 font-sans text-base font-bold text-white">
+            Automated Checkpoints
+          </h3>
+          <p className="mb-4 text-xs leading-relaxed text-neutral-400">
+            You never guess if your code works. Each phase concludes with automated verification checks and concrete test suites.
+          </p>
+
+          <div className="rounded-xl border border-white/[0.08] bg-[#060608] p-3 font-mono text-[11px] text-neutral-300 flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>All 8 phases verified</span>
+          </div>
+        </div>
+
+        {/* Bento 4: Wide Card (span 2) */}
+        <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-7 md:col-span-2 transition-all duration-200 hover:border-white/20 hover:bg-[#0E0E14] shadow-2xl shadow-black/60 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+          <div className="mb-5 flex items-center justify-between">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white shadow-xs">
+              <Cloud className="h-5 w-5" />
+            </div>
+            <span className="rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-300">
+              Cloud Ready
+            </span>
+          </div>
+
+          <h3 className="mb-2.5 font-sans text-xl font-bold text-white group-hover:text-neutral-100 transition-colors">
+            Deploy to real cloud infrastructure
+          </h3>
+          <p className="mb-5 max-w-xl text-xs sm:text-sm leading-relaxed text-neutral-400">
+            Stop leaving projects stranded on localhost. Every blueprint finishes with a multi-stage Docker build, CI configuration, and live cloud deployment you can put on your resume.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-neutral-400">
+            <div className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-[#060608] px-3 py-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-neutral-200">Live URL: habitly-api.onrender.com</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-neutral-500">
+              <GitBranch className="h-3.5 w-3.5" />
+              <span>github.com/developer/habitly-go</span>
+            </div>
           </div>
         </div>
       </div>

@@ -5,6 +5,9 @@ export interface Phase {
   id: string;
   orderIndex: number;
   title: string;
+  summary?: string;
+  tasks?: { id: string; title: string }[];
+  estimatedMinutes?: number;
   content: string;
 }
 
@@ -25,7 +28,11 @@ export interface Project {
   title: string;
   tagline: string;
   description?: string;
+  category?: string;
   whatYouWillLearn?: string[];
+  prerequisites?: string[];
+  deliverable?: string;
+  isPublished?: boolean;
   track: string;
   difficulty: ProjectDifficulty;
   estimatedHours: number;
@@ -44,7 +51,11 @@ export function mapApiProject(p: ApiProject): Project {
     title: p.title,
     tagline: p.tagline,
     description: p.description,
+    category: p.category,
     whatYouWillLearn: p.whatYouWillLearn,
+    prerequisites: p.prerequisites,
+    deliverable: p.deliverable,
+    isPublished: p.isPublished,
     track: p.track,
     difficulty: normalizeDifficulty(p.difficulty),
     estimatedHours: p.estimatedHours,
@@ -100,20 +111,20 @@ export const DIFFICULTY_ORDER: Record<string, number> = {
 };
 
 export const DIFFICULTY_COLORS: Record<string, string> = {
-  Beginner: "text-emerald-400 bg-emerald-950/50 border-emerald-800/60",
-  Intermediate: "text-amber-400 bg-amber-950/50 border-amber-800/60",
-  Advanced: "text-rose-400 bg-rose-950/50 border-rose-800/60",
+  Beginner: "text-neutral-300 bg-white/[0.04] border-white/10",
+  Intermediate: "text-neutral-300 bg-white/[0.04] border-white/10",
+  Advanced: "text-neutral-200 bg-white/[0.06] border-white/15",
 };
 
 export const TRACK_COLORS: Record<string, string> = {
-  "Next.js": "text-zinc-100 bg-zinc-900/90 border-zinc-700",
-  "Node.js": "text-emerald-400 bg-emerald-950/60 border-emerald-800",
-  Python: "text-amber-300 bg-amber-950/50 border-amber-800",
-  React: "text-cyan-300 bg-cyan-950/50 border-cyan-900",
-  TypeScript: "text-sky-300 bg-sky-950/50 border-sky-900",
-  PostgreSQL: "text-cyan-400 bg-cyan-950/50 border-cyan-900",
-  Redis: "text-rose-400 bg-rose-950/50 border-rose-900",
-  default: "text-stone-300 bg-stone-800/50 border-stone-700",
+  "Next.js": "text-neutral-200 bg-white/[0.04] border-white/10",
+  "Node.js": "text-neutral-200 bg-white/[0.04] border-white/10",
+  Python: "text-neutral-200 bg-white/[0.04] border-white/10",
+  React: "text-neutral-200 bg-white/[0.04] border-white/10",
+  TypeScript: "text-neutral-200 bg-white/[0.04] border-white/10",
+  PostgreSQL: "text-neutral-200 bg-white/[0.04] border-white/10",
+  Redis: "text-neutral-200 bg-white/[0.04] border-white/10",
+  default: "text-neutral-300 bg-white/[0.04] border-white/10",
 };
 
 export function getTrackColor(track: string): string {

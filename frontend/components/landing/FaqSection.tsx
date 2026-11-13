@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { ArrowRight, ChevronDown, HelpCircle } from "lucide-react";
+import { ChevronDown, HelpCircle } from "lucide-react";
 
 interface FAQItemProps {
   q: string;
@@ -12,23 +11,24 @@ interface FAQItemProps {
 function FAQItem({ q, a }: FAQItemProps) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border-b border-[#201d18] transition-colors last:border-b-0">
+    <div className="border-b border-white/[0.08] transition-colors last:border-b-0">
       <button
+        type="button"
         onClick={() => setOpen(!open)}
-        className="flex w-full cursor-pointer items-center justify-between gap-3 py-3 text-left group"
+        className="flex w-full cursor-pointer items-center justify-between gap-4 py-4 sm:py-5 text-left group"
         aria-expanded={open}
       >
-        <span className="text-xs sm:text-sm font-medium text-[#d4cbbd] transition-colors group-hover:text-accent">
+        <span className="text-sm sm:text-base font-semibold text-white transition-colors group-hover:text-neutral-200">
           {q}
         </span>
         <ChevronDown
-          className={`h-3.5 w-3.5 shrink-0 text-[#6b6256] transition-transform duration-200 group-hover:text-accent ${
-            open ? "rotate-180 text-accent" : ""
+          className={`h-4 w-4 shrink-0 text-neutral-500 transition-transform duration-200 group-hover:text-white ${
+            open ? "rotate-180 text-white" : ""
           }`}
         />
       </button>
       {open && (
-        <p className="pb-3 text-xs leading-relaxed text-[#8a8178]">
+        <p className="pb-5 text-xs sm:text-sm leading-relaxed text-neutral-400">
           {a}
         </p>
       )}
@@ -48,7 +48,7 @@ export function FaqSection() {
     },
     {
       q: "What skill level do I need?",
-      a: "Projects are tagged as Beginner, Intermediate, or Advanced. Each project page explains the skills and architecture you will practice.",
+      a: "Projects are tagged as Beginner, Intermediate, or Advanced. Each project page explains the exact prerequisites and concepts covered before you start.",
     },
     {
       q: "Can I put these projects on my resume?",
@@ -56,51 +56,33 @@ export function FaqSection() {
     },
     {
       q: "How long does a project take?",
-      a: "Project time estimates vary by build and are shown on each project page. Everything is self-paced, so you can build at your own speed.",
-    },
-    {
-      q: "What happens if I get stuck?",
-      a: "Every single phase includes explicit terminal commands, directory blueprints, and verification checkpoints so you can confirm your progress before advancing.",
+      a: "Project time estimates vary by build (typically between 10 to 28 hours across 8 phases). Everything is self-paced, so you can build at your own speed.",
     },
   ];
 
   return (
     <section id="faq" className="mb-20 sm:mb-28 lg:mb-32 scroll-mt-24">
-      <div className="rounded-xl border border-[#201d18] bg-[#11100e] p-4 sm:p-6 shadow-sm">
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_1.6fr] lg:gap-8">
-          {/* Left Title */}
-          <div>
-            <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full border border-amber-800/40 bg-amber-950/30 px-2.5 py-0.5">
-              <HelpCircle className="h-3 w-3 text-accent" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-accent">
-                FAQ
-              </span>
-            </div>
-            <h2 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-[#e4ddd3] mb-2">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-xs leading-relaxed text-[#8a8178]">
-              Everything you need to know about the platform, projects, and learning workflow.
-            </p>
-
-            <div className="mt-4">
-              <Link
-                href="/projects"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:text-accent-hover transition-colors"
-              >
-                <span>Browse All Projects</span>
-                <ArrowRight className="h-3 w-3" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Right Accordion List */}
-          <div className="rounded-lg border border-[#201d18] bg-[#14120f] p-3 sm:p-4 divide-y divide-[#201d18]">
-            {faqs.map((item) => (
-              <FAQItem key={item.q} q={item.q} a={item.a} />
-            ))}
-          </div>
+      {/* Header */}
+      <div className="mb-10 text-center">
+        <div className="mb-3 inline-flex">
+          <span className="pill-mono">
+            <HelpCircle className="h-3 w-3 text-white" />
+            <span>FREQUENTLY ASKED QUESTIONS</span>
+          </span>
         </div>
+        <h2 className="font-sans text-3xl sm:text-4xl font-extrabold tracking-tight text-white mb-3">
+          Everything you need to know
+        </h2>
+        <p className="mx-auto max-w-md text-sm leading-relaxed text-neutral-400">
+          Common questions about the curriculum, learning format, and portfolio deliverables.
+        </p>
+      </div>
+
+      {/* Accordion Card */}
+      <div className="mx-auto max-w-3xl rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-6 sm:p-8 shadow-2xl shadow-black/80 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+        {faqs.map((f, i) => (
+          <FAQItem key={i} q={f.q} a={f.a} />
+        ))}
       </div>
     </section>
   );

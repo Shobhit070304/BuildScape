@@ -27,8 +27,10 @@ export default function HomePage() {
     <>
       <Navbar />
       <ScrollSectionTracker />
-      <main className="w-full bg-[#0a0a0a] overflow-x-hidden">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <main className="w-full bg-[#050507] overflow-x-hidden relative">
+        {/* Subtle top spotlight */}
+        <div className="pointer-events-none absolute -top-40 left-1/2 h-[500px] w-full max-w-7xl -translate-x-1/2 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.06),transparent_70%)] blur-[80px]" />
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
           <HeroSection />
           <StatsSection />
           <FeaturedProjectsSection />

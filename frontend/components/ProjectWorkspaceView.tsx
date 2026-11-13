@@ -2,19 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Clock, ArrowLeft, Loader2, FolderX, ChevronLeft } from "lucide-react";
+import { Clock, ArrowLeft, Loader2, FolderX, ChevronLeft, Target } from "lucide-react";
 import { PhaseViewer } from "@/components/PhaseViewer";
-import { TechBadge } from "@/components/TechBadge";
 import { WorkspaceEnrollmentGuard } from "@/components/WorkspaceEnrollmentGuard";
 import { api } from "@/lib/api";
 import { mapApiProject } from "@/lib/projects";
 import type { Project } from "@/lib/projects";
-
-const DIFFICULTY_CLASSES: Record<string, string> = {
-  Beginner: "text-emerald-400 bg-emerald-950/30 border-emerald-900/50",
-  Intermediate: "text-amber-400 bg-amber-950/30 border-amber-800/50",
-  Advanced: "text-rose-400 bg-rose-950/30 border-rose-900/50",
-};
 
 interface ProjectWorkspaceViewProps {
   initialProject: Project | null;
@@ -54,10 +47,10 @@ export function ProjectWorkspaceView({
 
   if (loading) {
     return (
-      <div className="flex h-dvh w-full items-center justify-center bg-[#0a0a0a]">
+      <div className="flex h-dvh w-full items-center justify-center bg-[#050507]">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-accent" />
-          <p className="font-mono text-xs text-text-muted">Loading workspace environment...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-white" />
+          <p className="font-mono text-xs text-neutral-400">Loading workspace environment...</p>
         </div>
       </div>
     );
@@ -65,18 +58,18 @@ export function ProjectWorkspaceView({
 
   if (notFound || !project) {
     return (
-      <div className="flex h-dvh w-full items-center justify-center bg-[#0a0a0a] px-4">
+      <div className="flex h-dvh w-full items-center justify-center bg-[#050507] px-4">
         <div className="max-w-md text-center py-16">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-800/40 bg-amber-950/30">
-            <FolderX className="h-7 w-7 text-accent" />
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
+            <FolderX className="h-7 w-7 text-white" />
           </div>
-          <h1 className="font-serif text-2xl font-bold text-text mb-2">Project Not Found</h1>
-          <p className="text-xs text-text-muted leading-relaxed mb-6">
+          <h1 className="font-sans text-2xl font-bold text-white mb-2">Project Not Found</h1>
+          <p className="text-xs text-neutral-400 leading-relaxed mb-6">
             The workspace for &ldquo;{slug}&rdquo; could not be loaded from the database.
           </p>
           <Link
             href="/projects"
-            className="inline-flex items-center gap-2 rounded-lg border border-border bg-[#14120f] px-4 py-2 text-xs font-medium text-text transition-colors hover:border-border-hover hover:bg-[#1c1915]"
+            className="btn-secondary px-4 py-2 text-xs"
           >
             <ChevronLeft className="h-4 w-4" />
             Browse All Projects
@@ -86,59 +79,62 @@ export function ProjectWorkspaceView({
     );
   }
 
-  const diffClass =
-    DIFFICULTY_CLASSES[project.difficulty] ??
-    "text-amber-400 bg-amber-950/30 border-amber-800/50";
-
   return (
     <WorkspaceEnrollmentGuard project={project}>
       {(progress) => (
-      <div className="flex h-dvh flex-col overflow-hidden">
-        {/* Top breadcrumb bar */}
-        <div className="flex h-11 shrink-0 items-center gap-3 overflow-hidden border-b border-[#1a1a1a] bg-[#0a0a0a] px-4">
-          <Link
-            href={`/projects/${project.slug}`}
-            className="flex shrink-0 items-center gap-1 text-xs text-accent transition-colors hover:text-accent-hover"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Project Overview
-          </Link>
+        <div className="flex h-dvh flex-col overflow-hidden bg-[#050507]">
+          {/* Top Navigation Bar */}
+          <header className="flex h-11 shrink-0 items-center justify-between border-b border-white/[0.08] bg-[#0A0A0E] px-4">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <Link
+                href={`/projects/${project.slug}`}
+                className="flex shrink-0 items-center gap-1 font-semibold text-xs text-white transition-opacity hover:opacity-80"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Project</span> Overview
+              </Link>
 
-          <span className="h-3.5 w-px bg-[#2a2520]" />
+              <span className="h-3.5 w-px bg-white/10" />
 
-          <Link
-            href="/projects"
-            className="hidden shrink-0 items-center gap-1 text-xs text-text-muted transition-colors hover:text-[#e4ddd3] sm:flex"
-          >
-            All projects
-          </Link>
+              <Link
+                href="/projects"
+                className="hidden shrink-0 items-center gap-1 text-xs text-neutral-400 transition-colors hover:text-white md:flex"
+              >
+                All Projects
+              </Link>
 
-          <span className="hidden h-3.5 w-px bg-[#2a2520] sm:block" />
+              <span className="hidden h-3.5 w-px bg-white/10 md:block" />
 
-          {/* Project meta */}
-          <div className="flex min-w-0 items-center gap-2 overflow-hidden">
-            <TechBadge name={project.track} size="xs" />
-            <span
-              className={`inline-flex shrink-0 items-center rounded border px-1.5 py-0.5 text-[0.65rem] font-medium ${diffClass}`}
-            >
-              {project.difficulty}
-            </span>
-            <span className="truncate text-xs font-semibold text-[#e4ddd3]">
-              {project.title}
-            </span>
-          </div>
+              {/* Project Title */}
+              <span className="truncate text-xs font-semibold text-neutral-200">
+                {project.title}
+              </span>
+            </div>
 
-          <div className="ml-auto flex shrink-0 items-center gap-1.5 text-xs text-text-muted">
-            <Clock className="h-3 w-3" />
-            {project.estimatedHours}h estimated
+            {/* Right Meta Info */}
+            <div className="flex shrink-0 items-center gap-3">
+              {project.deliverable && (
+                <div
+                  className="hidden xl:flex items-center gap-1 text-[0.6875rem] text-neutral-300 max-w-xs truncate"
+                  title={project.deliverable}
+                >
+                  <Target className="h-3 w-3 shrink-0 text-white" />
+                  <span className="truncate">{project.deliverable}</span>
+                </div>
+              )}
+
+              <div className="flex shrink-0 items-center gap-1 font-mono text-[0.6875rem] text-neutral-400">
+                <Clock className="h-3 w-3 text-neutral-500" />
+                <span>{project.estimatedHours}h</span>
+              </div>
+            </div>
+          </header>
+
+          {/* Phase viewer */}
+          <div className="flex-1 overflow-hidden">
+            <PhaseViewer project={project} initialPhaseId={initialPhaseId} progress={progress} />
           </div>
         </div>
-
-        {/* Phase viewer */}
-        <div className="flex-1 overflow-hidden">
-          <PhaseViewer project={project} initialPhaseId={initialPhaseId} progress={progress} />
-        </div>
-      </div>
       )}
     </WorkspaceEnrollmentGuard>
   );

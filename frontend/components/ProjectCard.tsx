@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Clock, ChevronRight } from "lucide-react";
+import { Clock, Layers, ArrowUpRight } from "lucide-react";
 import type { Project } from "@/lib/projects";
 import { TechBadge } from "@/components/TechBadge";
 
@@ -8,68 +8,83 @@ interface ProjectCardProps {
 }
 
 const DIFFICULTY_CLASSES: Record<string, string> = {
-  Beginner: "text-emerald-400 bg-emerald-950/40 border-emerald-800/60",
-  Intermediate: "text-amber-400 bg-amber-950/40 border-amber-800/60",
-  Advanced: "text-rose-400 bg-rose-950/40 border-rose-800/60",
+  Beginner: "text-neutral-300 bg-white/[0.04] border-white/10",
+  Intermediate: "text-neutral-200 bg-white/[0.06] border-white/15",
+  Advanced: "text-white bg-white/10 border-white/20",
 };
 
 export function ProjectCard({ project }: ProjectCardProps) {
   const diffClass =
     DIFFICULTY_CLASSES[project.difficulty] ??
-    "text-amber-400 bg-amber-950/40 border-amber-800/60";
+    "text-neutral-300 bg-white/[0.04] border-white/10";
 
-  const phaseCount = project.phases ? project.phases.length : 0;
+  const phaseCount = project.phases?.length ?? 0;
+  const visibleStack = project.techStack.slice(0, 3);
+  const extraStack = project.techStack.length - 3;
 
   return (
     <Link
       href={`/projects/${project.slug}`}
-      className="group relative block overflow-hidden rounded-xl border border-[#201d18] bg-[#11100e] p-3.5 transition-all duration-200 hover:border-[#332e26] hover:bg-[#14120f] shadow-xs"
+      className="group relative flex flex-col justify-between rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-6 sm:p-7 transition-all duration-200 hover:-translate-y-1 hover:border-white/20 hover:bg-[#0E0E14] shadow-2xl shadow-black/60 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
     >
-      {/* Header row */}
-      <div className="mb-2 flex items-start justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-1.5">
-          {/* Main Technology Track with icon */}
-          <TechBadge name={project.track} size="xs" />
+      <div>
+        {/* Meta Bar */}
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            {project.category && (
+              <span className="font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-neutral-400">
+                {project.category}
+              </span>
+            )}
+            <span className="text-neutral-600">·</span>
+            <span
+              className={`inline-flex items-center rounded px-2 py-0.5 font-mono text-[0.625rem] font-medium border ${diffClass}`}
+            >
+              {project.difficulty}
+            </span>
+          </div>
 
-          {/* Difficulty pill */}
-          <span
-            className={`inline-flex items-center rounded border px-1.5 py-0.2 text-[0.62rem] font-medium ${diffClass}`}
-          >
-            {project.difficulty}
-          </span>
+          <div className="flex items-center gap-1 font-mono text-xs text-neutral-400">
+            <Clock className="h-3 w-3 text-neutral-500" />
+            <span>{project.estimatedHours}h</span>
+          </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1 text-[0.68rem] text-[#6b6256]">
-          <Clock className="h-3 w-3 text-[#6b6256]" />
-          {project.estimatedHours}h
-        </div>
+
+        {/* Title */}
+        <h3 className="mb-2 font-sans text-lg font-bold tracking-tight text-white transition-colors group-hover:text-neutral-100">
+          {project.title}
+        </h3>
+
+        {/* Tagline */}
+        <p className="line-clamp-2 text-xs sm:text-sm leading-relaxed text-neutral-400 mb-6">
+          {project.tagline}
+        </p>
       </div>
 
-      {/* Title with font-serif */}
-      <h3 className="mb-1 font-serif text-sm font-semibold leading-snug text-[#e4ddd3] transition-colors group-hover:text-white">
-        {project.title}
-      </h3>
-
-      {/* Tagline */}
-      <p className="mb-2.5 line-clamp-2 text-[11px] leading-relaxed text-[#8a8178]">
-        {project.tagline}
-      </p>
-
-      {/* Footer */}
-      <div className="flex items-center justify-between border-t border-[#1e1c18] pt-2 text-xs">
-        <div className="flex flex-wrap gap-1">
-          {project.techStack.slice(0, 3).map((tech) => (
-            <TechBadge key={tech} name={tech} size="xs" />
+      {/* Footer Area: Tech Stack + Navigation */}
+      <div className="pt-4 border-t border-white/[0.08]">
+        {/* Tech Stack Chips */}
+        <div className="mb-4 flex flex-wrap items-center gap-1.5">
+          {visibleStack.map((tech) => (
+            <TechBadge key={tech} name={tech} size="xs" showIcon={true} />
           ))}
-          {project.techStack.length > 3 && (
-            <span className="rounded border border-[#221f1a] bg-[#14120f] px-1 py-0.2 text-[0.58rem] text-[#8a8178]">
-              +{project.techStack.length - 3}
+          {extraStack > 0 && (
+            <span className="rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-mono text-[0.625rem] text-neutral-400">
+              +{extraStack}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-1 text-[0.68rem] font-medium text-[#c9a96e] transition-colors group-hover:text-[#d4b577]">
-          {phaseCount} phases
-          <ChevronRight className="h-3 w-3" />
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 font-mono text-xs text-neutral-400">
+            <Layers className="h-3.5 w-3.5 text-neutral-500" />
+            <span>{phaseCount} phases</span>
+          </span>
+
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-white transition-opacity group-hover:opacity-80">
+            <span>Open Blueprint</span>
+            <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </span>
         </div>
       </div>
     </Link>

@@ -37,25 +37,25 @@ function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
 
 export function StatsSection() {
   const stats = [
-    { label: "Production Builds", sub: "Engineered from scratch", value: 19, suffix: "+" },
-    { label: "Step-by-Step Phases", sub: "With strict checkpoints", value: 152, suffix: "+" },
-    { label: "Curriculum Blueprints", sub: "Architecture roadmaps", value: 1200, suffix: "h" },
-    { label: "Free Forever", sub: "Zero paywalls or trials", value: 100, suffix: "%" },
+    { label: "Flagship Blueprints", sub: "Real system architectures", value: 7, suffix: " builds" },
+    { label: "Milestone Phases", sub: "Automated checkpoints", value: 56, suffix: " phases" },
+    { label: "Engineering Hours", sub: "Zero video fluff", value: 180, suffix: "h+" },
+    { label: "Open & Free", sub: "No paywalls or trials", value: 100, suffix: "%" },
   ];
 
   return (
-    <section className="mb-20 sm:mb-28 lg:mb-32">
-      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+    <section className="mb-20 sm:mb-28">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {stats.map(({ label, sub, value, suffix }) => (
           <div
             key={label}
-            className="group relative flex flex-col items-center justify-center rounded-xl border border-[#201d18] bg-[#11100e] p-3.5 sm:p-4 text-center shadow-sm transition-all duration-200 hover:border-[#332e26] hover:bg-[#14120f]"
+            className="group relative flex flex-col items-center justify-center rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-6 sm:p-7 text-center shadow-2xl shadow-black/60 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-[#0E0E14]"
           >
-            <div className="mb-0.5 font-mono text-xl font-bold tracking-tight text-[#e4ddd3] sm:text-2xl group-hover:text-accent transition-colors">
+            <div className="mb-1 font-mono text-2xl sm:text-3xl font-extrabold tracking-tight text-white group-hover:text-neutral-200 transition-colors">
               <Counter target={value} suffix={suffix} />
             </div>
-            <div className="text-[11px] font-semibold text-[#d4cbbd]">{label}</div>
-            <div className="text-[9px] text-[#6b6256] mt-0.5">{sub}</div>
+            <div className="text-xs sm:text-sm font-semibold text-neutral-200">{label}</div>
+            <div className="text-[11px] font-mono text-neutral-500 mt-1">{sub}</div>
           </div>
         ))}
       </div>

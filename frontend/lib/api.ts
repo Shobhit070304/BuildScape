@@ -258,7 +258,11 @@ export interface ApiProject {
   title: string;
   tagline: string;
   description?: string;
+  category?: string;
   whatYouWillLearn?: string[];
+  prerequisites?: string[];
+  deliverable?: string;
+  isPublished?: boolean;
   track: string;
   difficulty: string;
   estimatedHours: number;
@@ -271,18 +275,24 @@ export interface ProjectPayload {
   title: string;
   tagline: string;
   description?: string;
+  category?: string;
   whatYouWillLearn?: string[];
+  prerequisites?: string[];
+  deliverable?: string;
   track: string;
   difficulty: string;
   estimatedHours: number;
   techStack: string[];
-  phases: { id: string; orderIndex: number; title: string; content: string }[];
+  phases: { id: string; orderIndex: number; title: string; summary?: string; tasks?: { id: string; title: string }[]; estimatedMinutes?: number; content: string }[];
 }
 
 export interface ApiPhase {
   id: string;
   orderIndex: number;
   title: string;
+  summary?: string;
+  tasks?: { id: string; title: string }[];
+  estimatedMinutes?: number;
   content?: string;
 }
 
