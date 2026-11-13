@@ -139,6 +139,35 @@ export const api = {
   getProjects: () =>
     request<{ projects: ApiProject[] }>("/api/projects"),
 
+  getPublicStats: () =>
+    request<{
+      stats: {
+        totalUsers: number;
+        totalProjects: number;
+        totalEnrollments: number;
+        completedEnrollments: number;
+      };
+    }>("/api/projects/stats/public"),
+
+  getVerifiedShowcases: () =>
+    request<{
+      showcases: Array<{
+        id: string;
+        title: string;
+        track: string;
+        difficulty: "Beginner" | "Intermediate" | "Advanced";
+        description: string;
+        authorName: string;
+        authorHandle: string;
+        authorAvatar?: string;
+        timeAgo: string;
+        repoUrl: string;
+        demoUrl?: string;
+        projectSlug: string;
+        certificateId?: string;
+      }>;
+    }>("/api/projects/showcases/verified"),
+
   getProject: (slug: string) =>
     request<{ project: ApiProject }>(`/api/projects/${slug}`),
 
@@ -247,6 +276,163 @@ export const api = {
 
   clearAssistantHistory: (projectSlug: string, phaseId: string) =>
     request<{ success: boolean }>(`/api/assistant/history/${encodeURIComponent(projectSlug)}/${encodeURIComponent(phaseId)}`, { method: "DELETE" }),
+
+  updateProfile: (data: {
+    name?: string;
+    bio?: string;
+    location?: string;
+    githubUrl?: string;
+    twitterUrl?: string;
+    portfolioUrl?: string;
+    linkedinUrl?: string;
+    skills?: string[];
+  }) =>
+    request<{ user: AuthUser }>("/api/auth/profile", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  getPublicProfile: (username: string) =>
+    request<{
+      profile: PublicUserProfile;
+      stats: PublicUserStats;
+      projects: PublicUserProject[];
+    }>(`/api/users/${encodeURIComponent(username)}`),
+
+  getDiscussions: (params?: {
+    category?: string;
+    projectSlug?: string;
+    phaseId?: string;
+    authorId?: string;
+    sort?: string;
+    q?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.category) searchParams.set("category", params.category);
+    if (params?.projectSlug) searchParams.set("projectSlug", params.projectSlug);
+    if (params?.phaseId) searchParams.set("phaseId", params.phaseId);
+    if (params?.authorId) searchParams.set("authorId", params.authorId);
+    if (params?.sort) searchParams.set("sort", params.sort);
+    if (params?.q) searchParams.set("q", params.q);
+    if (params?.page) searchParams.set("page", String(params.page));
+    if (params?.limit) searchParams.set("limit", String(params.limit));
+    const qs = searchParams.toString();
+    return request<{
+      discussions: DiscussionItem[];
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    }>(`/api/discussions${qs ? `?${qs}` : ""}`);
+  },
+
+  getDiscussion: (id: string) =>
+    request<{ discussion: DiscussionDetail }>(`/api/discussions/${encodeURIComponent(id)}`),
+
+  createDiscussion: (data: {
+    title: string;
+    content: string;
+    category?: string;
+    projectSlug?: string;
+    phaseId?: string;
+  }) =>
+    request<{ discussion: DiscussionDetail }>("/api/discussions", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  deleteDiscussion: (id: string) =>
+    request<{ success: boolean }>(`/api/discussions/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    }),
+
+  toggleUpvoteDiscussion: (id: string) =>
+    request<{ hasUpvoted: boolean; upvoteCount: number }>(`/api/discussions/${encodeURIComponent(id)}/upvote`, {
+      method: "POST",
+    }),
+
+  getDiscussionComments: (discussionId: string) =>
+    request<{ comments: DiscussionCommentItem[] }>(`/api/discussions/${encodeURIComponent(discussionId)}/comments`),
+
+  createComment: (discussionId: string, data: { content: string; parentId?: string }) =>
+    request<{ comment: DiscussionCommentItem }>(`/api/discussions/${encodeURIComponent(discussionId)}/comments`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  toggleUpvoteComment: (discussionId: string, commentId: string) =>
+    request<{ hasUpvoted: boolean; upvoteCount: number }>(
+      `/api/discussions/${encodeURIComponent(discussionId)}/comments/${encodeURIComponent(commentId)}/upvote`,
+      { method: "POST" }
+    ),
+
+  acceptCommentSolution: (discussionId: string, commentId: string) =>
+    request<{ isResolved: boolean; acceptedCommentId: string }>(
+      `/api/discussions/${encodeURIComponent(discussionId)}/comments/${encodeURIComponent(commentId)}/accept`,
+      { method: "POST" }
+    ),
+
+  deleteComment: (discussionId: string, commentId: string) =>
+    request<{ success: boolean }>(
+      `/api/discussions/${encodeURIComponent(discussionId)}/comments/${encodeURIComponent(commentId)}`,
+      { method: "DELETE" }
+    ),
+
+  // Admin Portal endpoints
+  getAdminOverview: () =>
+    request<{
+      stats: {
+        totalUsers: number;
+        totalEnrollments: number;
+        totalProjects: number;
+        totalDiscussions: number;
+        openIssuesCount: number;
+      };
+    }>("/api/admin/overview"),
+
+  getAdminUsers: (params?: { q?: string; page?: number; limit?: number }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.q) searchParams.set("q", params.q);
+    if (params?.page) searchParams.set("page", String(params.page));
+    if (params?.limit) searchParams.set("limit", String(params.limit));
+    const qs = searchParams.toString();
+    return request<{
+      users: AdminUserItem[];
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    }>(`/api/admin/users${qs ? `?${qs}` : ""}`);
+  },
+
+  toggleAdminUserRole: (userId: string, role: "user" | "admin") =>
+    request<{ success: boolean; user: AdminUserItem }>(`/api/admin/users/${encodeURIComponent(userId)}/role`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    }),
+
+  getAdminDiscussions: (params?: { category?: string; q?: string; page?: number; limit?: number }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.category) searchParams.set("category", params.category);
+    if (params?.q) searchParams.set("q", params.q);
+    if (params?.page) searchParams.set("page", String(params.page));
+    if (params?.limit) searchParams.set("limit", String(params.limit));
+    const qs = searchParams.toString();
+    return request<{
+      discussions: AdminDiscussionItem[];
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    }>(`/api/admin/discussions${qs ? `?${qs}` : ""}`);
+  },
+
+  deleteAdminDiscussion: (id: string) =>
+    request<{ success: boolean; message: string }>(`/api/admin/discussions/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    }),
 };
 
 // Shared types
@@ -256,7 +442,98 @@ export interface AuthUser {
   name: string;
   username?: string;
   avatar?: string;
+  bio?: string;
+  location?: string;
+  githubUrl?: string;
+  twitterUrl?: string;
+  portfolioUrl?: string;
+  linkedinUrl?: string;
+  skills?: string[];
   role?: "user" | "admin";
+}
+
+export type DiscussionCategory = "general" | "question" | "showcase" | "architecture" | "tip";
+
+export interface DiscussionAuthor {
+  id: string;
+  name: string;
+  username: string;
+  avatar?: string;
+  bio?: string;
+}
+
+export interface DiscussionItem {
+  id: string;
+  title: string;
+  content: string;
+  category: DiscussionCategory;
+  projectSlug?: string;
+  projectTitle?: string;
+  phaseId?: string;
+  phaseTitle?: string;
+  upvoteCount: number;
+  replyCount: number;
+  views: number;
+  isResolved: boolean;
+  hasUpvoted: boolean;
+  author: DiscussionAuthor;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DiscussionDetail extends DiscussionItem {
+  acceptedCommentId?: string | null;
+}
+
+export interface DiscussionCommentItem {
+  id: string;
+  discussionId: string;
+  content: string;
+  parentId?: string | null;
+  upvoteCount: number;
+  isAcceptedSolution: boolean;
+  hasUpvoted: boolean;
+  author: DiscussionAuthor;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PublicUserProfile {
+  id: string;
+  name: string;
+  username: string;
+  avatar?: string;
+  bio?: string;
+  location?: string;
+  githubUrl?: string;
+  twitterUrl?: string;
+  portfolioUrl?: string;
+  linkedinUrl?: string;
+  skills: string[];
+  createdAt: string;
+}
+
+export interface PublicUserStats {
+  completedProjectsCount: number;
+  enrolledProjectsCount: number;
+  discussionsCount: number;
+  solutionsCount: number;
+}
+
+export interface PublicUserProject {
+  title: string;
+  slug: string;
+  shortDescription: string;
+  track: string;
+  difficulty: string;
+  estimatedHours: number;
+  techStack: string[];
+  icon?: string;
+  isCompleted: boolean;
+  completedAt?: string;
+  enrolledAt: string;
+  githubRepoUrl?: string;
+  liveDemoUrl?: string;
 }
 
 export interface EnrolledProjectItem {
@@ -398,4 +675,38 @@ export interface UserReportedIssue {
   createdAt: string;
   updatedAt?: string;
   projectId?: { _id: string; slug: string; title: string } | null;
+}
+
+export interface AdminUserItem {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  avatar?: string;
+  role: "user" | "admin";
+  bio?: string;
+  location?: string;
+  skills: string[];
+  createdAt: string;
+  enrolledCount: number;
+  completedCount: number;
+}
+
+export interface AdminDiscussionItem {
+  id: string;
+  title: string;
+  category: DiscussionCategory;
+  projectSlug?: string;
+  projectTitle?: string;
+  upvoteCount: number;
+  replyCount: number;
+  views: number;
+  isResolved: boolean;
+  author: {
+    id: string;
+    name: string;
+    username: string;
+    avatar?: string;
+  };
+  createdAt: string;
 }

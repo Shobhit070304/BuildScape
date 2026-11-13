@@ -63,7 +63,28 @@ export function Navbar() {
             href="/projects"
             className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-white hover:bg-white/[0.05]"
           >
-            Blueprints
+            Projects
+          </Link>
+
+          <Link
+            href="/showcases"
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-white hover:bg-white/[0.05]"
+          >
+            Showcase
+          </Link>
+
+          <Link
+            href="/blog"
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-white hover:bg-white/[0.05]"
+          >
+            Blog
+          </Link>
+
+          <Link
+            href="/discussions"
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-white hover:bg-white/[0.05]"
+          >
+            Discussions
           </Link>
 
           {user && (

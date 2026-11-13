@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
+import Link from "next/link";
 import {
   Search,
   X,
@@ -8,50 +9,38 @@ import {
   AlertTriangle,
   RefreshCw,
   Loader2,
-  Server,
-  Layout,
-  Terminal,
-  Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { ProjectCard } from "@/components/ProjectCard";
 import { mapApiProject } from "@/lib/projects";
-import { api } from "@/lib/api";
+import { api, type EnrolledProjectItem } from "@/lib/api";
 import type { Project } from "@/lib/projects";
+import { useAuth } from "@/context/AuthContext";
+import { TechIcon } from "@/components/TechBadge";
 
-function renderTrackIcon(track: string) {
-  return (
-    <span aria-hidden="true" className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-slate-700 text-[9px] font-bold text-slate-200">
-      {track.replace(/[^a-z0-9]/gi, "").slice(0, 1).toUpperCase()}
-    </span>
-  );
-}
+// Strictly 3 Levels: Beginner, Intermediate, Advanced
+const LEVEL_OPTIONS = ["Beginner", "Intermediate", "Advanced"] as const;
 
-const CATEGORY_OPTIONS = [
-  { label: "Frontend", icon: Layout },
-  { label: "Backend", icon: Server },
-  { label: "Full-Stack", icon: Layers },
-  { label: "AI", icon: Sparkles },
-  { label: "Systems", icon: Terminal },
-];
-
-const LEVEL_OPTIONS = [
-  { label: "Beginner", difficulty: "Beginner" },
-  { label: "Intermediate", difficulty: "Intermediate" },
-  { label: "Advanced", difficulty: "Advanced" },
+// Our real platform tracks
+const CORE_TRACKS = [
+  "Golang",
+  "TypeScript",
+  "Python",
+  "Spring Boot",
+  "Rust",
+  "React",
 ];
 
 export default function ProjectsPage() {
+  const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [enrollments, setEnrollments] = useState<EnrolledProjectItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [isFromDb, setIsFromDb] = useState(false);
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedTrack, setSelectedTrack] = useState<string | null>(() =>
-    typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("track")
-  );
-  const [selectedLevelLabel, setSelectedLevelLabel] = useState<string | null>(null);
+  const [selectedTrack, setSelectedTrack] = useState<string | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
 
   const loadProjects = useCallback(() => {
     api
@@ -59,7 +48,6 @@ export default function ProjectsPage() {
       .then((data) => {
         if (data?.projects && data.projects.length > 0) {
           setProjects(data.projects.map(mapApiProject));
-          setIsFromDb(true);
         } else {
           setProjects([]);
           setLoadError("No projects currently available in the curriculum database.");
@@ -74,15 +62,62 @@ export default function ProjectsPage() {
       });
   }, []);
 
-  const retryProjects = () => {
-    setIsLoading(true);
-    setLoadError(null);
-    loadProjects();
-  };
-
   useEffect(() => {
     loadProjects();
   }, [loadProjects]);
+
+  useEffect(() => {
+    if (user) {
+      api
+        .getEnrolledProjects()
+        .then((res) => setEnrollments(res.enrollments || []))
+        .catch(() => setEnrollments([]));
+    }
+  }, [user]);
+
+  // Combine core tracks with any unique tracks in project database
+  const availableTracks = useMemo(() => {
+    const fromProjects = Array.from(new Set(projects.map((p) => p.track)));
+    return Array.from(new Set([...CORE_TRACKS, ...fromProjects])).filter(Boolean);
+  }, [projects]);
+
+  // Working on projects: either user's active enrollments, or flagship starters
+  const workingOnList = useMemo(() => {
+    if (enrollments.length > 0) {
+      return enrollments.slice(0, 2).map((item) => ({
+        slug: item.project.slug,
+        title: item.project.title,
+        track: item.project.track,
+        difficulty: item.project.difficulty,
+        startedText: item.enrolledAt
+          ? new Date(item.enrolledAt).toLocaleDateString(undefined, {
+              month: "short",
+              year: "numeric",
+            })
+          : "recently",
+      }));
+    }
+    // Default starter projects
+    if (projects.length >= 2) {
+      return [
+        {
+          slug: projects[0].slug,
+          title: projects[0].title,
+          track: projects[0].track,
+          difficulty: projects[0].difficulty,
+          startedText: "1 month ago",
+        },
+        {
+          slug: projects[1].slug,
+          title: projects[1].title,
+          track: projects[1].track,
+          difficulty: projects[1].difficulty,
+          startedText: "3 months ago",
+        },
+      ];
+    }
+    return [];
+  }, [enrollments, projects]);
 
   const filtered = useMemo(() => {
     return projects.filter((p: Project) => {
@@ -92,123 +127,94 @@ export default function ProjectsPage() {
         p.title.toLowerCase().includes(q) ||
         p.tagline.toLowerCase().includes(q) ||
         p.track.toLowerCase().includes(q) ||
-        (p.category && p.category.toLowerCase().includes(q)) ||
         p.techStack.some((t) => t.toLowerCase().includes(q));
-
-      const matchCategory = !selectedCategory || p.category === selectedCategory;
 
       const matchTrack =
         !selectedTrack ||
-        p.track === selectedTrack ||
+        p.track.toLowerCase() === selectedTrack.toLowerCase() ||
         p.techStack.some((t) => t.toLowerCase() === selectedTrack.toLowerCase());
 
       const matchLevel =
-        !selectedLevelLabel ||
-        p.difficulty.toLowerCase() === selectedLevelLabel.toLowerCase();
+        !selectedLevel || p.difficulty.toLowerCase() === selectedLevel.toLowerCase();
 
-      return matchSearch && matchCategory && matchTrack && matchLevel;
+      return matchSearch && matchTrack && matchLevel;
     });
-  }, [projects, search, selectedCategory, selectedTrack, selectedLevelLabel]);
-
-  const hasFilters = Boolean(search || selectedCategory || selectedTrack || selectedLevelLabel);
-
-  function clearFilters() {
-    setSearch("");
-    setSelectedCategory(null);
-    setSelectedTrack(null);
-    setSelectedLevelLabel(null);
-  }
-
-  const availableTracks = useMemo(
-    () => Array.from(new Set(projects.map((project) => project.track))).sort((a, b) => a.localeCompare(b)),
-    [projects]
-  );
+  }, [projects, search, selectedTrack, selectedLevel]);
 
   return (
     <>
       <Navbar />
-      <main className="w-full bg-[#050507] min-h-screen text-white pb-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-10">
-          {/* Header Banner — Centered & Scaled */}
-          <div className="mb-8 text-center flex flex-col items-center justify-center max-w-2xl mx-auto">
-            <div className="flex items-center gap-2.5 mb-2.5">
-              <span className="pill-mono">
-                <Sparkles className="h-3 w-3 text-white" />
-                <span>CURRICULUM BLUEPRINTS</span>
-              </span>
-              {isFromDb && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-950/40 border border-emerald-500/30 px-2.5 py-0.5 text-[0.68rem] font-mono font-medium text-emerald-300">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                  Live Sync
+      <main className="w-full bg-[#050507] min-h-screen text-white pb-24 relative">
+        {/* Subtle Obsidian Atmospheric Top Radial Glow */}
+        <div
+          className="pointer-events-none absolute left-1/2 top-0 h-96 w-full -translate-x-1/2 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.04),transparent_65%)]"
+          aria-hidden="true"
+        />
+
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 relative">
+          {/* ───────────────── 1. NOW WORKING ON SECTION (TOP) ───────────────── */}
+          {workingOnList.length > 0 && (
+            <section className="mb-8">
+              <div className="flex items-center justify-between mb-3.5">
+                <div>
+                  <span className="text-[10px] sm:text-[11px] font-mono font-semibold uppercase tracking-widest text-indigo-400">
+                    NOW WORKING ON
+                  </span>
+                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white mt-0.5">
+                    Pick up where you left off.
+                  </h2>
+                </div>
+                <span className="font-mono text-xs text-neutral-400">
+                  {workingOnList.length} active
                 </span>
-              )}
-            </div>
-
-            <h1 className="font-sans text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white mb-2">
-              Production-Grade Engineering Blueprints
-            </h1>
-            <p className="text-xs sm:text-sm leading-relaxed text-neutral-400">
-              Real-world systems built from scratch. Every phase covers architecture decisions, deep-dive mental models, structured tasks, code checkpoints, and pitfalls.
-            </p>
-          </div>
-
-          {/* Filter Bar Card */}
-          <div className="mb-8 rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-5 sm:p-6 shadow-2xl shadow-black/80 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] space-y-4">
-            {/* Row 1: CATEGORY / TYPE */}
-            <div className="flex items-start gap-3 sm:gap-4">
-              <span className="w-16 sm:w-20 shrink-0 pt-1 text-[11px] font-mono tracking-widest text-neutral-400 uppercase font-semibold">
-                DOMAIN
-              </span>
-              <div className="flex flex-wrap items-center gap-2 flex-1">
-                <button
-                  type="button"
-                  onClick={() => setSelectedCategory(null)}
-                  className={`rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all ${
-                    selectedCategory === null
-                      ? "bg-white text-black shadow-sm"
-                      : "bg-[#0E0E14] text-neutral-400 border border-white/10 hover:border-white/25 hover:text-white"
-                  }`}
-                >
-                  All Domains
-                </button>
-                {CATEGORY_OPTIONS.map((cat) => {
-                  const isSelected = selectedCategory === cat.label;
-                  const Icon = cat.icon;
-                  return (
-                    <button
-                      type="button"
-                      key={cat.label}
-                      onClick={() => setSelectedCategory(isSelected ? null : cat.label)}
-                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all ${
-                        isSelected
-                          ? "bg-white text-black shadow-sm"
-                          : "bg-[#0E0E14] text-neutral-400 border border-white/10 hover:border-white/25 hover:text-white"
-                      }`}
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-                      <span>{cat.label}</span>
-                    </button>
-                  );
-                })}
               </div>
-            </div>
 
-            {/* Row 2: TRACK */}
-            <div className="flex items-start gap-3 sm:gap-4">
-              <span className="w-16 sm:w-20 shrink-0 pt-1 text-[11px] font-mono tracking-widest text-neutral-400 uppercase font-semibold">
+              <div className="space-y-2.5">
+                {workingOnList.map((item) => (
+                  <Link
+                    key={item.slug}
+                    href={`/projects/${item.slug}/workspace`}
+                    className="group flex items-center justify-between rounded-xl border border-white/[0.08] bg-[#0A0A0E] p-3.5 sm:p-4 transition-all hover:border-white/20 hover:bg-[#0E0E14] shadow-sm"
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-[#0E0E14] text-white shadow-sm">
+                        <TechIcon name={item.track} className="h-5 w-5 shrink-0" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-sans font-bold text-sm text-white group-hover:text-neutral-100 truncate">
+                          {item.title}
+                        </h3>
+                        <p className="font-mono text-[11px] text-neutral-400 mt-0.5 truncate">
+                          {item.track} · {item.difficulty} · started {item.startedText}
+                        </p>
+                      </div>
+                    </div>
+
+                    <ArrowRight className="h-4 w-4 text-neutral-500 transition-transform group-hover:translate-x-1 group-hover:text-white shrink-0 ml-3" />
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* ───────────────── 2. FILTERS (STACK & LEVEL ON TOP) ───────────────── */}
+          <div className="mb-8 space-y-3.5">
+            {/* TRACK ROW (Boxless, Sleek Pills) */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-[11px] font-mono tracking-widest text-neutral-400 uppercase font-semibold w-14 shrink-0">
                 TRACK
               </span>
-              <div className="flex flex-wrap items-center gap-2 flex-1">
+              <div className="flex flex-wrap items-center gap-1.5 flex-1">
                 <button
                   type="button"
                   onClick={() => setSelectedTrack(null)}
                   className={`rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all ${
                     selectedTrack === null
-                      ? "bg-white text-black shadow-sm"
-                      : "bg-[#0E0E14] text-neutral-400 border border-white/10 hover:border-white/25 hover:text-white"
+                      ? "bg-white text-black shadow-xs font-bold"
+                      : "text-neutral-400 hover:text-white hover:bg-white/[0.04]"
                   }`}
                 >
-                  All Tracks
+                  All
                 </button>
                 {availableTracks.map((track) => {
                   const isSelected = selectedTrack === track;
@@ -217,13 +223,13 @@ export default function ProjectsPage() {
                       type="button"
                       key={track}
                       onClick={() => setSelectedTrack(isSelected ? null : track)}
-                      className={`group inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all ${
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all ${
                         isSelected
-                          ? "bg-white text-black shadow-sm"
-                          : "bg-[#0E0E14] text-neutral-400 border border-white/10 hover:border-white/25 hover:text-white"
+                          ? "bg-white text-black shadow-xs font-bold"
+                          : "text-neutral-400 hover:text-white hover:bg-white/[0.04]"
                       }`}
                     >
-                      {renderTrackIcon(track)}
+                      <TechIcon name={track} className="h-3.5 w-3.5 shrink-0" />
                       <span>{track}</span>
                     </button>
                   );
@@ -231,130 +237,130 @@ export default function ProjectsPage() {
               </div>
             </div>
 
-            {/* Row 3: LEVEL & Search */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-white/[0.08]">
-              <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-                <span className="w-16 sm:w-20 shrink-0 text-[11px] font-mono tracking-widest text-neutral-400 uppercase font-semibold">
-                  LEVEL
-                </span>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedLevelLabel(null)}
-                    className={`rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all ${
-                      selectedLevelLabel === null
-                        ? "bg-white text-black shadow-sm"
-                        : "bg-[#0E0E14] text-neutral-400 border border-white/10 hover:border-white/25 hover:text-white"
-                    }`}
-                  >
-                    All
-                  </button>
-                  {LEVEL_OPTIONS.map((lvl) => {
-                    const isSelected = selectedLevelLabel === lvl.label;
-                    return (
-                      <button
-                        type="button"
-                        key={lvl.label}
-                        onClick={() => setSelectedLevelLabel(isSelected ? null : lvl.label)}
-                        className={`rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all ${
-                          isSelected
-                            ? "bg-white text-black shadow-sm"
-                            : "bg-[#0E0E14] text-neutral-400 border border-white/10 hover:border-white/25 hover:text-white"
-                        }`}
-                      >
-                        {lvl.label}
-                      </button>
-                    );
-                  })}
-
-                  {hasFilters && (
+            {/* LEVEL ROW (Strictly 3 Levels: Beginner, Intermediate, Advanced - Boxless) */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-[11px] font-mono tracking-widest text-neutral-400 uppercase font-semibold w-14 shrink-0">
+                LEVEL
+              </span>
+              <div className="flex flex-wrap items-center gap-1.5 flex-1">
+                <button
+                  type="button"
+                  onClick={() => setSelectedLevel(null)}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all ${
+                    selectedLevel === null
+                      ? "bg-white text-black shadow-xs font-bold"
+                      : "text-neutral-400 hover:text-white hover:bg-white/[0.04]"
+                  }`}
+                >
+                  All
+                </button>
+                {LEVEL_OPTIONS.map((lvl) => {
+                  const isSelected = selectedLevel === lvl;
+                  return (
                     <button
                       type="button"
-                      onClick={clearFilters}
-                      className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-white/20 bg-white/[0.06] px-3 py-1 text-xs font-medium text-white hover:bg-white/[0.12] transition-all ml-1"
+                      key={lvl}
+                      onClick={() => setSelectedLevel(isSelected ? null : lvl)}
+                      className={`rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all ${
+                        isSelected
+                          ? "bg-white text-black shadow-xs font-bold"
+                          : "text-neutral-400 hover:text-white hover:bg-white/[0.04]"
+                      }`}
                     >
-                      <X className="h-3 w-3" />
-                      <span>Reset Filters</span>
+                      {lvl}
                     </button>
-                  )}
-                </div>
+                  );
+                })}
               </div>
+            </div>
 
-              {/* Search Bar */}
-              <div className="relative w-full sm:w-72">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                <input
-                  type="text"
-                  aria-label="Search projects"
-                  placeholder="Search by title, stack, keyword..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-[#060608] py-2 pl-9 pr-8 text-xs text-white placeholder-neutral-500 outline-none transition-colors focus:border-white/30"
-                />
-                {search && (
+            {/* SEARCH & COUNTER ROW */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-white/[0.06]">
+              <div className="flex items-center gap-2 text-xs font-mono text-neutral-400">
+                <Layers className="h-3.5 w-3.5 text-neutral-400" />
+                <span>
+                  {filtered.length} {filtered.length === 1 ? "project" : "projects"}
+                </span>
+                {(selectedTrack || selectedLevel || search) && (
                   <button
                     type="button"
-                    onClick={() => setSearch("")}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white cursor-pointer"
+                    onClick={() => {
+                      setSelectedTrack(null);
+                      setSelectedLevel(null);
+                      setSearch("");
+                    }}
+                    className="ml-2 inline-flex items-center gap-1 text-[11px] text-neutral-400 hover:text-white cursor-pointer"
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <X className="h-3 w-3" />
+                    <span>Clear filters</span>
                   </button>
                 )}
               </div>
+
+              {/* Search Bar with Ctrl+K */}
+              <div className="relative w-full sm:w-64">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
+                <input
+                  type="text"
+                  aria-label="Search projects"
+                  placeholder="Search anything..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-[#0A0A0E] py-1.5 pl-8 pr-14 text-xs text-white placeholder-neutral-500 outline-none transition-colors focus:border-white/30 font-mono shadow-xs"
+                />
+                <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded border border-white/10 px-1 py-0.2 text-[9px] font-mono text-neutral-400">
+                  Ctrl K
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Results Summary Bar */}
-          <div className="flex items-center justify-between pb-4">
-            <div className="flex items-center gap-2">
-              <Layers className="h-4 w-4 text-white" />
-              <span className="font-mono text-xs text-neutral-400">
-                Showing <strong className="text-white font-semibold">{filtered.length}</strong> {filtered.length === 1 ? "blueprint" : "blueprints"}
-              </span>
-            </div>
-          </div>
-
-          {/* Project Cards Grid */}
+          {/* ───────────────── 3. PROJECT CARDS GRID (2 IN ONE LINE) ───────────────── */}
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-24 gap-3">
-              <Loader2 className="h-8 w-8 animate-spin text-white" />
-              <p className="font-mono text-xs text-neutral-400">Connecting to curriculum database...</p>
+              <Loader2 className="h-7 w-7 animate-spin text-white" />
+              <p className="font-mono text-xs text-neutral-400">Loading curriculum projects...</p>
             </div>
           ) : loadError && projects.length === 0 ? (
             <div className="mx-auto my-8 max-w-lg rounded-2xl border border-rose-900/40 bg-[#0A0A0E] p-7 text-center shadow-2xl">
-              <div className="mx-auto mb-3.5 flex h-12 w-12 items-center justify-center rounded-xl border border-rose-800/40 bg-rose-950/40 text-rose-400">
-                <AlertTriangle className="h-6 w-6" />
+              <div className="mx-auto mb-3.5 flex h-11 w-11 items-center justify-center rounded-xl border border-rose-800/40 bg-rose-950/40 text-rose-400">
+                <AlertTriangle className="h-5 w-5" />
               </div>
-              <h2 className="font-sans text-lg font-bold text-white mb-1.5">
-                Database Offline or Unreachable
-              </h2>
-              <p className="text-xs text-neutral-400 leading-relaxed mb-5">
-                {loadError}
-              </p>
+              <h3 className="font-sans text-sm font-bold text-white mb-1.5">
+                Curriculum Service Offline
+              </h3>
+              <p className="text-xs text-neutral-400 mb-4 leading-relaxed">{loadError}</p>
               <button
                 type="button"
-                onClick={retryProjects}
-                className="btn-primary text-xs cursor-pointer"
+                onClick={loadProjects}
+                className="btn-primary inline-flex items-center gap-1.5 text-xs"
               >
-                <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                <RefreshCw className="h-3.5 w-3.5" />
                 <span>Retry Connection</span>
               </button>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="py-16 text-center rounded-2xl border border-dashed border-white/10 bg-[#0A0A0E]/60">
-              <p className="mb-2 text-sm text-neutral-400">
-                No blueprints matched your criteria.
+            <div className="rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-12 text-center shadow-xl">
+              <p className="font-sans text-sm font-semibold text-white mb-1">
+                No projects matched your criteria.
+              </p>
+              <p className="text-xs text-neutral-400 mb-4">
+                Try clearing your track or level filters to view all projects.
               </p>
               <button
                 type="button"
-                onClick={clearFilters}
-                className="cursor-pointer text-xs font-semibold text-white underline underline-offset-2"
+                onClick={() => {
+                  setSelectedTrack(null);
+                  setSelectedLevel(null);
+                  setSearch("");
+                }}
+                className="btn-secondary text-xs"
               >
-                Clear all filters
+                Clear All Filters
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
               {filtered.map((project) => (
                 <ProjectCard key={project.id} project={project} />
               ))}

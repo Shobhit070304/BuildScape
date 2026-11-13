@@ -10,9 +10,16 @@ import { cacheAside, invalidateProjectCache, projectCacheKeys } from "./cache.se
 
 // Project browsing, enrollment, and progress use cases.
 export const projectsService = {
-  list: () => cacheAside(projectCacheKeys.list, async () =>
-    (await projectRepository.list()).map((project) => project.toObject())
-  ),
+  list: () => cacheAside(projectCacheKeys.list, async () => {
+    const [projects, countsMap] = await Promise.all([
+      projectRepository.list(),
+      progressRepository.getEnrollmentCountsByProject(),
+    ]);
+    return projects.map((project) => ({
+      ...project.toObject(),
+      learnerCount: countsMap.get(project._id.toString()) || 0,
+    }));
+  }),
 
   async getBySlug(slug: string) {
     return cacheAside(projectCacheKeys.detail(slug), async () => {

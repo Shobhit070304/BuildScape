@@ -61,7 +61,7 @@ export function WorkspaceEnrollmentGuard({
     return (
       <div className="flex h-screen w-screen flex-col items-center justify-center bg-[#0F172A] text-slate-300">
         <Loader2 className="h-7 w-7 animate-spin text-indigo-500 mb-3" />
-        <p className="text-xs font-mono text-slate-400">Verifying blueprint enrollment state...</p>
+        <p className="text-xs font-mono text-slate-400">Verifying project enrollment state...</p>
       </div>
     );
   }

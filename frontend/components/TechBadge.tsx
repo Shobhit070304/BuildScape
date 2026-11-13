@@ -177,6 +177,49 @@ function FastApiIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
   );
 }
 
+function CplusplusIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 128 128" fill="none">
+      <path d="M117.5 39.5L67.5 10.7a7 7 0 0 0-7 0L10.5 39.5a7 7 0 0 0-3.5 6.1v57.6a7 7 0 0 0 3.5 6.1l50 28.8a7 7 0 0 0 7 0l50-28.8a7 7 0 0 0 3.5-6.1V45.6a7 7 0 0 0-3.5-6.1z" fill="#00599C" />
+      <path d="M64 24.5l42 24.2v48.5L64 121.5l-42-24.2V48.7L64 24.5z" fill="#004482" />
+      <path d="M57.5 48.5c-9.7 0-17.5 7.8-17.5 17.5s7.8 17.5 17.5 17.5c7.2 0 13.5-4.4 16.1-10.7h-9.5a7.5 7.5 0 1 1 0-13.6h9.5c-2.6-6.3-8.9-10.7-16.1-10.7zM78.5 62h4v-4h4v4h4v4h-4v4h-4v-4h-4v-4zm18 0h4v-4h4v4h4v4h-4v4h-4v-4h-4v-4z" fill="#FFFFFF" />
+    </svg>
+  );
+}
+
+function JavaIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="#EA2D2E">
+      <path d="M8.85 16.84c0 .03-.02.04-.02.06 1.76.43 3.69.45 5.51.02.02-.02.03-.03.03-.06-.88-.47-2.66-.86-5.52-.02zm.12 1.94c0 .03-.03.04-.03.06 2.05.5 4.3.51 6.42.02.02-.02.04-.03.04-.06-1.03-.54-3.1-.98-6.43-.02zm-1.84 2.21c0 .04-.03.05-.03.07 2.68.64 5.62.66 8.38.03.03-.03.05-.04.05-.07-1.34-.7-4.04-1.27-8.4-.03zm12.55-5.91c-.88-.67-2.6-1.25-4.41-1.25-.37 0-.74.02-1.1.07.69-.94 1.15-2.09 1.15-3.37 0-2.8-1.92-5.11-4.48-5.53-.16 1.09-.8 2.09-1.8 2.63-.59.32-1.28.47-1.99.47-.39 0-.78-.05-1.16-.14-.52 1.3-.43 2.78.29 4.02-2.14.39-3.92 1.34-4.8 2.58-.29.41-.44.86-.44 1.33 0 1.93 2.45 3.39 6.27 3.82-.48.4-.78.96-.78 1.6 0 .54.21 1.02.57 1.4-3.23-.42-5.46-1.74-5.46-3.29 0-.49.23-.95.66-1.37.52-.51 1.28-.94 2.22-1.29-.63-.94-.85-2.09-.56-3.22.44-1.75 1.79-3.08 3.51-3.46.22-.75.69-1.4 1.35-1.85 1.3-.88 2.94-.97 4.31-.22.39-1.18 1.3-2.14 2.49-2.58.55-.2 1.14-.28 1.72-.23-1.07.97-1.49 2.44-1.03 3.82.52 1.55 1.94 2.64 3.59 2.76-.05.69-.3 1.34-.73 1.87 1.75.24 3.19.86 3.84 1.62.29.34.4.73.32 1.11-.08.38-.34.72-.75.98z" />
+    </svg>
+  );
+}
+
+function NodeIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="#339933">
+      <path d="M12 2l10 5.8v11.6L12 23.2l-10-5.8V7.8L12 2zm0 2.3L4.1 8.9v9.2L12 20.7l7.9-4.6V8.9L12 4.3z" />
+      <path d="M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9z" fill="#68A063" />
+    </svg>
+  );
+}
+
+function WebDevIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="#E34F26">
+      <path d="M2.5 2l1.7 19.1L12 23.5l7.8-2.4L21.5 2H2.5zm15.6 5.3l-.2 2.2H8.3l.2 2.3h7.1l-.5 5.5-3.1.9-3.1-.9-.2-2.3H6.6l.4 4.3 5 1.4 5-1.4.8-8.7H6.2l-.2-2.3h12.1z" />
+    </svg>
+  );
+}
+
+function MachineLearningIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="#A855F7">
+      <path d="M12 2a1 1 0 0 1 1 1v1.05a7.002 7.002 0 0 1 5.95 5.95H20a1 1 0 1 1 0 2h-1.05a7.002 7.002 0 0 1-5.95 5.95V19a1 1 0 1 1-2 0v-1.05a7.002 7.002 0 0 1-5.95-5.95H4a1 1 0 1 1 0-2h1.05a7.002 7.002 0 0 1 5.95-5.95V3a1 1 0 0 1 1-1zm0 4a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6z" />
+    </svg>
+  );
+}
+
 function DefaultCodeIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -197,11 +240,13 @@ const BRAND_MAP: Record<
   // Frontend
   React: { icon: ReactIcon, pillClass: "border-sky-500/30 bg-sky-950/30 text-sky-200" },
   "React 19": { icon: ReactIcon, pillClass: "border-sky-500/30 bg-sky-950/30 text-sky-200" },
+  "React & Node.js": { icon: ReactIcon, pillClass: "border-sky-500/30 bg-sky-950/30 text-sky-200" },
   "Next.js": { icon: NextjsIcon, pillClass: "border-slate-700 bg-slate-900/60 text-slate-200" },
   "Next.js & TypeScript": { icon: NextjsIcon, pillClass: "border-sky-500/30 bg-sky-950/30 text-sky-200" },
   TypeScript: { icon: TypeScriptIcon, pillClass: "border-blue-500/30 bg-blue-950/30 text-blue-200" },
   "Tailwind CSS": { icon: TailwindIcon, pillClass: "border-cyan-500/30 bg-cyan-950/30 text-cyan-200" },
   "Tailwind v4": { icon: TailwindIcon, pillClass: "border-cyan-500/30 bg-cyan-950/30 text-cyan-200" },
+  "Web Development": { icon: WebDevIcon, pillClass: "border-orange-500/30 bg-orange-950/30 text-orange-200" },
 
   // Backend & Systems
   Go: { icon: GoIcon, pillClass: "border-cyan-500/30 bg-cyan-950/30 text-cyan-200" },
@@ -210,10 +255,15 @@ const BRAND_MAP: Record<
   "Python & FastAPI": { icon: PythonIcon, pillClass: "border-teal-500/30 bg-teal-950/30 text-teal-200" },
   FastAPI: { icon: FastApiIcon, pillClass: "border-teal-500/30 bg-teal-950/30 text-teal-200" },
   Rust: { icon: RustIcon, pillClass: "border-orange-500/30 bg-orange-950/30 text-orange-200" },
+  "C++": { icon: CplusplusIcon, pillClass: "border-blue-500/30 bg-blue-950/30 text-blue-200" },
+  "C Language": { icon: CplusplusIcon, pillClass: "border-blue-500/30 bg-blue-950/30 text-blue-200" },
+  Java: { icon: JavaIcon, pillClass: "border-red-500/30 bg-red-950/30 text-red-200" },
   "Spring Boot": { icon: SpringBootIcon, pillClass: "border-emerald-500/30 bg-emerald-950/30 text-emerald-200" },
   "Spring Boot 3.5": { icon: SpringBootIcon, pillClass: "border-emerald-500/30 bg-emerald-950/30 text-emerald-200" },
   "Full-Stack SpringBoot": { icon: SpringBootIcon, pillClass: "border-emerald-500/30 bg-emerald-950/30 text-emerald-200" },
-  "Node.js": { icon: DefaultCodeIcon, pillClass: "border-emerald-500/30 bg-emerald-950/30 text-emerald-200" },
+  "Node.js": { icon: NodeIcon, pillClass: "border-emerald-500/30 bg-emerald-950/30 text-emerald-200" },
+  "Machine Learning": { icon: MachineLearningIcon, pillClass: "border-purple-500/30 bg-purple-950/30 text-purple-200" },
+  AI: { icon: MachineLearningIcon, pillClass: "border-purple-500/30 bg-purple-950/30 text-purple-200" },
 
   // Infrastructure & Data
   Docker: { icon: DockerIcon, pillClass: "border-blue-500/30 bg-blue-950/30 text-blue-200" },
@@ -221,6 +271,42 @@ const BRAND_MAP: Record<
   pgx: { icon: PostgresIcon, pillClass: "border-indigo-500/30 bg-indigo-950/30 text-indigo-200" },
   Redis: { icon: RedisIcon, pillClass: "border-rose-500/30 bg-rose-950/30 text-rose-200" },
 };
+
+export function TechIcon({ name, className = "h-3.5 w-3.5" }: { name: string; className?: string }) {
+  const match = BRAND_MAP[name];
+  if (match) {
+    const Component = match.icon;
+    return <Component className={className} />;
+  }
+  const lower = name.toLowerCase();
+  if (lower.includes("python")) return <PythonIcon className={className} />;
+  if (lower.includes("spring") || lower.includes("java")) return <SpringBootIcon className={className} />;
+  if (lower.includes("react")) return <ReactIcon className={className} />;
+  if (lower.includes("go")) return <GoIcon className={className} />;
+  if (lower.includes("rust")) return <RustIcon className={className} />;
+  if (lower.includes("c++") || lower.includes("c lang")) return <CplusplusIcon className={className} />;
+  if (lower.includes("web") || lower.includes("html") || lower.includes("frontend")) return <WebDevIcon className={className} />;
+  if (lower.includes("machine") || lower.includes("ml") || lower.includes("ai")) return <MachineLearningIcon className={className} />;
+  if (lower.includes("node")) return <NodeIcon className={className} />;
+  return <DefaultCodeIcon className={className} />;
+}
+
+export function getTrackOrTechIcon(name: string): React.ComponentType<{ className?: string }> {
+  const match = BRAND_MAP[name];
+  if (match) return match.icon;
+  // fuzzy match
+  const lower = name.toLowerCase();
+  if (lower.includes("python")) return PythonIcon;
+  if (lower.includes("spring") || lower.includes("java")) return SpringBootIcon;
+  if (lower.includes("react")) return ReactIcon;
+  if (lower.includes("go")) return GoIcon;
+  if (lower.includes("rust")) return RustIcon;
+  if (lower.includes("c++") || lower.includes("c lang")) return CplusplusIcon;
+  if (lower.includes("web") || lower.includes("html") || lower.includes("frontend")) return WebDevIcon;
+  if (lower.includes("machine") || lower.includes("ml") || lower.includes("ai")) return MachineLearningIcon;
+  if (lower.includes("node")) return NodeIcon;
+  return DefaultCodeIcon;
+}
 
 export function TechBadge({
   name,

@@ -3,7 +3,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 
 export function CtaSection() {
   return (
-    <section className="mb-20 sm:mb-28 lg:mb-32">
+    <section className="py-20 sm:py-24">
       <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0A0A0E] px-6 py-14 text-center sm:px-12 sm:py-20 shadow-2xl shadow-black/80 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]">
         {/* Ambient white spotlight */}
         <div
@@ -32,7 +32,7 @@ export function CtaSection() {
 
           <div className="flex flex-wrap justify-center items-center gap-3.5">
             <Link href="/projects" className="btn-primary px-7! py-3.5! text-sm!">
-              <span>Explore All Blueprints</span>
+              <span>Explore All Projects</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link

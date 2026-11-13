@@ -69,7 +69,7 @@ export function ProjectEnrollmentBox({ project, progress }: ProjectEnrollmentBox
           BUILD TRACKER
         </span>
         <h3 className="font-sans text-lg font-bold text-white mt-0.5">
-          {effectivelyEnrolled ? "Your Blueprint Progress" : "Start This Blueprint"}
+          {effectivelyEnrolled ? "Your Project Progress" : "Start This Project"}
         </h3>
         <p className="text-xs text-neutral-400 mt-1 leading-relaxed">
           {effectivelyEnrolled
@@ -98,7 +98,7 @@ export function ProjectEnrollmentBox({ project, progress }: ProjectEnrollmentBox
       {!hydrated ? (
         <div className="flex items-center justify-center py-6 text-neutral-400 gap-2">
           <Loader2 className="h-4 w-4 animate-spin text-white" />
-          <span className="text-xs font-mono">Syncing blueprint state...</span>
+          <span className="text-xs font-mono">Syncing project state...</span>
         </div>
       ) : !user ? (
         /* Sign-in prompt */
@@ -173,7 +173,7 @@ export function ProjectEnrollmentBox({ project, progress }: ProjectEnrollmentBox
             {loadingEnrollment ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin text-black" />
-                <span>Enrolling in Blueprint...</span>
+                <span>Enrolling in Project...</span>
               </>
             ) : (
               <>
@@ -190,7 +190,7 @@ export function ProjectEnrollmentBox({ project, progress }: ProjectEnrollmentBox
         <p className="mt-2 text-center text-xs text-rose-400">{actionError}</p>
       )}
 
-      {/* Blueprint Info Specs */}
+      {/* Project Info Specs */}
       <div className="mt-5 border-t border-white/[0.08] pt-4 space-y-2.5 text-xs text-neutral-400">
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-1.5 text-neutral-400">
@@ -213,6 +213,19 @@ export function ProjectEnrollmentBox({ project, progress }: ProjectEnrollmentBox
           </span>
           <span className="font-mono text-neutral-200 font-medium">{project.difficulty} Level</span>
         </div>
+      </div>
+
+      {/* Enrolled Developers Social Proof */}
+      <div className="mt-4 border-t border-white/[0.06] pt-3 text-center">
+        <p className="font-mono text-[11px] text-neutral-400">
+          {project.learnerCount && project.learnerCount > 0 ? (
+            <>
+              Join <span className="font-semibold text-white">{project.learnerCount.toLocaleString()}</span> developers building this project
+            </>
+          ) : (
+            <span>Be among the first developers to build this project.</span>
+          )}
+        </p>
       </div>
     </div>
   );

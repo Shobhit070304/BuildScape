@@ -1,5 +1,10 @@
 import { asyncHandler } from "../middleware/asyncHandler";
-import { getUserProfile, loginWithGoogle, updateUsername } from "../services/auth.service";
+import {
+  getUserProfile,
+  loginWithGoogle,
+  updateUsername,
+  updateUserProfile,
+} from "../services/auth.service";
 import { HttpError } from "../services/httpError";
 
 // Handle authentication request validation and response formatting.
@@ -43,6 +48,13 @@ export const getMe = asyncHandler(async (req, res) => {
       name: user.name,
       username: user.username,
       avatar: user.avatar,
+      bio: user.bio ?? "",
+      location: user.location ?? "",
+      githubUrl: user.githubUrl ?? "",
+      twitterUrl: user.twitterUrl ?? "",
+      portfolioUrl: user.portfolioUrl ?? "",
+      linkedinUrl: user.linkedinUrl ?? "",
+      skills: user.skills ?? [],
       role: user.role,
     },
   });
@@ -51,4 +63,24 @@ export const getMe = asyncHandler(async (req, res) => {
 export const changeUsername = asyncHandler(async (req, res) => {
   const user = await updateUsername(req.user!.userId, req.body?.username);
   res.json({ username: user.username });
+});
+
+export const editProfile = asyncHandler(async (req, res) => {
+  const user = await updateUserProfile(req.user!.userId, req.body ?? {});
+  res.json({
+    user: {
+      id: user._id.toString(),
+      name: user.name,
+      username: user.username,
+      avatar: user.avatar,
+      bio: user.bio ?? "",
+      location: user.location ?? "",
+      githubUrl: user.githubUrl ?? "",
+      twitterUrl: user.twitterUrl ?? "",
+      portfolioUrl: user.portfolioUrl ?? "",
+      linkedinUrl: user.linkedinUrl ?? "",
+      skills: user.skills ?? [],
+      role: user.role,
+    },
+  });
 });

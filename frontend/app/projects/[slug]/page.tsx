@@ -24,12 +24,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         .join(" ");
       return {
         title: `${formattedTitle} — BuildScape`,
-        description: `Hands-on software engineering project blueprint on BuildScape.`,
+        description: `Hands-on software engineering project on BuildScape.`,
       };
     }
 
-    const title = `${project.title} — ${project.track} Blueprint`;
-    const description = `${project.tagline} Step-by-step ${project.difficulty.toLowerCase()}-level blueprint (${project.estimatedHours}h) with phase architecture and source code guidance.`;
+    const title = `${project.title} — ${project.track} Project`;
+    const description = `${project.tagline} Step-by-step ${project.difficulty.toLowerCase()}-level project (${project.estimatedHours}h) with phase architecture and source code guidance.`;
 
     return {
       title,
@@ -37,16 +37,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       keywords: [
         ...project.techStack,
         project.track,
-        `${project.title} tutorial`,
+        `${project.title} project`,
         "system design project",
-        "hands-on architecture blueprint",
+        "hands-on architecture project",
         "learn by doing",
       ],
       alternates: {
         canonical: `/projects/${project.slug}`,
       },
       openGraph: {
-        title: `${project.title} | BuildScape Blueprint`,
+        title: `${project.title} | BuildScape Project`,
         description,
         url: `${siteUrl}/projects/${project.slug}`,
         type: "article",

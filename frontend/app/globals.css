@@ -66,6 +66,98 @@
   background-clip: text;
 }
 
+.gradient-text-violet {
+  background: linear-gradient(135deg, #FFFFFF 0%, #E0E7FF 45%, #A5B4FC 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Smooth Atmosphere & Floating Animations ────────────────────── */
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.75;
+    transform: translate(-50%, 0) scale(1);
+  }
+  50% {
+    opacity: 0.98;
+    transform: translate(-50%, 0) scale(1.06);
+  }
+}
+
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes shimmerGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulseGlow 9s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: floatGentle 6s ease-in-out infinite;
+}
+
+/* ─── Ambient Grid & Atmosphere Utilities ────────────────────────── */
+.bg-dot-grid {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.gradient-mesh-hero {
+  background: 
+    radial-gradient(circle at 20% 15%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 80% 25%, rgba(139, 92, 246, 0.10) 0%, transparent 45%),
+    radial-gradient(circle at 50% 65%, rgba(59, 130, 246, 0.08) 0%, transparent 55%);
+}
+
+.gradient-mesh-section {
+  background: 
+    radial-gradient(circle at 10% 40%, rgba(99, 102, 241, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 90% 60%, rgba(168, 85, 247, 0.08) 0%, transparent 45%);
+}
+
+.animate-shimmer {
+  background-size: 200% 200%;
+  animation: shimmerGradient 6s ease infinite;
+}
+
+/* ─── Continuous Marquee Animation (Pauses on Hover) ──────────────── */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 32s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
 /* Eyebrow pill — Sleek monochrome with subtle micro-glow */
 .pill-indigo,
 .pill-amber,

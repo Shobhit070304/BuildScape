@@ -3,13 +3,36 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ArrowDown, ArrowLeft, ArrowUp, Eye, Loader2, Plus, Save, Trash2 } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowUp,
+  Eye,
+  Loader2,
+  Plus,
+  Trash2,
+  Users,
+  MessageSquare,
+  Layers,
+  Flag,
+  ShieldCheck,
+  ShieldAlert,
+  Search,
+  ExternalLink,
+  BarChart3,
+} from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
-import { api } from "@/lib/api";
-import type { ApiProject, ProjectPayload } from "@/lib/api";
+import {
+  api,
+  type ApiProject,
+  type ProjectPayload,
+  type AdminUserItem,
+  type AdminDiscussionItem,
+} from "@/lib/api";
 import { normalizeDifficulty } from "@/lib/projects";
 
 type ProjectDraft = ProjectPayload;
@@ -53,6 +76,19 @@ function asDraft(project: ApiProject): ProjectDraft {
 
 export default function AdminPage() {
   const { user, isLoading: authLoading } = useAuth();
+  const [activeTab, setActiveTab] = useState<"overview" | "projects" | "discussions" | "users">("overview");
+
+  // Overview Stats
+  const [stats, setStats] = useState<{
+    totalUsers: number;
+    totalEnrollments: number;
+    totalProjects: number;
+    totalDiscussions: number;
+    openIssuesCount: number;
+  } | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
+
+  // Projects State
   const [projects, setProjects] = useState<ApiProject[]>([]);
   const [draft, setDraft] = useState<ProjectDraft>(emptyProject);
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
@@ -62,6 +98,29 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [previewPhase, setPreviewPhase] = useState<number | null>(null);
+
+  // Discussions Moderation State
+  const [adminDiscussions, setAdminDiscussions] = useState<AdminDiscussionItem[]>([]);
+  const [loadingDiscussions, setLoadingDiscussions] = useState(false);
+  const [discussionSearch, setDiscussionSearch] = useState("");
+
+  // Users Management State
+  const [adminUsers, setAdminUsers] = useState<AdminUserItem[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [userSearch, setUserSearch] = useState("");
+  const [togglingRole, setTogglingRole] = useState<string | null>(null);
+
+  const loadOverview = useCallback(async () => {
+    setLoadingStats(true);
+    try {
+      const res = await api.getAdminOverview();
+      setStats(res.stats);
+    } catch (err) {
+      console.error("Failed to load admin stats:", err);
+    } finally {
+      setLoadingStats(false);
+    }
+  }, []);
 
   const loadProjects = useCallback(async () => {
     setLoadingProjects(true);
@@ -75,13 +134,49 @@ export default function AdminPage() {
     }
   }, []);
 
-  useEffect(() => {
-    // Load protected curriculum after the session role has been restored.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!authLoading && user?.role === "admin") void loadProjects();
-  }, [authLoading, user, loadProjects]);
+  const loadDiscussions = useCallback(async () => {
+    setLoadingDiscussions(true);
+    try {
+      const res = await api.getAdminDiscussions({ q: discussionSearch || undefined });
+      setAdminDiscussions(res.discussions);
+    } catch (err) {
+      console.error("Failed to load admin discussions:", err);
+    } finally {
+      setLoadingDiscussions(false);
+    }
+  }, [discussionSearch]);
 
-  const heading = useMemo(() => editingSlug ? "Edit project" : "Create project", [editingSlug]);
+  const loadUsers = useCallback(async () => {
+    setLoadingUsers(true);
+    try {
+      const res = await api.getAdminUsers({ q: userSearch || undefined });
+      setAdminUsers(res.users);
+    } catch (err) {
+      console.error("Failed to load admin users:", err);
+    } finally {
+      setLoadingUsers(false);
+    }
+  }, [userSearch]);
+
+  useEffect(() => {
+    if (!authLoading && user?.role === "admin") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      void loadOverview();
+      void loadProjects();
+    }
+  }, [authLoading, user, loadOverview, loadProjects]);
+
+  useEffect(() => {
+    if (activeTab === "discussions") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      void loadDiscussions();
+    }
+    if (activeTab === "users") {
+      void loadUsers();
+    }
+  }, [activeTab, loadDiscussions, loadUsers]);
+
+  const heading = useMemo(() => (editingSlug ? "Edit project" : "Create project"), [editingSlug]);
 
   const startNew = () => {
     setEditingSlug(null);
@@ -118,73 +213,91 @@ export default function AdminPage() {
     if (newIndex < 0 || newIndex >= draft.phases.length) return;
     setDraft((current) => {
       const nextPhases = [...current.phases];
-      const temp = nextPhases[index];
-      nextPhases[index] = nextPhases[newIndex];
-      nextPhases[newIndex] = temp;
+      const [item] = nextPhases.splice(index, 1);
+      nextPhases.splice(newIndex, 0, item);
       return {
         ...current,
-        phases: nextPhases.map((item, idx) => ({ ...item, orderIndex: idx + 1 })),
+        phases: nextPhases.map((phase, phaseIndex) => ({
+          ...phase,
+          orderIndex: phaseIndex + 1,
+        })),
       };
-    });
-    setPreviewPhase((currentPreview) => {
-      if (currentPreview === index) return newIndex;
-      if (currentPreview === newIndex) return index;
-      return currentPreview;
     });
   };
 
-  const handleSave = async (event: FormEvent<HTMLFormElement>) => {
+  const addPhase = () => {
+    setDraft((current) => ({
+      ...current,
+      phases: [
+        ...current.phases,
+        {
+          id: `phase-${current.phases.length + 1}`,
+          orderIndex: current.phases.length + 1,
+          title: "",
+          content: "",
+        },
+      ],
+    }));
+  };
+
+  const removePhase = (index: number) => {
+    setDraft((current) => ({
+      ...current,
+      phases: current.phases
+        .filter((_, phaseIndex) => phaseIndex !== index)
+        .map((phase, phaseIndex) => ({ ...phase, orderIndex: phaseIndex + 1 })),
+    }));
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaving(true);
     setError(null);
     setMessage(null);
 
-    const payload: ProjectDraft = {
+    const payload: ProjectPayload = {
       ...draft,
-      slug: draft.slug.trim().toLowerCase(),
+      slug: draft.slug.trim(),
       title: draft.title.trim(),
       tagline: draft.tagline.trim(),
-      description: draft.description?.trim() || "",
+      description: (draft.description ?? "").trim(),
       track: draft.track.trim(),
       estimatedHours: Number(draft.estimatedHours),
-      techStack: Array.isArray(draft.techStack) ? draft.techStack : splitList(String(draft.techStack)),
-      whatYouWillLearn: Array.isArray(draft.whatYouWillLearn)
-        ? draft.whatYouWillLearn
-        : splitList(String(draft.whatYouWillLearn)),
-      phases: draft.phases.map((phase, index) => ({ ...phase, orderIndex: index + 1 })),
+      phases: draft.phases.map((phase, index) => ({
+        id: phase.id.trim(),
+        orderIndex: index + 1,
+        title: phase.title.trim(),
+        content: phase.content.trim(),
+      })),
     };
 
     try {
       if (editingSlug) {
         await api.updateProject(editingSlug, payload);
-        setMessage("Project updated.");
+        setMessage("Project updated successfully");
       } else {
         await api.createProject(payload);
-        setMessage("Project created.");
+        setMessage("Project published successfully");
       }
-      setEditingSlug(payload.slug);
       await loadProjects();
+      await loadOverview();
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Could not save project");
+      setError(saveError instanceof Error ? saveError.message : "Failed to save project");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (!editingSlug) return;
-    const confirmed = window.confirm(
-      `Delete “${draft.title}” and permanently remove its enrollments, progress, personal notes, and curriculum reports? This cannot be undone.`
-    );
-    if (!confirmed) return;
-
+  const handleDeleteProject = async (slug: string) => {
+    if (!window.confirm(`Are you sure you want to delete project "${slug}"?`)) return;
     setDeleting(true);
     setError(null);
     try {
-      await api.deleteProject(editingSlug);
-      startNew();
-      setMessage("Project and related learner data deleted.");
+      await api.deleteProject(slug);
+      setMessage("Project deleted successfully");
+      if (editingSlug === slug) startNew();
       await loadProjects();
+      await loadOverview();
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : "Could not delete project");
     } finally {
@@ -192,227 +305,703 @@ export default function AdminPage() {
     }
   };
 
+  const handleDeleteDiscussion = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this discussion thread as admin?")) return;
+    try {
+      await api.deleteAdminDiscussion(id);
+      setAdminDiscussions((prev) => prev.filter((d) => d.id !== id));
+      await loadOverview();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to delete discussion");
+    }
+  };
+
+  const handleToggleUserRole = async (targetUserId: string, currentRole: "user" | "admin") => {
+    const nextRole = currentRole === "admin" ? "user" : "admin";
+    if (!window.confirm(`Change this user's role to ${nextRole.toUpperCase()}?`)) return;
+    setTogglingRole(targetUserId);
+    try {
+      await api.toggleAdminUserRole(targetUserId, nextRole);
+      setAdminUsers((prev) =>
+        prev.map((u) => (u.id === targetUserId ? { ...u, role: nextRole } : u))
+      );
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to update role");
+    } finally {
+      setTogglingRole(null);
+    }
+  };
+
   if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#050507]">
-        <Loader2 className="h-6 w-6 animate-spin text-white" />
+      <div className="min-h-screen bg-[#050507] text-white">
+        <Navbar />
+        <div className="flex flex-col items-center justify-center py-32 text-neutral-400">
+          <Loader2 className="h-6 w-6 animate-spin text-white mb-2" />
+          <p className="text-xs">Authenticating admin session...</p>
+        </div>
       </div>
     );
   }
 
-  if (!user || user.role !== "admin") {
+  if (user?.role !== "admin") {
     return (
-      <>
+      <div className="min-h-screen bg-[#050507] text-white">
         <Navbar />
-        <main className="mx-auto max-w-xl px-5 py-20 text-center min-h-[80vh] flex flex-col items-center justify-center bg-[#050507]">
-          <h1 className="font-serif text-2xl font-bold text-white">Admin access required</h1>
-          <p className="mt-2 text-sm text-neutral-400">Sign in with the account configured in `ADMIN_EMAIL` to manage curriculum.</p>
-          <Link href="/profile" className="mt-5 inline-flex items-center gap-2 text-sm text-neutral-300 hover:text-white"><ArrowLeft className="h-4 w-4" />Back to profile</Link>
-        </main>
-      </>
+        <div className="mx-auto max-w-md py-24 text-center">
+          <ShieldAlert className="mx-auto h-12 w-12 text-rose-500 mb-3" />
+          <h1 className="text-xl font-bold">Admin Privileges Required</h1>
+          <p className="mt-2 text-xs text-neutral-400">
+            You do not have administrative authorization to access the BuildScape control plane.
+          </p>
+          <Link
+            href="/projects"
+            className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/20"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Return to Projects</span>
+          </Link>
+        </div>
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-[#050507] text-white pb-24">
       <Navbar />
-      <main className="min-h-screen bg-[#050507] px-4 py-8 text-neutral-100 sm:px-6">
-        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-          <aside className="h-fit rounded-xl border border-white/[0.08] bg-[#0A0A0E] p-4 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-neutral-400 font-mono">Curriculum</p>
-                <h1 className="font-serif text-lg font-bold text-white">Projects</h1>
-              </div>
-              <button
-                onClick={startNew}
-                className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-black hover:bg-neutral-200 shadow-sm cursor-pointer"
-              >
-                <Plus className="h-3.5 w-3.5" />New
-              </button>
+
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Top Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/[0.08] pb-6">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-neutral-300 backdrop-blur-sm mb-2.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+              <span>Admin Control Plane</span>
             </div>
-            {loadingProjects ? (
-              <Loader2 className="mx-auto my-8 h-5 w-5 animate-spin text-white" />
-            ) : (
-              <div className="max-h-[70vh] space-y-1 overflow-y-auto">
-                {projects.map((project) => (
-                  <button
-                    key={project.slug}
-                    onClick={() => void editProject(project.slug)}
-                    className={`w-full rounded-lg px-3 py-2 text-left cursor-pointer transition-colors ${
-                      editingSlug === project.slug
-                        ? "border border-white/20 bg-white/[0.07] text-white"
-                        : "hover:bg-white/[0.04] text-neutral-400 hover:text-neutral-200"
-                    }`}
-                  >
-                    <span className="block text-xs font-medium">{project.title}</span>
-                    <span className="mt-0.5 block truncate font-mono text-[10px] text-neutral-500">{project.slug}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </aside>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+              Platform Administration
+            </h1>
+            <p className="mt-1 text-xs text-neutral-400">
+              Manage curriculum projects, review user progress, moderate community discussions, and inspect issues.
+            </p>
+          </div>
 
-          <section className="rounded-xl border border-white/[0.08] bg-[#0A0A0E] p-4 sm:p-6 shadow-sm">
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-neutral-400 font-mono">Admin editor</p>
-                <h2 className="font-serif text-xl font-bold text-white">{heading}</h2>
-              </div>
-              <div className="flex items-center gap-4">
-                <Link href="/admin/issues" className="text-xs text-neutral-400 hover:text-white">Curriculum issue reports</Link>
-                {editingSlug && (
-                  <Link
-                    href={`/projects/${draft.slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-neutral-300 hover:text-white"
-                  >
-                    <Eye className="h-3.5 w-3.5" />Preview saved project
-                  </Link>
-                )}
+          <div className="flex items-center gap-2.5">
+            <Link
+              href="/admin/issues"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.05] px-3.5 py-2 text-xs font-medium text-neutral-200 hover:bg-white hover:text-black transition-colors"
+            >
+              <Flag className="h-3.5 w-3.5 text-amber-400" />
+              <span>Reported Issues</span>
+              {stats?.openIssuesCount ? (
+                <span className="rounded-full bg-amber-500/20 px-1.5 py-0.2 text-[10px] text-amber-300 font-bold">
+                  {stats.openIssuesCount}
+                </span>
+              ) : null}
+            </Link>
+          </div>
+        </div>
+
+        {/* Global Analytics Overview Cards */}
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <div className="rounded-xl border border-white/[0.08] bg-[#0A0A0E] p-4 text-center">
+            <span className="text-[10px] uppercase tracking-wider text-neutral-400 font-mono block">
+              Registered Users
+            </span>
+            <span className="text-xl sm:text-2xl font-bold font-mono text-white mt-1 block">
+              {stats?.totalUsers ?? (loadingStats ? "..." : 0)}
+            </span>
+          </div>
+
+          <div className="rounded-xl border border-white/[0.08] bg-[#0A0A0E] p-4 text-center">
+            <span className="text-[10px] uppercase tracking-wider text-neutral-400 font-mono block">
+              Active Enrollments
+            </span>
+            <span className="text-xl sm:text-2xl font-bold font-mono text-white mt-1 block">
+              {stats?.totalEnrollments ?? (loadingStats ? "..." : 0)}
+            </span>
+          </div>
+
+          <div className="rounded-xl border border-white/[0.08] bg-[#0A0A0E] p-4 text-center">
+            <span className="text-[10px] uppercase tracking-wider text-neutral-400 font-mono block">
+              Projects
+            </span>
+            <span className="text-xl sm:text-2xl font-bold font-mono text-white mt-1 block">
+              {stats?.totalProjects ?? projects.length}
+            </span>
+          </div>
+
+          <div className="rounded-xl border border-white/[0.08] bg-[#0A0A0E] p-4 text-center">
+            <span className="text-[10px] uppercase tracking-wider text-neutral-400 font-mono block">
+              Discussions
+            </span>
+            <span className="text-xl sm:text-2xl font-bold font-mono text-white mt-1 block">
+              {stats?.totalDiscussions ?? (loadingStats ? "..." : 0)}
+            </span>
+          </div>
+
+          <div className="rounded-xl border border-white/[0.08] bg-[#0A0A0E] p-4 text-center">
+            <span className="text-[10px] uppercase tracking-wider text-neutral-400 font-mono block">
+              Open Issues
+            </span>
+            <span className="text-xl sm:text-2xl font-bold font-mono text-amber-400 mt-1 block">
+              {stats?.openIssuesCount ?? (loadingStats ? "..." : 0)}
+            </span>
+          </div>
+        </div>
+
+        {/* Tab Switcher */}
+        <div className="mt-8 flex flex-wrap items-center gap-2 border-b border-white/[0.08] pb-3">
+          <button
+            type="button"
+            onClick={() => setActiveTab("overview")}
+            className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
+              activeTab === "overview"
+                ? "bg-white text-black font-semibold shadow-sm"
+                : "text-neutral-400 hover:text-white hover:bg-white/[0.04]"
+            }`}
+          >
+            <BarChart3 className="h-3.5 w-3.5" />
+            <span>Overview & Health</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("projects")}
+            className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
+              activeTab === "projects"
+                ? "bg-white text-black font-semibold shadow-sm"
+                : "text-neutral-400 hover:text-white hover:bg-white/[0.04]"
+            }`}
+          >
+            <Layers className="h-3.5 w-3.5" />
+            <span>Curriculum Projects ({projects.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("discussions")}
+            className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
+              activeTab === "discussions"
+                ? "bg-white text-black font-semibold shadow-sm"
+                : "text-neutral-400 hover:text-white hover:bg-white/[0.04]"
+            }`}
+          >
+            <MessageSquare className="h-3.5 w-3.5" />
+            <span>Discussions Moderation</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("users")}
+            className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
+              activeTab === "users"
+                ? "bg-white text-black font-semibold shadow-sm"
+                : "text-neutral-400 hover:text-white hover:bg-white/[0.04]"
+            }`}
+          >
+            <Users className="h-3.5 w-3.5" />
+            <span>User Accounts</span>
+          </button>
+        </div>
+
+        {/* ──────────────── TAB 1: OVERVIEW & HEALTH ──────────────── */}
+        {activeTab === "overview" && (
+          <div className="mt-6 space-y-6">
+            <div className="rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-6">
+              <h2 className="text-base font-semibold text-white mb-2">Quick Navigation Shortcuts</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                <button
+                  type="button"
+                  onClick={() => { setActiveTab("projects"); startNew(); }}
+                  className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-left hover:border-white/20 hover:bg-white/[0.05] transition-all cursor-pointer"
+                >
+                  <Plus className="h-5 w-5 text-indigo-400 mb-2" />
+                  <h3 className="text-xs font-semibold text-white">Create New Project</h3>
+                  <p className="text-[11px] text-neutral-400 mt-1">Author a new project curriculum with structured phases.</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("discussions")}
+                  className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-left hover:border-white/20 hover:bg-white/[0.05] transition-all cursor-pointer"
+                >
+                  <MessageSquare className="h-5 w-5 text-purple-400 mb-2" />
+                  <h3 className="text-xs font-semibold text-white">Moderate Community</h3>
+                  <p className="text-[11px] text-neutral-400 mt-1">Review live threads, solve issues, and remove spam.</p>
+                </button>
+
+                <Link
+                  href="/admin/issues"
+                  className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-left hover:border-white/20 hover:bg-white/[0.05] transition-all"
+                >
+                  <Flag className="h-5 w-5 text-amber-400 mb-2" />
+                  <h3 className="text-xs font-semibold text-white">Inspect Curriculum Issues</h3>
+                  <p className="text-[11px] text-neutral-400 mt-1">Review feedback on broken links or unclear code.</p>
+                </Link>
               </div>
             </div>
+          </div>
+        )}
 
-            {error && <p role="alert" className="mb-4 rounded-lg border border-red-900/50 bg-red-950/30 p-3 text-xs text-red-200">{error}</p>}
-            {message && <p role="status" className="mb-4 rounded-lg border border-emerald-900/50 bg-emerald-950/30 p-3 text-xs text-emerald-200">{message}</p>}
-
-            <form onSubmit={handleSave} className="space-y-5">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="space-y-1 text-xs text-neutral-300">Slug<input required maxLength={64} pattern="[a-z0-9]+(-[a-z0-9]+)*" value={draft.slug} onChange={(e) => setDraft({ ...draft, slug: e.target.value })} className="admin-input" placeholder="distributed-cache" /></label>
-                <label className="space-y-1 text-xs text-neutral-300">Title<input required maxLength={120} value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} className="admin-input" /></label>
-                <label className="space-y-1 text-xs text-neutral-300 sm:col-span-2">Tagline<input required maxLength={240} value={draft.tagline} onChange={(e) => setDraft({ ...draft, tagline: e.target.value })} className="admin-input" /></label>
-                <label className="space-y-1 text-xs text-neutral-300">Track<input required maxLength={80} value={draft.track} onChange={(e) => setDraft({ ...draft, track: e.target.value })} className="admin-input" placeholder="Backend Engineering" /></label>
-                <label className="space-y-1 text-xs text-neutral-300">Difficulty<select value={draft.difficulty} onChange={(e) => setDraft({ ...draft, difficulty: e.target.value })} className="admin-input"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></label>
-                <label className="space-y-1 text-xs text-neutral-300">Estimated hours<input required type="number" min={1} max={5000} value={draft.estimatedHours} onChange={(e) => setDraft({ ...draft, estimatedHours: Number(e.target.value) })} className="admin-input" /></label>
-                <label className="space-y-1 text-xs text-neutral-300">Technologies <span className="text-neutral-500">(comma or newline separated)</span><textarea required rows={2} value={Array.isArray(draft.techStack) ? draft.techStack.join(", ") : draft.techStack} onChange={(e) => setDraft({ ...draft, techStack: splitList(e.target.value) })} className="admin-input" /></label>
-                <label className="space-y-1 text-xs text-neutral-300">What learners will learn <span className="text-neutral-500">(one per line)</span><textarea rows={2} value={Array.isArray(draft.whatYouWillLearn) ? draft.whatYouWillLearn.join("\n") : draft.whatYouWillLearn} onChange={(e) => setDraft({ ...draft, whatYouWillLearn: splitList(e.target.value) })} className="admin-input" /></label>
-                <label className="space-y-1 text-xs text-neutral-300 sm:col-span-2">Description<textarea rows={4} maxLength={20000} value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} className="admin-input" /></label>
+        {/* ──────────────── TAB 2: PROJECTS & CURRICULUM ──────────────── */}
+        {activeTab === "projects" && (
+          <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-12">
+            {/* Sidebar list of projects */}
+            <aside className="lg:col-span-4 rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-4">
+              <div className="flex items-center justify-between pb-3 border-b border-white/[0.08] mb-3">
+                <span className="text-xs font-semibold text-white">Curriculum Projects</span>
+                <button
+                  type="button"
+                  onClick={startNew}
+                  className="inline-flex items-center gap-1 rounded bg-white px-2 py-1 text-[11px] font-semibold text-black hover:bg-neutral-200 cursor-pointer"
+                >
+                  <Plus className="h-3 w-3" />
+                  <span>New</span>
+                </button>
               </div>
 
-              <div className="space-y-3 border-t border-white/[0.08] pt-5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-serif text-lg font-semibold text-white">Phases</h3>
-                    <p className="text-[11px] text-neutral-400">Order follows the list; content supports Markdown.</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setDraft((current) => ({ ...current, phases: [...current.phases, { id: `phase-${current.phases.length + 1}`, orderIndex: current.phases.length + 1, title: "", content: "" }] }))}
-                    className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-neutral-300 hover:bg-white/[0.04] hover:text-white cursor-pointer"
-                  >
-                    <Plus className="h-3.5 w-3.5" />Add phase
-                  </button>
+              {loadingProjects ? (
+                <div className="flex justify-center py-10">
+                  <Loader2 className="h-5 w-5 animate-spin text-neutral-400" />
                 </div>
-                {draft.phases.map((phase, index) => (
-                  <div key={`${phase.id}-${index}`} className="rounded-lg border border-white/[0.08] bg-[#07070A] p-3 sm:p-4">
-                    <div className="mb-3 flex items-center justify-between">
-                      <span className="font-mono text-[11px] uppercase tracking-wider text-neutral-400">Phase {index + 1}</span>
-                      <div className="flex items-center gap-1.5">
+              ) : (
+                <div className="space-y-1.5 max-h-[600px] overflow-y-auto">
+                  {projects.map((p) => (
+                    <div
+                      key={p.slug}
+                      className={`flex items-center justify-between p-2.5 rounded-lg border transition-all ${
+                        editingSlug === p.slug
+                          ? "border-white/30 bg-white/[0.08]"
+                          : "border-transparent hover:border-white/10 hover:bg-white/[0.03]"
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => void editProject(p.slug)}
+                        className="text-left flex-1 min-w-0 cursor-pointer mr-2"
+                      >
+                        <h4 className="text-xs font-semibold text-white truncate">{p.title}</h4>
+                        <p className="text-[10px] text-neutral-400 font-mono truncate">{p.slug}</p>
+                      </button>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Link
+                          href={`/projects/${p.slug}`}
+                          target="_blank"
+                          className="p-1 text-neutral-400 hover:text-white"
+                          title="View live overview"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </Link>
                         <button
                           type="button"
-                          disabled={index === 0}
-                          onClick={() => movePhase(index, -1)}
-                          className="rounded p-1 text-neutral-400 hover:bg-white/[0.06] hover:text-white disabled:opacity-20 disabled:hover:bg-transparent"
-                          title="Move phase up"
-                          aria-label={`Move phase ${index + 1} up`}
+                          onClick={() => void handleDeleteProject(p.slug)}
+                          disabled={deleting}
+                          className="p-1 text-neutral-500 hover:text-red-400 cursor-pointer"
+                          title="Delete project"
                         >
-                          <ArrowUp className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          disabled={index === draft.phases.length - 1}
-                          onClick={() => movePhase(index, 1)}
-                          className="rounded p-1 text-neutral-400 hover:bg-white/[0.06] hover:text-white disabled:opacity-20 disabled:hover:bg-transparent"
-                          title="Move phase down"
-                          aria-label={`Move phase ${index + 1} down`}
-                        >
-                          <ArrowDown className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setPreviewPhase(previewPhase === index ? null : index)}
-                          className="inline-flex items-center gap-1 text-[11px] text-neutral-400 hover:text-white"
-                        >
-                          <Eye className="h-3 w-3" />{previewPhase === index ? "Edit content" : "Preview"}
-                        </button>
-                        <button
-                          type="button"
-                          disabled={draft.phases.length === 1}
-                          onClick={() => {
-                            setDraft((current) => ({
-                              ...current,
-                              phases: current.phases.filter((_, phaseIndex) => phaseIndex !== index).map((item, phaseIndex) => ({ ...item, orderIndex: phaseIndex + 1 }))
-                            }));
-                            setPreviewPhase(null);
-                          }}
-                          className="rounded p-1 text-rose-400 hover:bg-rose-950/40 disabled:opacity-30 cursor-pointer"
-                          aria-label={`Remove phase ${index + 1}`}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-3 w-3" />
                         </button>
                       </div>
                     </div>
-                    <div className="grid gap-3 sm:grid-cols-[180px_minmax(0,1fr)]">
-                      <label className="space-y-1 text-[11px] text-neutral-300">Phase ID<input required maxLength={64} pattern="[A-Za-z0-9]+(-[A-Za-z0-9]+)*" value={phase.id} onChange={(e) => updatePhase(index, { id: e.target.value })} className="admin-input" /></label>
-                      <label className="space-y-1 text-[11px] text-neutral-300">Title<input required maxLength={160} value={phase.title} onChange={(e) => updatePhase(index, { title: e.target.value })} className="admin-input" /></label>
-                    </div>
-                    {previewPhase === index ? (
-                      <article className="prose prose-invert mt-4 max-h-96 overflow-y-auto rounded-md border border-white/[0.08] bg-[#0A0A0E] p-4 text-sm">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{phase.content || "Nothing to preview yet."}</ReactMarkdown>
-                      </article>
-                    ) : (
-                      <label className="mt-3 block space-y-1 text-[11px] text-neutral-300">Markdown content<textarea required rows={12} maxLength={100000} value={phase.content} onChange={(e) => updatePhase(index, { content: e.target.value })} className="admin-input font-mono leading-relaxed" /></label>
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
+              )}
+            </aside>
+
+            {/* Project Edit / Create Form */}
+            <div className="lg:col-span-8 rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-6">
+              <div className="flex items-center justify-between pb-4 border-b border-white/[0.08] mb-5">
+                <h2 className="text-base font-semibold text-white">{heading}</h2>
+                {editingSlug && (
+                  <span className="text-xs font-mono text-neutral-400">Editing: {editingSlug}</span>
+                )}
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.08] pt-4">
+              {message && (
+                <div className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-950/30 p-3 text-xs text-emerald-300">
+                  {message}
+                </div>
+              )}
+              {error && (
+                <div className="mb-4 rounded-lg border border-red-500/30 bg-red-950/30 p-3 text-xs text-red-300">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-300 mb-1">Slug</label>
+                    <input
+                      type="text"
+                      value={draft.slug}
+                      onChange={(e) => setDraft({ ...draft, slug: e.target.value })}
+                      placeholder="e.g. real-time-collab"
+                      required
+                      className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-300 mb-1">Title</label>
+                    <input
+                      type="text"
+                      value={draft.title}
+                      onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+                      placeholder="e.g. Real-Time Collaboration Engine"
+                      required
+                      className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  {editingSlug && (
+                  <label className="block text-xs font-medium text-neutral-300 mb-1">Tagline</label>
+                  <input
+                    type="text"
+                    value={draft.tagline}
+                    onChange={(e) => setDraft({ ...draft, tagline: e.target.value })}
+                    placeholder="Short punchy summary"
+                    required
+                    className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-300 mb-1">Track</label>
+                    <input
+                      type="text"
+                      value={draft.track}
+                      onChange={(e) => setDraft({ ...draft, track: e.target.value })}
+                      placeholder="e.g. Next.js & TypeScript"
+                      required
+                      className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-300 mb-1">Difficulty</label>
+                    <select
+                      value={draft.difficulty}
+                      onChange={(e) => setDraft({ ...draft, difficulty: e.target.value as ProjectDraft["difficulty"] })}
+                      className="w-full rounded-lg border border-white/10 bg-[#07070A] px-3 py-1.5 text-xs text-white"
+                    >
+                      <option value="Beginner">Beginner</option>
+                      <option value="Intermediate">Intermediate</option>
+                      <option value="Advanced">Advanced</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-300 mb-1">Estimated Hours</label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={draft.estimatedHours}
+                      onChange={(e) => setDraft({ ...draft, estimatedHours: Number(e.target.value) })}
+                      required
+                      className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-neutral-300 mb-1">
+                    Tech Stack (comma or newline separated)
+                  </label>
+                  <input
+                    type="text"
+                    value={draft.techStack.join(", ")}
+                    onChange={(e) => setDraft({ ...draft, techStack: splitList(e.target.value) })}
+                    placeholder="TypeScript, Next.js, Redis, Docker"
+                    className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-neutral-300 mb-1">
+                    Description (Markdown supported)
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={draft.description}
+                    onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+                    className="w-full rounded-lg border border-white/10 bg-white/[0.04] p-3 text-xs text-white font-mono"
+                  />
+                </div>
+
+                {/* Phases section */}
+                <div className="pt-4 border-t border-white/[0.08]">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xs font-semibold text-white">Curriculum Phases ({draft.phases.length})</h3>
                     <button
                       type="button"
-                      disabled={deleting}
-                      onClick={() => void handleDelete()}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-red-900/50 px-3 py-2 text-xs text-red-200 hover:bg-red-950/30 disabled:opacity-50 cursor-pointer"
+                      onClick={addPhase}
+                      className="inline-flex items-center gap-1 rounded bg-white/[0.08] px-2.5 py-1 text-xs text-white hover:bg-white/[0.15] cursor-pointer"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />{deleting ? "Deleting…" : "Delete project"}
+                      <Plus className="h-3 w-3" />
+                      <span>Add Phase</span>
                     </button>
-                  )}
+                  </div>
+
+                  <div className="space-y-3">
+                    {draft.phases.map((phase, idx) => (
+                      <div key={phase.id} className="rounded-xl border border-white/10 bg-white/[0.02] p-3.5 space-y-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-mono text-xs text-neutral-500 font-bold">Phase {idx + 1}</span>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => movePhase(idx, -1)}
+                              disabled={idx === 0}
+                              className="p-1 text-neutral-400 hover:text-white disabled:opacity-30 cursor-pointer"
+                            >
+                              <ArrowUp className="h-3 w-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => movePhase(idx, 1)}
+                              disabled={idx === draft.phases.length - 1}
+                              className="p-1 text-neutral-400 hover:text-white disabled:opacity-30 cursor-pointer"
+                            >
+                              <ArrowDown className="h-3 w-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setPreviewPhase(previewPhase === idx ? null : idx)}
+                              className="p-1 text-neutral-400 hover:text-white cursor-pointer"
+                              title="Toggle markdown preview"
+                            >
+                              <Eye className="h-3 w-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removePhase(idx)}
+                              className="p-1 text-neutral-400 hover:text-red-400 cursor-pointer"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            value={phase.id}
+                            onChange={(e) => updatePhase(idx, { id: e.target.value })}
+                            placeholder="phase-id"
+                            className="rounded border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs text-white font-mono"
+                          />
+                          <input
+                            type="text"
+                            value={phase.title}
+                            onChange={(e) => updatePhase(idx, { title: e.target.value })}
+                            placeholder="Phase Title"
+                            className="rounded border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs text-white"
+                          />
+                        </div>
+
+                        {previewPhase === idx ? (
+                          <div className="rounded border border-white/10 bg-black/40 p-3 text-xs max-h-48 overflow-y-auto">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{phase.content}</ReactMarkdown>
+                          </div>
+                        ) : (
+                          <textarea
+                            rows={3}
+                            value={phase.content}
+                            onChange={(e) => updatePhase(idx, { content: e.target.value })}
+                            placeholder="Phase instructional content in markdown..."
+                            className="w-full rounded border border-white/10 bg-white/[0.04] p-2 text-xs font-mono text-white resize-y"
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <button
-                  type="submit"
-                  disabled={saving || deleting}
-                  className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-xs font-bold text-black hover:bg-neutral-200 disabled:opacity-50 cursor-pointer shadow-sm"
-                >
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  {saving ? "Saving…" : editingSlug ? "Save changes" : "Create project"}
-                </button>
+
+                <div className="pt-4 border-t border-white/[0.08] flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-white px-5 py-2 text-xs font-semibold text-black hover:bg-neutral-200 transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
+                  >
+                    {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                    <span>{editingSlug ? "Save Changes" : "Publish Project"}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ──────────────── TAB 3: DISCUSSIONS MODERATION ──────────────── */}
+        {activeTab === "discussions" && (
+          <div className="mt-6 rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-white/[0.08] mb-4">
+              <div>
+                <h2 className="text-base font-semibold text-white">Community Discussions Moderation</h2>
+                <p className="text-xs text-neutral-400">Review discussions, investigate spam, and remove violating posts.</p>
               </div>
-            </form>
-          </section>
-        </div>
+
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-500" />
+                <input
+                  type="text"
+                  value={discussionSearch}
+                  onChange={(e) => setDiscussionSearch(e.target.value)}
+                  placeholder="Filter discussions..."
+                  className="w-full rounded-lg border border-white/10 bg-white/[0.03] pl-8 pr-3 py-1.5 text-xs text-white"
+                />
+              </div>
+            </div>
+
+            {loadingDiscussions ? (
+              <div className="flex justify-center py-16">
+                <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
+              </div>
+            ) : adminDiscussions.length === 0 ? (
+              <div className="text-center py-12 text-xs text-neutral-400">No discussions match your filter.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="border-b border-white/[0.08] text-neutral-400 font-mono text-[11px]">
+                    <tr>
+                      <th className="py-2.5 px-3">Title & Category</th>
+                      <th className="py-2.5 px-3">Author</th>
+                      <th className="py-2.5 px-3">Upvotes</th>
+                      <th className="py-2.5 px-3">Replies</th>
+                      <th className="py-2.5 px-3">Created</th>
+                      <th className="py-2.5 px-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.04]">
+                    {adminDiscussions.map((d) => (
+                      <tr key={d.id} className="hover:bg-white/[0.02]">
+                        <td className="py-3 px-3">
+                          <Link href={`/discussions/${d.id}`} target="_blank" className="font-semibold text-white hover:underline line-clamp-1">
+                            {d.title}
+                          </Link>
+                          <span className="text-[10px] text-neutral-500 uppercase font-mono">{d.category}</span>
+                        </td>
+                        <td className="py-3 px-3 font-mono text-neutral-300">
+                          @{d.author.username}
+                        </td>
+                        <td className="py-3 px-3 font-mono">{d.upvoteCount}</td>
+                        <td className="py-3 px-3 font-mono">{d.replyCount}</td>
+                        <td className="py-3 px-3 text-neutral-400">{new Date(d.createdAt).toLocaleDateString()}</td>
+                        <td className="py-3 px-3 text-right">
+                          <button
+                            type="button"
+                            onClick={() => void handleDeleteDiscussion(d.id)}
+                            className="p-1 text-neutral-400 hover:text-red-400 cursor-pointer"
+                            title="Delete thread"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ──────────────── TAB 4: USERS MANAGEMENT ──────────────── */}
+        {activeTab === "users" && (
+          <div className="mt-6 rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-white/[0.08] mb-4">
+              <div>
+                <h2 className="text-base font-semibold text-white">Registered User Accounts</h2>
+                <p className="text-xs text-neutral-400">Search users, view progress enrollments, and toggle admin permissions.</p>
+              </div>
+
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-500" />
+                <input
+                  type="text"
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  placeholder="Search name, username, email..."
+                  className="w-full rounded-lg border border-white/10 bg-white/[0.03] pl-8 pr-3 py-1.5 text-xs text-white"
+                />
+              </div>
+            </div>
+
+            {loadingUsers ? (
+              <div className="flex justify-center py-16">
+                <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
+              </div>
+            ) : adminUsers.length === 0 ? (
+              <div className="text-center py-12 text-xs text-neutral-400">No users found.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="border-b border-white/[0.08] text-neutral-400 font-mono text-[11px]">
+                    <tr>
+                      <th className="py-2.5 px-3">User</th>
+                      <th className="py-2.5 px-3">Email</th>
+                      <th className="py-2.5 px-3">Role</th>
+                      <th className="py-2.5 px-3">Enrolled</th>
+                      <th className="py-2.5 px-3">Completed</th>
+                      <th className="py-2.5 px-3">Joined</th>
+                      <th className="py-2.5 px-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.04]">
+                    {adminUsers.map((u) => (
+                      <tr key={u.id} className="hover:bg-white/[0.02]">
+                        <td className="py-3 px-3">
+                          <Link href={`/profile/${u.username}`} target="_blank" className="flex items-center gap-2 hover:underline">
+                            {u.avatar ? (
+                              <Image src={u.avatar} alt={u.name} width={22} height={22} className="rounded-full" />
+                            ) : (
+                              <div className="h-5.5 w-5.5 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-bold">
+                                {u.name.slice(0, 1)}
+                              </div>
+                            )}
+                            <div>
+                              <span className="font-semibold text-white block">{u.name}</span>
+                              <span className="text-[10px] text-neutral-500 font-mono">@{u.username}</span>
+                            </div>
+                          </Link>
+                        </td>
+                        <td className="py-3 px-3 font-mono text-neutral-400">{u.email}</td>
+                        <td className="py-3 px-3">
+                          <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${
+                            u.role === "admin"
+                              ? "bg-purple-950/40 border border-purple-500/30 text-purple-300"
+                              : "bg-white/[0.04] border border-white/10 text-neutral-300"
+                          }`}>
+                            {u.role.toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 font-mono">{u.enrolledCount}</td>
+                        <td className="py-3 px-3 font-mono">{u.completedCount}</td>
+                        <td className="py-3 px-3 text-neutral-400">{new Date(u.createdAt).toLocaleDateString()}</td>
+                        <td className="py-3 px-3 text-right">
+                          <button
+                            type="button"
+                            disabled={togglingRole === u.id || u.email === user.email}
+                            onClick={() => void handleToggleUserRole(u.id, u.role)}
+                            className="rounded border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] font-medium text-neutral-300 hover:text-white hover:bg-white/[0.08] disabled:opacity-30 cursor-pointer"
+                          >
+                            {togglingRole === u.id ? "Updating..." : u.role === "admin" ? "Demote" : "Make Admin"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </main>
-      <style jsx global>{`
-        .admin-input {
-          display: block;
-          width: 100%;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 0.5rem;
-          background: #050507;
-          padding: 0.55rem 0.7rem;
-          color: #FFFFFF;
-          font-size: 0.75rem;
-          outline: none;
-        }
-        .admin-input:focus {
-          border-color: rgba(255, 255, 255, 0.3);
-        }
-        .admin-input::placeholder {
-          color: #71717A;
-        }
-      `}</style>
-    </>
+    </div>
   );
 }

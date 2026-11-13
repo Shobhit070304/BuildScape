@@ -11,6 +11,7 @@
     "test": "npm run build && node --test",
     "check": "npm run lint && npm test",
     "seed": "ts-node-dev --transpile-only src/scripts/seed.ts",
+    "seed:discussions": "ts-node-dev --transpile-only src/scripts/seed-discussions.ts",
     "migrate:difficulties": "ts-node-dev --transpile-only src/scripts/migrateDifficulties.ts"
   },
   "keywords": [],

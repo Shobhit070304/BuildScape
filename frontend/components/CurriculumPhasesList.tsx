@@ -10,6 +10,32 @@ interface CurriculumPhasesListProps {
   progress: ProgressController;
 }
 
+function stripMarkdown(text: string): string {
+  if (!text) return "";
+  return text
+    // Remove markdown headers e.g. ### Phase overview
+    .replace(/^#+\s+/gm, "")
+    // Remove bold and italics e.g. **Time:** or *important*
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    .replace(/_([^_]+)_/g, "$1")
+    // Remove inline code e.g. `npm install`
+    .replace(/`([^`]+)`/g, "$1")
+    // Remove blockquotes e.g. > Note:
+    .replace(/^>\s+/gm, "")
+    // Remove markdown links e.g. [text](url) -> text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    // Remove list markers
+    .replace(/^[-*+]\s+/gm, "")
+    // Remove leaked "Time: about..." phrases
+    .replace(/Time:\s*about\s*[\d.]+\s*(hours?|minutes?)/gi, "")
+    // Normalize newlines and collapse whitespace
+    .replace(/\r\n|\r|\n/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function CurriculumPhasesList({ project, progress }: CurriculumPhasesListProps) {
   const router = useRouter();
   const { enrolled, completed, hydrated } = progress;
@@ -60,7 +86,8 @@ export function CurriculumPhasesList({ project, progress }: CurriculumPhasesList
                 : `${phase.estimatedMinutes}m`
               : null;
             const taskCount = phase.tasks?.length ?? 0;
-            const summaryText = phase.summary || phase.title;
+            const rawSummary = phase.summary || phase.title;
+            const cleanSummary = stripMarkdown(rawSummary);
 
             return (
               <button
@@ -85,22 +112,38 @@ export function CurriculumPhasesList({ project, progress }: CurriculumPhasesList
                   )}
                 </div>
 
-                {/* Phase Header */}
-                <div className="flex items-start justify-between gap-2 flex-wrap sm:flex-nowrap">
-                  <div className="flex items-baseline gap-2.5">
-                    <span className="font-mono text-xs font-semibold text-neutral-500 shrink-0">
-                      {stepNum}
-                    </span>
-                    <h3
-                      className={`text-sm font-semibold transition-colors group-hover:text-white leading-snug ${
-                        isDone ? "text-emerald-300" : "text-white"
-                      }`}
-                    >
-                      {phase.title}
-                    </h3>
+                {/* Phase Main Layout: Left info + Right uniform metrics */}
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono text-xs font-semibold text-neutral-500 shrink-0">
+                        {stepNum}
+                      </span>
+                      <h3
+                        className={`text-sm font-semibold transition-colors group-hover:text-white leading-snug ${
+                          isDone ? "text-emerald-300" : "text-white"
+                        }`}
+                      >
+                        {phase.title}
+                      </h3>
+                      {isDone && (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-950/40 px-2 py-0.5 font-mono text-[10px] font-medium text-emerald-400 shrink-0">
+                          <CheckCircle2 className="h-2.5 w-2.5" />
+                          Completed
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Phase Overview Summary (Markdown stripped) */}
+                    {cleanSummary && (
+                      <p className="mt-1.5 pl-6 text-xs leading-relaxed text-neutral-400 transition-colors group-hover:text-neutral-300 line-clamp-2">
+                        {cleanSummary}
+                      </p>
+                    )}
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  {/* Right rail metadata: ALWAYS identical on all phases */}
+                  <div className="flex items-center gap-2.5 shrink-0 pt-0.5">
                     {estTime && (
                       <span className="inline-flex items-center gap-1 font-mono text-[0.625rem] text-neutral-400">
                         <Clock className="h-2.5 w-2.5 text-neutral-500" />
@@ -113,21 +156,9 @@ export function CurriculumPhasesList({ project, progress }: CurriculumPhasesList
                         {taskCount} tasks
                       </span>
                     )}
-                    {isDone && (
-                      <span className="shrink-0 rounded-full border border-emerald-500/30 bg-emerald-950/40 px-2 py-0.5 font-mono text-[0.625rem] font-medium text-emerald-300">
-                        Completed
-                      </span>
-                    )}
                     <ArrowRight className="h-3 w-3 text-neutral-600 transition-transform group-hover:translate-x-1 group-hover:text-white" />
                   </div>
                 </div>
-
-                {/* Phase Overview Summary */}
-                {summaryText && (
-                  <p className="mt-1.5 pl-6 text-xs leading-relaxed text-neutral-400 transition-colors group-hover:text-neutral-300 line-clamp-2">
-                    {summaryText}
-                  </p>
-                )}
               </button>
             );
           })}

@@ -23,6 +23,7 @@ import {
   ShieldCheck,
   Award,
   ExternalLink,
+  MessageSquare,
 } from "lucide-react";
 import type { Project, Phase } from "@/lib/projects";
 import type { ProgressController } from "@/hooks/useProgress";
@@ -477,6 +478,17 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
                   <span>Report</span>
                 </button>
 
+                {/* Community Discussions Link */}
+                <Link
+                  href={`/discussions?projectSlug=${encodeURIComponent(project.slug)}`}
+                  target="_blank"
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-transparent bg-transparent px-2.5 py-1.5 text-xs text-neutral-400 hover:border-white/10 hover:bg-white/[0.03] hover:text-neutral-200 transition-all cursor-pointer"
+                  title="View community discussions for this project"
+                >
+                  <MessageSquare className="h-3.5 w-3.5 text-neutral-500" />
+                  <span className="hidden sm:inline">Discuss</span>
+                </Link>
+
                 {/* AI Assistant Button */}
                 <button
                   type="button"
@@ -562,8 +574,8 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
                       </div>
                       <p className="text-xs text-neutral-300 mt-1 max-w-xl leading-relaxed">
                         {isVerified
-                          ? `Your repository has been verified against the production blueprint architecture. Certificate ID: ${certificateId}`
-                          : "Submit your public GitHub repository to run automated blueprint fingerprint checks and claim your shareable Proof of Work certificate."}
+                          ? `Your repository has been verified against the production project architecture. Certificate ID: ${certificateId}`
+                          : "Submit your public GitHub repository to run automated project fingerprint checks and claim your shareable Proof of Work certificate."}
                       </p>
                     </div>
                   </div>

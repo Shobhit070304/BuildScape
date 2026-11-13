@@ -38,6 +38,17 @@ export const progressRepository = {
   countEnrollments: (projectId: Types.ObjectId) =>
     UserProjectEnrollment.countDocuments({ projectId }),
 
+  getEnrollmentCountsByProject: async () => {
+    const counts = await UserProjectEnrollment.aggregate([
+      { $group: { _id: "$projectId", count: { $sum: 1 } } },
+    ]);
+    const map = new Map<string, number>();
+    for (const item of counts) {
+      if (item._id) map.set(item._id.toString(), item.count);
+    }
+    return map;
+  },
+
   listEnrollments: (userId: string) =>
     UserProjectEnrollment.find({ userId: asObjectId(userId) }).populate("projectId"),
 

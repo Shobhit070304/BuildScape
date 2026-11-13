@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 
 const NAV = [
-  { label: "Blueprints", href: "/projects" },
+  { label: "Projects", href: "/projects" },
   { label: "How It Works", href: "#how-it-works" },
   { label: "Architecture Bento", href: "#features" },
   { label: "FAQ", href: "#faq" },

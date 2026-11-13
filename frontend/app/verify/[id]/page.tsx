@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: VerifyPageProps): Promise<Met
 
   return {
     title: `Verified Project: ${cert.project.title} - ${cert.recipient.name} | BuildScape`,
-    description: `Official BuildScape verification for ${cert.recipient.name} completing the ${cert.project.title} production blueprint.`,
+    description: `Official BuildScape verification for ${cert.recipient.name} completing the ${cert.project.title} production project.`,
     openGraph: {
       title: `BuildScape Verified: ${cert.project.title}`,
       description: `Verified production build completed by ${cert.recipient.name}. Built with ${cert.project.techStack.join(", ")}.`,
@@ -148,7 +148,7 @@ export default async function CertificateVerificationPage({ params }: VerifyPage
               </div>
             </div>
 
-            {/* Blueprint Overview Specs */}
+            {/* Project Overview Specs */}
             <div className="space-y-6">
               <div>
                 <div className="flex items-center gap-2 mb-2 font-mono text-[11px] text-neutral-400 uppercase tracking-wider">
@@ -269,7 +269,7 @@ export default async function CertificateVerificationPage({ params }: VerifyPage
               href="/projects"
               className="inline-flex items-center gap-1.5 text-xs text-neutral-400 hover:text-white transition-colors"
             >
-              <span>Explore More Production Blueprints</span>
+              <span>Explore More Production Projects</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>

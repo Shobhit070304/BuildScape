@@ -6,8 +6,16 @@ export interface IUser {
   name: string;
   username?: string;
   avatar?: string;
+  bio?: string;
+  location?: string;
+  githubUrl?: string;
+  twitterUrl?: string;
+  portfolioUrl?: string;
+  linkedinUrl?: string;
+  skills?: string[];
   role: "user" | "admin";
   createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -17,6 +25,13 @@ const UserSchema = new Schema<IUser>(
     name: { type: String, required: true },
     username: { type: String, unique: true, sparse: true, trim: true, lowercase: true },
     avatar: { type: String },
+    bio: { type: String, default: "", maxlength: 300 },
+    location: { type: String, default: "", maxlength: 100 },
+    githubUrl: { type: String, default: "" },
+    twitterUrl: { type: String, default: "" },
+    portfolioUrl: { type: String, default: "" },
+    linkedinUrl: { type: String, default: "" },
+    skills: { type: [String], default: [] },
     role: { type: String, enum: ["user", "admin"], default: "user" },
   },
   { timestamps: true }

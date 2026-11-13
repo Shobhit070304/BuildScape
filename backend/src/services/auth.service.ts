@@ -45,6 +45,13 @@ export async function loginWithGoogle(credential: string) {
       name: user.name,
       username: user.username,
       avatar: user.avatar,
+      bio: user.bio,
+      location: user.location,
+      githubUrl: user.githubUrl,
+      twitterUrl: user.twitterUrl,
+      portfolioUrl: user.portfolioUrl,
+      linkedinUrl: user.linkedinUrl,
+      skills: user.skills,
       role: effectiveRole,
     },
   };
@@ -92,4 +99,63 @@ export async function updateUsername(userId: string, requestedUsername: unknown)
     }
     throw error;
   }
+}
+
+export async function updateUserProfile(
+  userId: string,
+  data: {
+    name?: string;
+    bio?: string;
+    location?: string;
+    githubUrl?: string;
+    twitterUrl?: string;
+    portfolioUrl?: string;
+    linkedinUrl?: string;
+    skills?: string[];
+  }
+) {
+  const cleanData: Record<string, unknown> = {};
+
+  if (typeof data.name === "string") {
+    const name = data.name.trim();
+    if (name.length < 2 || name.length > 50) {
+      throw new HttpError(400, "Name must be between 2 and 50 characters");
+    }
+    cleanData.name = name;
+  }
+
+  if (typeof data.bio === "string") {
+    cleanData.bio = data.bio.trim().slice(0, 300);
+  }
+
+  if (typeof data.location === "string") {
+    cleanData.location = data.location.trim().slice(0, 100);
+  }
+
+  if (typeof data.githubUrl === "string") {
+    cleanData.githubUrl = data.githubUrl.trim().slice(0, 200);
+  }
+
+  if (typeof data.twitterUrl === "string") {
+    cleanData.twitterUrl = data.twitterUrl.trim().slice(0, 200);
+  }
+
+  if (typeof data.portfolioUrl === "string") {
+    cleanData.portfolioUrl = data.portfolioUrl.trim().slice(0, 200);
+  }
+
+  if (typeof data.linkedinUrl === "string") {
+    cleanData.linkedinUrl = data.linkedinUrl.trim().slice(0, 200);
+  }
+
+  if (Array.isArray(data.skills)) {
+    cleanData.skills = data.skills
+      .filter((s): s is string => typeof s === "string" && s.trim().length > 0)
+      .map((s) => s.trim().slice(0, 30))
+      .slice(0, 20);
+  }
+
+  const user = await userRepository.updateProfile(userId, cleanData);
+  if (!user) throw new HttpError(404, "User not found");
+  return user;
 }

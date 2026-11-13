@@ -168,7 +168,7 @@ export function ProjectVerificationModal({
               <div className="flex items-center gap-2 text-neutral-200">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
                 <span>
-                  <strong>Architecture Fingerprint:</strong> Detects blueprint tech stack{project.techStack?.length ? ` (${project.techStack.slice(0, 3).join(", ")})` : ""}.
+                  <strong>Architecture Fingerprint:</strong> Detects project tech stack{project.techStack?.length ? ` (${project.techStack.slice(0, 3).join(", ")})` : ""}.
                 </span>
               </div>
               <div className="flex items-center gap-2 text-neutral-200">
@@ -256,7 +256,7 @@ export function ProjectVerificationModal({
               VERIFICATION COMPLETE
             </span>
             <h3 className="font-serif text-xl font-bold text-white mt-1">
-              Verified Production Blueprint
+              Verified Production Project
             </h3>
             <p className="text-xs text-neutral-400 mt-1 max-w-sm mx-auto leading-relaxed">
               Your repository passed all 3 architectural and authorship checks. Your official proof-of-work certificate is published.

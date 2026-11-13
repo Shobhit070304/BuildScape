@@ -16,6 +16,16 @@ interface AuthContextValue {
   login: (credential: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUsername: (username: string) => Promise<void>;
+  updateProfile: (data: {
+    name?: string;
+    bio?: string;
+    location?: string;
+    githubUrl?: string;
+    twitterUrl?: string;
+    portfolioUrl?: string;
+    linkedinUrl?: string;
+    skills?: string[];
+  }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -24,6 +34,7 @@ const AuthContext = createContext<AuthContextValue>({
   login: async () => {},
   logout: async () => {},
   updateUsername: async () => {},
+  updateProfile: async () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -66,8 +77,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser((current) => current ? { ...current, username: result.username } : current);
   }, []);
 
+  const updateProfile = useCallback(async (data: {
+    name?: string;
+    bio?: string;
+    location?: string;
+    githubUrl?: string;
+    twitterUrl?: string;
+    portfolioUrl?: string;
+    linkedinUrl?: string;
+    skills?: string[];
+  }) => {
+    const result = await api.updateProfile(data);
+    setUser(result.user);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, updateUsername }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout, updateUsername, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

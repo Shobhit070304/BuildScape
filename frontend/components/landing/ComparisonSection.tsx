@@ -56,7 +56,7 @@ export function ComparisonSection() {
   ];
 
   return (
-    <section id="comparison" className="mb-20 sm:mb-28 lg:mb-32 scroll-mt-24">
+    <section id="comparison" className="py-20 sm:py-24 border-b border-white/[0.08] scroll-mt-24">
       {/* Section Header — Centered & Scaled */}
       <div className="mb-10 text-center">
         <div className="mb-2.5 inline-flex">

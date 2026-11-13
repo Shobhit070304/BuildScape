@@ -19,6 +19,8 @@ import {
   toggleTaskProgress,
   verifyProjectSubmission,
   getProjectCertificate,
+  getPublicStats,
+  getVerifiedShowcases,
 } from "../controllers/projects.controller";
 import { authenticate } from "../middleware/authenticate";
 import { requireAdmin } from "../middleware/authorize";
@@ -39,6 +41,8 @@ router.get("/my/issues", authenticate, getMyIssues);
 
 // Public verifiable certificate lookup (must be before /:slug)
 router.get("/certificates/:certificateId", getProjectCertificate);
+router.get("/stats/public", getPublicStats);
+router.get("/showcases/verified", getVerifiedShowcases);
 
 // Public project browsing
 router.get("/", listProjects);

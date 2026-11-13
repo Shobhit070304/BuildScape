@@ -9,6 +9,25 @@ export const userRepository = {
   updateUsername: (userId: string, username: string) =>
     User.findByIdAndUpdate(userId, { $set: { username } }, { returnDocument: "after", runValidators: true }).select("-__v"),
 
+  updateProfile: (
+    userId: string,
+    profile: {
+      name?: string;
+      bio?: string;
+      location?: string;
+      githubUrl?: string;
+      twitterUrl?: string;
+      portfolioUrl?: string;
+      linkedinUrl?: string;
+      skills?: string[];
+    }
+  ) =>
+    User.findByIdAndUpdate(
+      userId,
+      { $set: profile },
+      { returnDocument: "after", runValidators: true }
+    ).select("-__v -googleId -email"),
+
   upsertGoogleUser: async (values: {
     googleId: string;
     email: string;

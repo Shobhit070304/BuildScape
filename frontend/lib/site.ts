@@ -16,12 +16,12 @@ export const SITE_CONFIG = {
   title: "BuildScape — Build Real Production Software",
   tagline: "Escape tutorial hell. Build production software through structured, phase-by-phase roadmaps with full code guidance.",
   description:
-    "Build real-world distributed architectures, cache engines, streaming databases, and full-stack systems with phase-by-phase blueprints and a portfolio of completed projects.",
+    "Build real-world distributed architectures, cache engines, streaming databases, and full-stack systems with phase-by-phase projects and a portfolio of completed projects.",
   keywords: [
     "system design projects",
     "learn backend engineering",
     "distributed systems tutorial",
-    "coding blueprints",
+    "engineering projects",
     "build real software",
     "escape tutorial hell",
     "hands on software engineering",

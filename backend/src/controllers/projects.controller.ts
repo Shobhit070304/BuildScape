@@ -1,8 +1,69 @@
 import { asyncHandler } from "../middleware/asyncHandler";
 import { projectsService } from "../services/projects.service";
 import { feedbackService } from "../services/feedback.service";
+import { User } from "../models/User";
+import { Project } from "../models/Project";
+import { UserProjectEnrollment } from "../models/UserProjectEnrollment";
 
 // Keep HTTP parsing and response formatting in controllers.
+export const getPublicStats = asyncHandler(async (_req, res) => {
+  const [totalUsers, totalProjects, totalEnrollments, completedEnrollments] = await Promise.all([
+    User.countDocuments(),
+    Project.countDocuments(),
+    UserProjectEnrollment.countDocuments(),
+    UserProjectEnrollment.countDocuments({ completedAt: { $ne: null } }),
+  ]);
+  res.json({
+    stats: {
+      totalUsers,
+      totalProjects,
+      totalEnrollments,
+      completedEnrollments,
+    },
+  });
+});
+
+export const getVerifiedShowcases = asyncHandler(async (_req, res) => {
+  const verified = await UserProjectEnrollment.find({ isVerified: true })
+    .populate("userId", "name avatar username")
+    .populate("projectId", "title slug track difficulty shortDescription")
+    .sort({ verifiedAt: -1 })
+    .limit(30)
+    .lean();
+
+  const showcases = verified
+    .filter((e) => e.projectId && e.userId)
+    .map((e) => {
+      const u = e.userId as unknown as { name: string; avatar?: string; username: string };
+      const p = e.projectId as unknown as {
+        title: string;
+        slug: string;
+        track: string;
+        difficulty: string;
+        shortDescription?: string;
+      };
+      return {
+        id: e.certificateId || e._id.toString(),
+        title: p.title,
+        track: p.track,
+        difficulty: p.difficulty,
+        description:
+          p.shortDescription ||
+          `Verified implementation of ${p.title} deployed with passing test suites.`,
+        authorName: u.name,
+        authorHandle: `@${u.username}`,
+        authorAvatar: u.avatar,
+        timeAgo: e.verifiedAt ? new Date(e.verifiedAt).toLocaleDateString() : "recently",
+        repoUrl: e.githubRepoUrl || "",
+        demoUrl: e.liveDemoUrl || undefined,
+        projectSlug: p.slug,
+        certificateId: e.certificateId,
+      };
+    });
+
+  res.json({ showcases });
+});
+
 export const listProjects = asyncHandler(async (_req, res) => {
   res.json({ projects: await projectsService.list() });
 });

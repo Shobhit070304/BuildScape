@@ -61,7 +61,7 @@ export function FaqSection() {
   ];
 
   return (
-    <section id="faq" className="mb-20 sm:mb-28 lg:mb-32 scroll-mt-24">
+    <section id="faq" className="py-20 sm:py-24 border-b border-white/[0.08] scroll-mt-24">
       {/* Header — Centered & Scaled */}
       <div className="mb-10 text-center">
         <div className="mb-2.5 inline-flex">
