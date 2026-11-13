@@ -9,6 +9,12 @@ interface ProgressState {
   enrolled: boolean;
   currentPhaseIndex: number;
   completed: string[];
+  completedTasks: Record<string, string[]>;
+  isVerified: boolean;
+  verifiedAt: string | null;
+  certificateId: string | null;
+  githubRepoUrl: string | null;
+  liveDemoUrl: string | null;
   hydrated: boolean;
   loadError: string | null;
 }
@@ -21,6 +27,12 @@ export function useProgress(projectSlug: string, enabled = true) {
     enrolled: false,
     currentPhaseIndex: 0,
     completed: [],
+    completedTasks: {},
+    isVerified: false,
+    verifiedAt: null,
+    certificateId: null,
+    githubRepoUrl: null,
+    liveDemoUrl: null,
     hydrated: false,
     loadError: null,
   });
@@ -41,6 +53,12 @@ export function useProgress(projectSlug: string, enabled = true) {
         enrolled: data.enrolled,
         currentPhaseIndex: data.currentPhaseIndex,
         completed: data.completedPhases.map((p) => p.phaseId),
+        completedTasks: data.completedTasks || {},
+        isVerified: Boolean(data.isVerified),
+        verifiedAt: data.verifiedAt || null,
+        certificateId: data.certificateId || null,
+        githubRepoUrl: data.githubRepoUrl || null,
+        liveDemoUrl: data.liveDemoUrl || null,
         hydrated: true,
         loadError: null,
       });
@@ -51,6 +69,12 @@ export function useProgress(projectSlug: string, enabled = true) {
         enrolled: false,
         currentPhaseIndex: 0,
         completed: [],
+        completedTasks: {},
+        isVerified: false,
+        verifiedAt: null,
+        certificateId: null,
+        githubRepoUrl: null,
+        liveDemoUrl: null,
         hydrated: true,
         loadError: error instanceof Error ? error.message : "Could not load enrollment status.",
       });
@@ -64,7 +88,7 @@ export function useProgress(projectSlug: string, enabled = true) {
   }, [authLoading, fetchDbProgress]);
 
   const togglePhase = useCallback(
-    async (phaseId: string) => {
+    async (phaseId: string, phaseTaskIds?: string[]) => {
       if (!user || phaseToggleInFlight.current) return false;
       phaseToggleInFlight.current = true;
       const requestId = ++requestVersion.current;
@@ -73,11 +97,21 @@ export function useProgress(projectSlug: string, enabled = true) {
 
       // Optimistic update
       const previousCompleted = state.completed;
+      const previousTasks = state.completedTasks[phaseId] || [];
       const updated = isNowCompleting
         ? [...previousCompleted, phaseId]
         : previousCompleted.filter((id) => id !== phaseId);
 
-      setState((prev) => ({ ...prev, completed: updated }));
+      setState((prev) => ({
+        ...prev,
+        completed: updated,
+        completedTasks: isNowCompleting && phaseTaskIds && phaseTaskIds.length > 0
+          ? {
+              ...prev.completedTasks,
+              [phaseId]: Array.from(new Set([...(prev.completedTasks[phaseId] || []), ...phaseTaskIds])),
+            }
+          : prev.completedTasks,
+      }));
 
       try {
         if (isNowCompleting) {
@@ -95,6 +129,12 @@ export function useProgress(projectSlug: string, enabled = true) {
               enrolled: fresh.enrolled,
               currentPhaseIndex: fresh.currentPhaseIndex,
               completed: fresh.completedPhases.map((p) => p.phaseId),
+              completedTasks: fresh.completedTasks || {},
+              isVerified: Boolean(fresh.isVerified),
+              verifiedAt: fresh.verifiedAt || null,
+              certificateId: fresh.certificateId || null,
+              githubRepoUrl: fresh.githubRepoUrl || null,
+              liveDemoUrl: fresh.liveDemoUrl || null,
               hydrated: true,
               loadError: null,
             });
@@ -107,19 +147,108 @@ export function useProgress(projectSlug: string, enabled = true) {
         console.error("Failed to update phase progress in DB:", err);
         // Rollback on failure
         if (requestId === requestVersion.current) {
-          setState((prev) => ({ ...prev, completed: previousCompleted }));
+          setState((prev) => ({
+            ...prev,
+            completed: previousCompleted,
+            completedTasks: {
+              ...prev.completedTasks,
+              [phaseId]: previousTasks,
+            },
+          }));
         }
         return false;
       } finally {
         phaseToggleInFlight.current = false;
       }
     },
-    [state.completed, user, projectSlug]
+    [state.completed, state.completedTasks, user, projectSlug]
   );
 
   const isCompleted = useCallback(
     (phaseId: string) => state.completed.includes(phaseId),
     [state.completed]
+  );
+
+  const isTaskCompleted = useCallback(
+    (phaseId: string, taskId: string) => {
+      const tasks = state.completedTasks[phaseId];
+      return Array.isArray(tasks) && tasks.includes(taskId);
+    },
+    [state.completedTasks]
+  );
+
+  const toggleTask = useCallback(
+    async (phaseId: string, taskId: string, allPhaseTaskIds?: string[]) => {
+      if (!user) return false;
+      const currentTasks = state.completedTasks[phaseId] || [];
+      const isNowCompleting = !currentTasks.includes(taskId);
+
+      // Optimistic update
+      const updatedTasks = isNowCompleting
+        ? [...currentTasks, taskId]
+        : currentTasks.filter((id) => id !== taskId);
+
+      const allTasksNowCompleted =
+        isNowCompleting &&
+        allPhaseTaskIds &&
+        allPhaseTaskIds.length > 0 &&
+        allPhaseTaskIds.every((id) => updatedTasks.includes(id));
+
+      const shouldAutoMarkPhase = allTasksNowCompleted && !state.completed.includes(phaseId);
+      const previousCompleted = state.completed;
+
+      setState((prev) => ({
+        ...prev,
+        completed: shouldAutoMarkPhase ? [...prev.completed, phaseId] : prev.completed,
+        completedTasks: {
+          ...prev.completedTasks,
+          [phaseId]: updatedTasks,
+        },
+      }));
+
+      try {
+        const res = await api.toggleTaskProgress(projectSlug, phaseId, taskId, isNowCompleting);
+        setState((prev) => ({
+          ...prev,
+          completed:
+            res.phaseCompleted && !prev.completed.includes(phaseId)
+              ? [...prev.completed, phaseId]
+              : prev.completed,
+          completedTasks: {
+            ...prev.completedTasks,
+            [phaseId]: res.completedTasks,
+          },
+        }));
+        return true;
+      } catch (err) {
+        console.error("Failed to toggle task progress:", err);
+        // Rollback
+        setState((prev) => ({
+          ...prev,
+          completed: previousCompleted,
+          completedTasks: {
+            ...prev.completedTasks,
+            [phaseId]: currentTasks,
+          },
+        }));
+        return false;
+      }
+    },
+    [state.completed, state.completedTasks, user, projectSlug]
+  );
+
+  const setVerificationSuccess = useCallback(
+    (data: { isVerified: boolean; certificateId: string; verifiedAt: string; githubRepoUrl: string; liveDemoUrl?: string }) => {
+      setState((prev) => ({
+        ...prev,
+        isVerified: data.isVerified,
+        certificateId: data.certificateId,
+        verifiedAt: data.verifiedAt,
+        githubRepoUrl: data.githubRepoUrl,
+        liveDemoUrl: data.liveDemoUrl || null,
+      }));
+    },
+    []
   );
 
   const setActivePhase = useCallback((phaseId: string, index: number) => {
@@ -152,9 +281,18 @@ export function useProgress(projectSlug: string, enabled = true) {
     enrolled: belongsToCurrentUser && state.enrolled,
     currentPhaseIndex: belongsToCurrentUser ? state.currentPhaseIndex : 0,
     completed: belongsToCurrentUser ? state.completed : [],
+    completedTasks: belongsToCurrentUser ? state.completedTasks : {},
+    isVerified: belongsToCurrentUser && state.isVerified,
+    verifiedAt: belongsToCurrentUser ? state.verifiedAt : null,
+    certificateId: belongsToCurrentUser ? state.certificateId : null,
+    githubRepoUrl: belongsToCurrentUser ? state.githubRepoUrl : null,
+    liveDemoUrl: belongsToCurrentUser ? state.liveDemoUrl : null,
     hydrated: enabled && ((!authLoading && !user) || (belongsToCurrentUser && state.hydrated)),
     loadError: belongsToCurrentUser ? state.loadError : null,
     togglePhase,
+    toggleTask,
+    isTaskCompleted,
+    setVerificationSuccess,
     setActivePhase,
     isCompleted,
     clearProgress,

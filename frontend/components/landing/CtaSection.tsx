@@ -19,15 +19,14 @@ export function CtaSection() {
             </span>
           </div>
 
-          <h2 className="mb-4 font-sans text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
-            Stop watching tutorials.
-            <br />
+          <h2 className="mb-3 font-sans text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white">
+            Stop watching tutorials.{" "}
             <span className="gradient-text-titanium">
               Start building real systems.
             </span>
           </h2>
 
-          <p className="mx-auto mb-9 max-w-lg text-sm sm:text-base leading-relaxed text-neutral-400">
+          <p className="mx-auto mb-8 max-w-lg text-xs sm:text-sm leading-relaxed text-neutral-400">
             Pick a production build, work through the guided phases at your own pace, and ship verifiable applications to your developer portfolio.
           </p>
 

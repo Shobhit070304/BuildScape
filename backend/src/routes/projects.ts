@@ -16,6 +16,9 @@ import {
   createProject,
   updateProject,
   deleteProject,
+  toggleTaskProgress,
+  verifyProjectSubmission,
+  getProjectCertificate,
 } from "../controllers/projects.controller";
 import { authenticate } from "../middleware/authenticate";
 import { requireAdmin } from "../middleware/authorize";
@@ -34,6 +37,9 @@ const feedbackLimiter = rateLimit({
 router.get("/my/enrolled", authenticate, getEnrolledProjects);
 router.get("/my/issues", authenticate, getMyIssues);
 
+// Public verifiable certificate lookup (must be before /:slug)
+router.get("/certificates/:certificateId", getProjectCertificate);
+
 // Public project browsing
 router.get("/", listProjects);
 router.get("/:slug", getProject);
@@ -47,6 +53,8 @@ router.delete("/:slug", authenticate, requireAdmin, deleteProject);
 router.post("/:slug/enroll", authenticate, enrollProject);
 router.post("/:slug/phases/:phaseId/complete", authenticate, completePhase);
 router.delete("/:slug/phases/:phaseId/complete", authenticate, uncompletePhase);
+router.post("/:slug/phases/:phaseId/tasks/:taskId/toggle", authenticate, toggleTaskProgress);
+router.post("/:slug/verify", authenticate, feedbackLimiter, verifyProjectSubmission);
 router.get("/:slug/phases/:phaseId/note", authenticate, getPhaseNote);
 router.put("/:slug/phases/:phaseId/note", authenticate, savePhaseNote);
 router.post("/:slug/phases/:phaseId/issues", authenticate, feedbackLimiter, reportPhaseIssue);

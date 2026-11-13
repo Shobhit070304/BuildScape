@@ -13,89 +13,89 @@ import {
 
 export function HeroSection() {
   return (
-    <section id="hero" className="relative overflow-hidden pt-10 pb-16 sm:pt-16 sm:pb-24 mb-10 sm:mb-16 scroll-mt-24">
-      {/* Sleek Atmospheric White Spotlight & Radial Glow */}
+    <section id="hero" className="relative overflow-hidden pt-12 pb-16 sm:pt-16 sm:pb-24 mb-10 sm:mb-16 scroll-mt-24">
+      {/* Sleek Atmospheric Background Effect: Radial Glow + Precision Dot Grid */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-        <div className="absolute -top-40 left-1/2 h-[480px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08),transparent_65%)] blur-[90px]" />
-        <div className="absolute top-20 right-10 h-72 w-72 rounded-full bg-white/[0.02] blur-[100px]" />
+        {/* Soft Indigo / Titanium Ambient Radial Gradient */}
+        <div className="absolute -top-32 left-1/2 h-[520px] w-[1000px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.12),rgba(255,255,255,0.05)_40%,transparent_70%)] blur-[90px]" />
+        {/* Precision Background Dot Grid with Mask */}
+        <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.07)_1px,transparent_1px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_35%,#000_60%,transparent_100%)] opacity-70" />
       </div>
 
-      <div className="relative mx-auto max-w-7xl grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-14">
-        {/* Left Column: Headline & Value Proposition */}
-        <div className="w-full lg:col-span-7">
-          {/* Eyebrow Pill */}
-          <div className="mb-5 inline-flex">
-            <span className="pill-mono">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>BLUEPRINTS FOR SOFTWARE ENGINEERS</span>
-            </span>
-          </div>
-
-          <h1 className="mb-5 font-sans text-4xl font-extrabold leading-[1.08] tracking-tight text-white sm:text-6xl lg:text-[4rem]">
-            Build real systems.
-            <br />
-            <span className="gradient-text-titanium">
-              Escape tutorial hell.
-            </span>
-          </h1>
-
-          <p className="mb-8 max-w-xl text-base sm:text-lg leading-relaxed text-neutral-400 font-normal">
-            Stop watching video tutorials you forget next week. Follow production blueprints to design, write, test, and deploy real systems from scratch — with complete mental models, verified CLI checkpoints, and portfolio repositories on GitHub.
-          </p>
-
-          {/* Key Value Prop Chips */}
-          <div className="mb-8 flex flex-wrap gap-2.5">
-            {[
-              { icon: <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />, label: "100% Free & Open Curriculum" },
-              { icon: <Layers className="h-3.5 w-3.5 text-neutral-300 shrink-0" />, label: "8 Structured Phases" },
-              { icon: <GitBranch className="h-3.5 w-3.5 text-neutral-300 shrink-0" />, label: "Live GitHub Deliverable" },
-            ].map(({ icon, label }) => (
-              <div
-                key={label}
-                className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#0C0C10] px-3.5 py-1.5 shadow-sm shadow-black/40"
-              >
-                {icon}
-                <span className="text-xs font-medium text-neutral-200">{label}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Primary & Secondary Action CTAs */}
-          <div className="mb-9 flex flex-wrap items-center gap-3.5">
-            <Link href="/projects" className="btn-primary px-6 py-3 text-sm">
-              <span>Start Building Free</span>
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link href="#how-it-works" className="btn-secondary px-5 py-3 text-sm">
-              How It Works
-            </Link>
-          </div>
-
-          {/* Popular Tracks Quick Navigation */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-mono text-neutral-500 uppercase tracking-widest mr-1">
-              Popular Tracks:
-            </span>
-            {[
-              "Next.js & TypeScript",
-              "Golang",
-              "Spring Boot & React",
-              "Python & FastAPI",
-              "Rust",
-            ].map((track) => (
-              <Link
-                key={track}
-                href={`/projects?track=${encodeURIComponent(track)}`}
-                className="rounded-lg border border-white/[0.08] bg-[#0E0E14] px-2.5 py-1 text-xs font-medium text-neutral-400 transition-all hover:border-white/25 hover:bg-[#14141C] hover:text-white"
-              >
-                {track}
-              </Link>
-            ))}
-          </div>
+      <div className="relative mx-auto max-w-5xl flex flex-col items-center justify-center text-center">
+        {/* Eyebrow Pill */}
+        <div className="mb-4 inline-flex">
+          <span className="pill-mono">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>BLUEPRINTS FOR SOFTWARE ENGINEERS</span>
+          </span>
         </div>
 
-        {/* Right Column: High-Fidelity Workspace Preview Mockup (Linear / Stripe style) */}
-        <div className="w-full lg:col-span-5">
+        {/* Scaled H1 Heading */}
+        <h1 className="mb-4 font-sans text-3xl sm:text-4xl md:text-5xl font-extrabold leading-[1.12] tracking-tight text-white max-w-3xl">
+          Build real systems.{" "}
+          <span className="gradient-text-titanium">
+            Escape tutorial hell.
+          </span>
+        </h1>
+
+        {/* Scaled Description */}
+        <p className="mb-7 max-w-2xl text-sm sm:text-base leading-relaxed text-neutral-400 font-normal">
+          Stop watching video tutorials you forget next week. Follow production blueprints to design, write, test, and deploy real systems from scratch — with complete mental models, verified CLI checkpoints, and portfolio repositories on GitHub.
+        </p>
+
+        {/* Key Value Prop Chips — Centered */}
+        <div className="mb-7 flex flex-wrap items-center justify-center gap-2 sm:gap-2.5">
+          {[
+            { icon: <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />, label: "100% Free & Open Curriculum" },
+            { icon: <Layers className="h-3.5 w-3.5 text-neutral-300 shrink-0" />, label: "8 Structured Phases" },
+            { icon: <GitBranch className="h-3.5 w-3.5 text-neutral-300 shrink-0" />, label: "Live GitHub Deliverable" },
+          ].map(({ icon, label }) => (
+            <div
+              key={label}
+              className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#0C0C10] px-3.5 py-1.5 shadow-sm shadow-black/40"
+            >
+              {icon}
+              <span className="text-xs font-medium text-neutral-200">{label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Primary & Secondary Action CTAs — Centered */}
+        <div className="mb-8 flex flex-wrap items-center justify-center gap-3.5">
+          <Link href="/projects" className="btn-primary px-5 py-2.5 text-xs sm:text-sm shadow-lg shadow-white/10">
+            <span>Start Building Free</span>
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link href="#how-it-works" className="btn-secondary px-5 py-2.5 text-xs sm:text-sm">
+            How It Works
+          </Link>
+        </div>
+
+        {/* Popular Tracks Quick Navigation — Centered */}
+        <div className="mb-12 flex flex-wrap items-center justify-center gap-2">
+          <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest mr-1">
+            Popular Tracks:
+          </span>
+          {[
+            "Next.js & TypeScript",
+            "Golang",
+            "Spring Boot & React",
+            "Python & FastAPI",
+            "Rust",
+          ].map((track) => (
+            <Link
+              key={track}
+              href={`/projects?track=${encodeURIComponent(track)}`}
+              className="rounded-lg border border-white/[0.08] bg-[#0E0E14] px-2.5 py-1 text-xs font-medium text-neutral-400 transition-all hover:border-white/25 hover:bg-[#14141C] hover:text-white"
+            >
+              {track}
+            </Link>
+          ))}
+        </div>
+
+        {/* High-Fidelity Workspace Preview Mockup — Centered Container */}
+        <div className="w-full max-w-3xl mx-auto text-left">
           <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0A0A0E] shadow-2xl shadow-black/80 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]">
             {/* Window Title Bar */}
             <div className="flex items-center justify-between border-b border-white/[0.08] bg-[#0E0E14] px-4 py-3">
@@ -161,14 +161,14 @@ export function HeroSection() {
                 </div>
                 <div className="text-neutral-500">&#47;&#47; Compute unbroken daily streaks across user timezone</div>
                 <div>
-                  <span className="text-white font-semibold">func</span>{" "}
-                  <span className="text-neutral-300">CalculateStreak</span>(logs []CheckIn, tz *time.Location) StreakResult &#123;
+                  <span className="text-indigo-400 font-semibold">func</span>{" "}
+                  <span className="text-sky-300">CalculateStreak</span>(logs []CheckIn, tz *time.Location) StreakResult &#123;
                 </div>
                 <div className="text-neutral-400">
-                  &nbsp;&nbsp;current, best := <span className="text-emerald-400">0</span>, <span className="text-emerald-400">0</span>
+                  &nbsp;&nbsp;current, best := <span className="text-amber-400">0</span>, <span className="text-amber-400">0</span>
                 </div>
                 <div className="text-neutral-400">
-                  &nbsp;&nbsp;<span className="text-white font-semibold">return</span> StreakResult&#123;Current: current, Longest: best&#125;
+                  &nbsp;&nbsp;<span className="text-indigo-400 font-semibold">return</span> StreakResult&#123;Current: current, Longest: best&#125;
                 </div>
                 <div>&#125;</div>
               </div>

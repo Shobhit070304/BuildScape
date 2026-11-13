@@ -1,6 +1,8 @@
 import mongoose, { Types } from "mongoose";
 import { projectRepository } from "../repositories/projects.repository";
 import { progressRepository } from "../repositories/progress.repository";
+import { userRepository } from "../repositories/users.repository";
+import { verificationService } from "./verification.service";
 import { HttpError } from "./httpError";
 import { validateProjectInput } from "./projectValidation";
 import { feedbackRepository } from "../repositories/feedback.repository";
@@ -32,6 +34,7 @@ export const projectsService = {
     const project = await this.getBySlug(slug);
     const phaseIndex = project.phases.findIndex((item) => item.id === phaseId);
     if (phaseIndex === -1) throw new HttpError(404, "Phase not found");
+    const targetPhase = project.phases[phaseIndex];
 
     const session = await mongoose.startSession();
     try {
@@ -40,15 +43,17 @@ export const projectsService = {
         if (!enrollment) throw new HttpError(403, "Enroll in this project before updating progress");
 
         await progressRepository.markPhaseComplete(userId, project._id, phaseId, session);
+
+        // When a phase is completed, also mark all tasks of this phase as completed
+        if (targetPhase?.tasks && targetPhase.tasks.length > 0) {
+          const taskIds = targetPhase.tasks.map((item) => item.id);
+          await progressRepository.markAllPhaseTasksComplete(userId, project._id, phaseId, taskIds, session);
+        }
+
         const completedPhases = await progressRepository.listCompletedPhases(userId, project._id, session);
 
-        // Keep the active phase aligned with the newly persisted completion.
-        const currentIdx = enrollment.currentPhaseIndex ?? 0;
-        const nextPhaseIndex = Math.min(
-          Math.max(0, project.phases.length - 1),
-          Math.max(currentIdx, phaseIndex + 1)
-        );
-        await progressRepository.setCurrentPhase(userId, project._id, nextPhaseIndex, session);
+        // Do not auto-switch phase on completion: keep user on current phase
+        await progressRepository.setCurrentPhase(userId, project._id, phaseIndex, session);
 
         if (completedPhases.length >= project.phases.length && project.phases.length > 0) {
           await progressRepository.setProjectCompletedIfMissing(userId, project._id, new Date(), session);
@@ -61,8 +66,8 @@ export const projectsService = {
 
   async uncompletePhase(userId: string, slug: string, phaseId: string) {
     const project = await this.getBySlug(slug);
-    const phase = project.phases.find((item) => item.id === phaseId);
-    if (!phase) throw new HttpError(404, "Phase not found");
+    const phaseIndex = project.phases.findIndex((item) => item.id === phaseId);
+    if (phaseIndex === -1) throw new HttpError(404, "Phase not found");
 
     const session = await mongoose.startSession();
     try {
@@ -71,16 +76,8 @@ export const projectsService = {
         if (!enrollment) throw new HttpError(403, "Enroll in this project before updating progress");
 
         await progressRepository.unmarkPhaseComplete(userId, project._id, phaseId, session);
-        const remaining = await progressRepository.listCompletedPhases(userId, project._id, session);
-        const firstIncompleteIndex = project.phases.findIndex(
-          (item) => !remaining.some((completed) => completed.phaseId === item.id)
-        );
-        await progressRepository.setCurrentPhase(
-          userId,
-          project._id,
-          Math.max(0, firstIncompleteIndex === -1 ? project.phases.length - 1 : firstIncompleteIndex),
-          session
-        );
+        // Do not auto-switch phase: keep user on current phase
+        await progressRepository.setCurrentPhase(userId, project._id, phaseIndex, session);
         // Completion and repository-check achievements are retained when progress is edited.
       });
     } finally {
@@ -104,18 +101,145 @@ export const projectsService = {
     }
   },
 
+  async toggleTaskProgress(userId: string, slug: string, phaseId: string, taskId: string, completed?: boolean) {
+    const project = await this.getBySlug(slug);
+    const phase = project.phases.find((item) => item.id === phaseId);
+    if (!phase) throw new HttpError(404, "Phase not found");
+
+    const enrollment = await progressRepository.findEnrollment(userId, project._id);
+    if (!enrollment) throw new HttpError(403, "Enroll in this project before tracking task progress");
+
+    const completedTasksMap = await progressRepository.listCompletedTasks(userId, project._id);
+    const currentCompleted = completedTasksMap[phaseId] ?? [];
+    const isNowCompleted = completed !== undefined ? completed : !currentCompleted.includes(taskId);
+
+    await progressRepository.toggleMilestoneTask(userId, project._id, phaseId, taskId, isNowCompleted);
+
+    const updatedTasksMap = await progressRepository.listCompletedTasks(userId, project._id);
+    const completedTasksForPhase = updatedTasksMap[phaseId] ?? [];
+    const phaseTasks = phase.tasks ?? [];
+    let phaseAutoCompleted = false;
+
+    // If all tasks of the phase are marked done, automatically mark the phase completed
+    if (
+      isNowCompleted &&
+      phaseTasks.length > 0 &&
+      phaseTasks.every((task) => completedTasksForPhase.includes(task.id))
+    ) {
+      const completedPhases = await progressRepository.listCompletedPhases(userId, project._id);
+      const alreadyCompleted = completedPhases.some((item) => item.phaseId === phaseId);
+      if (!alreadyCompleted) {
+        await this.completePhase(userId, slug, phaseId);
+        phaseAutoCompleted = true;
+      }
+    }
+
+    return {
+      taskId,
+      phaseId,
+      completed: isNowCompleted,
+      completedTasks: completedTasksForPhase,
+      phaseCompleted: phaseAutoCompleted,
+    };
+  },
+
+  async verifyProjectSubmission(userId: string, slug: string, data: { githubRepoUrl: string; liveDemoUrl?: string }) {
+    const project = await this.getBySlug(slug);
+    const enrollment = await progressRepository.findEnrollment(userId, project._id);
+    if (!enrollment) throw new HttpError(403, "Enroll in this project before requesting verification");
+
+    const user = await userRepository.findById(userId);
+
+    const verificationResult = await verificationService.verifyProjectSubmission(
+      slug,
+      data.githubRepoUrl,
+      data.liveDemoUrl,
+      user ? { name: user.name, username: user.username, email: user.email } : undefined
+    );
+
+    const updatedEnrollment = await progressRepository.setVerification(userId, project._id, {
+      githubRepoUrl: verificationResult.githubRepoUrl,
+      liveDemoUrl: verificationResult.liveDemoUrl,
+      certificateId: verificationResult.certificateId,
+      verificationDetails: verificationResult.verificationDetails,
+    });
+
+    await invalidateProjectCache(slug);
+
+    return {
+      isVerified: true,
+      verifiedAt: updatedEnrollment?.verifiedAt || verificationResult.verifiedAt,
+      certificateId: verificationResult.certificateId,
+      githubRepoUrl: verificationResult.githubRepoUrl,
+      liveDemoUrl: verificationResult.liveDemoUrl,
+      verificationDetails: verificationResult.verificationDetails,
+    };
+  },
+
+  async getCertificate(certificateId: string) {
+    const enrollment = await progressRepository.findEnrollmentByCertificateId(certificateId);
+    if (!enrollment) throw new HttpError(404, "Certificate not found or unverified");
+
+    const user = enrollment.userId as unknown as { name: string; username?: string; avatar?: string } | null;
+    const project = enrollment.projectId as unknown as {
+      _id: Types.ObjectId;
+      slug: string;
+      title: string;
+      tagline: string;
+      track: string;
+      difficulty: string;
+      estimatedHours: number;
+      techStack: string[];
+      deliverable?: string;
+      phases?: { id: string; title: string }[];
+    } | null;
+
+    if (!user || !project) throw new HttpError(404, "Certificate data could not be resolved");
+
+    return {
+      certificateId: enrollment.certificateId,
+      verifiedAt: enrollment.verifiedAt || enrollment.completedAt || enrollment.enrolledAt,
+      githubRepoUrl: enrollment.githubRepoUrl,
+      liveDemoUrl: enrollment.liveDemoUrl,
+      verificationDetails: enrollment.verificationDetails,
+      recipient: {
+        name: user.name,
+        username: user.username,
+        avatar: user.avatar,
+      },
+      project: {
+        slug: project.slug,
+        title: project.title,
+        tagline: project.tagline,
+        track: project.track,
+        difficulty: project.difficulty,
+        estimatedHours: project.estimatedHours,
+        techStack: project.techStack,
+        deliverable: project.deliverable,
+        phaseCount: project.phases?.length ?? 0,
+      },
+    };
+  },
+
   async getProgress(userId: string, slug: string) {
     const project = await projectRepository.findPhasesBySlug(slug);
     if (!project) throw new HttpError(404, "Project not found");
-    const [enrollment, completedPhases] = await Promise.all([
+    const [enrollment, completedPhases, completedTasks] = await Promise.all([
       progressRepository.findEnrollment(userId, project._id),
       progressRepository.listCompletedPhases(userId, project._id),
+      progressRepository.listCompletedTasks(userId, project._id),
     ]);
     return {
       enrolled: Boolean(enrollment),
       currentPhaseIndex: enrollment?.currentPhaseIndex ?? 0,
       completedAt: enrollment?.completedAt,
+      isVerified: Boolean(enrollment?.isVerified),
+      verifiedAt: enrollment?.verifiedAt,
+      certificateId: enrollment?.certificateId,
+      githubRepoUrl: enrollment?.githubRepoUrl,
+      liveDemoUrl: enrollment?.liveDemoUrl,
       completedPhases: completedPhases.map(({ phaseId, completedAt }) => ({ phaseId, completedAt })),
+      completedTasks,
     };
   },
 
@@ -142,6 +266,11 @@ export const projectsService = {
         enrollmentId: enrollment._id,
         enrolledAt: enrollment.enrolledAt,
         completedAt: enrollment.completedAt,
+        isVerified: Boolean(enrollment.isVerified),
+        verifiedAt: enrollment.verifiedAt,
+        certificateId: enrollment.certificateId,
+        githubRepoUrl: enrollment.githubRepoUrl,
+        liveDemoUrl: enrollment.liveDemoUrl,
         currentPhaseIndex: enrollment.currentPhaseIndex,
         completedCount: completed.length,
         totalPhases: project.phases?.length ?? 0,

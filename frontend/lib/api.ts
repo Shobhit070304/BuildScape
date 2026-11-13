@@ -191,6 +191,34 @@ export const api = {
       { method: "DELETE" }
     ),
 
+  toggleTaskProgress: (slug: string, phaseId: string, taskId: string, completed?: boolean) =>
+    request<{ taskId: string; phaseId: string; completed: boolean; completedTasks: string[]; phaseCompleted?: boolean }>(
+      `/api/projects/${slug}/phases/${encodeURIComponent(phaseId)}/tasks/${encodeURIComponent(taskId)}/toggle`,
+      { method: "POST", body: JSON.stringify({ completed }) }
+    ),
+
+  verifyProject: (slug: string, data: { githubRepoUrl: string; liveDemoUrl?: string }) =>
+    request<{
+      isVerified: boolean;
+      certificateId: string;
+      verifiedAt: string;
+      githubRepoUrl: string;
+      liveDemoUrl?: string;
+      verificationDetails: {
+        commitCount?: number;
+        repoOwner?: string;
+        repoName?: string;
+        fingerprintMatched?: string[];
+        verifiedChecks?: string[];
+      };
+    }>(`/api/projects/${slug}/verify`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  getCertificate: (certificateId: string) =>
+    request<{ certificate: CertificateData }>(`/api/projects/certificates/${encodeURIComponent(certificateId)}`),
+
   getEnrolledProjects: () =>
     request<{ enrollments: EnrolledProjectItem[] }>("/api/projects/my/enrolled"),
 
@@ -235,6 +263,11 @@ export interface EnrolledProjectItem {
   enrollmentId: string;
   enrolledAt: string;
   completedAt?: string;
+  isVerified?: boolean;
+  verifiedAt?: string;
+  certificateId?: string;
+  githubRepoUrl?: string;
+  liveDemoUrl?: string;
   currentPhaseIndex: number;
   completedCount: number;
   totalPhases: number;
@@ -300,7 +333,43 @@ export interface ProgressResponse {
   enrolled: boolean;
   currentPhaseIndex: number;
   completedAt?: string;
+  isVerified?: boolean;
+  verifiedAt?: string;
+  certificateId?: string;
+  githubRepoUrl?: string;
+  liveDemoUrl?: string;
   completedPhases: { phaseId: string; completedAt: string }[];
+  completedTasks?: Record<string, string[]>;
+}
+
+export interface CertificateData {
+  certificateId: string;
+  verifiedAt: string;
+  githubRepoUrl: string;
+  liveDemoUrl?: string;
+  verificationDetails?: {
+    commitCount?: number;
+    repoOwner?: string;
+    repoName?: string;
+    fingerprintMatched?: string[];
+    verifiedChecks?: string[];
+  };
+  recipient: {
+    name: string;
+    username?: string;
+    avatar?: string;
+  };
+  project: {
+    slug: string;
+    title: string;
+    tagline: string;
+    track: string;
+    difficulty: string;
+    estimatedHours: number;
+    techStack: string[];
+    deliverable?: string;
+    phaseCount: number;
+  };
 }
 
 export type CurriculumIssueCategory = "outdated" | "broken" | "unclear" | "other";

@@ -129,9 +129,9 @@ export default function ProjectsPage() {
       <Navbar />
       <main className="w-full bg-[#050507] min-h-screen text-white pb-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-10">
-          {/* Header Banner */}
-          <div className="mb-8">
-            <div className="flex items-center gap-2.5 mb-3">
+          {/* Header Banner — Centered & Scaled */}
+          <div className="mb-8 text-center flex flex-col items-center justify-center max-w-2xl mx-auto">
+            <div className="flex items-center gap-2.5 mb-2.5">
               <span className="pill-mono">
                 <Sparkles className="h-3 w-3 text-white" />
                 <span>CURRICULUM BLUEPRINTS</span>
@@ -144,10 +144,10 @@ export default function ProjectsPage() {
               )}
             </div>
 
-            <h1 className="font-sans text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white mb-3">
+            <h1 className="font-sans text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white mb-2">
               Production-Grade Engineering Blueprints
             </h1>
-            <p className="max-w-3xl text-sm sm:text-base leading-relaxed text-neutral-400">
+            <p className="text-xs sm:text-sm leading-relaxed text-neutral-400">
               Real-world systems built from scratch. Every phase covers architecture decisions, deep-dive mental models, structured tasks, code checkpoints, and pitfalls.
             </p>
           </div>
@@ -354,7 +354,7 @@ export default function ProjectsPage() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {filtered.map((project) => (
                 <ProjectCard key={project.id} project={project} />
               ))}

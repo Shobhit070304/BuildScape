@@ -345,15 +345,19 @@ code, pre {
 }
 .prose tr:nth-child(even) td { background: rgba(255, 255, 255, 0.02); }
 
-/* ─── Syntax Highlight ───────────────────────────────────────── */
-.hljs { background: transparent !important; color: #E4E4E7 !important; }
-.hljs-keyword { color: #FFFFFF !important; font-weight: 600; }
-.hljs-string { color: #A1A1AA !important; }
-.hljs-comment { color: #52525B !important; font-style: italic; }
-.hljs-number { color: #E4E4E7 !important; }
-.hljs-function, .hljs-title { color: #FFFFFF !important; }
-.hljs-built_in { color: #D4D4D8 !important; }
-.hljs-type { color: #FFFFFF !important; }
-.hljs-variable { color: #FFFFFF !important; }
-.hljs-attr, .hljs-attribute { color: #D4D4D8 !important; }
-.hljs-punctuation { color: #71717A !important; }
+/* ─── Syntax Highlight (Vibrant Modern Developer Theme) ────────── */
+.hljs { background: transparent !important; color: #E2E8F0 !important; }
+.hljs-keyword, .hljs-selector-tag, .hljs-operator { color: #818CF8 !important; font-weight: 600; }
+.hljs-string, .hljs-doctag { color: #34D399 !important; }
+.hljs-title, .hljs-title.function_, .hljs-section { color: #60A5FA !important; font-weight: 600; }
+.hljs-function { color: #60A5FA !important; }
+.hljs-comment, .hljs-quote { color: #64748B !important; font-style: italic; }
+.hljs-number, .hljs-literal { color: #F59E0B !important; }
+.hljs-variable, .hljs-template-variable { color: #F87171 !important; }
+.hljs-type, .hljs-class .hljs-title { color: #38BDF8 !important; font-weight: 600; }
+.hljs-attr, .hljs-attribute { color: #A78BFA !important; }
+.hljs-built_in { color: #2DD4BF !important; }
+.hljs-punctuation { color: #94A3B8 !important; }
+.hljs-tag { color: #F43F5E !important; }
+.hljs-name { color: #818CF8 !important; font-weight: 600; }
+.hljs-params { color: #E2E8F0 !important; }

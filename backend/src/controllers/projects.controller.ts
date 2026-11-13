@@ -80,3 +80,40 @@ export const deleteProject = asyncHandler(async (req, res) => {
   const project = await projectsService.delete(String(req.params.slug));
   res.json({ success: true, message: `Project “${project.title}” and its learner data were deleted` });
 });
+
+export const toggleTaskProgress = asyncHandler(async (req, res) => {
+  const { slug, phaseId, taskId } = req.params;
+  const { completed } = req.body ?? {};
+  const result = await projectsService.toggleTaskProgress(
+    req.user!.userId,
+    String(slug),
+    String(phaseId),
+    String(taskId),
+    typeof completed === "boolean" ? completed : undefined
+  );
+  res.json(result);
+});
+
+export const verifyProjectSubmission = asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+  const { githubRepoUrl, liveDemoUrl } = req.body ?? {};
+  if (!githubRepoUrl || typeof githubRepoUrl !== "string") {
+    res.status(400).json({ message: "githubRepoUrl is required" });
+    return;
+  }
+  const result = await projectsService.verifyProjectSubmission(
+    req.user!.userId,
+    String(slug),
+    {
+      githubRepoUrl,
+      liveDemoUrl: typeof liveDemoUrl === "string" ? liveDemoUrl : undefined,
+    }
+  );
+  res.json(result);
+});
+
+export const getProjectCertificate = asyncHandler(async (req, res) => {
+  const { certificateId } = req.params;
+  const certificate = await projectsService.getCertificate(String(certificateId));
+  res.json({ certificate });
+});

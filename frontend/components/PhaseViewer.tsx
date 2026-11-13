@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
 import {
   CheckCircle2,
   Circle,
@@ -18,12 +19,17 @@ import {
   Layers,
   Trash2,
   Clock,
+  Check,
+  ShieldCheck,
+  Award,
+  ExternalLink,
 } from "lucide-react";
 import type { Project, Phase } from "@/lib/projects";
 import type { ProgressController } from "@/hooks/useProgress";
 import { useAuth } from "@/context/AuthContext";
 import { AssistantDrawer } from "./AssistantDrawer";
 import { MarkdownContent } from "./MarkdownContent";
+import { ProjectVerificationModal } from "./ProjectVerificationModal";
 import { api, type CurriculumIssueCategory } from "@/lib/api";
 
 function PhaseSidebarItem({
@@ -31,12 +37,14 @@ function PhaseSidebarItem({
   index,
   isActive,
   isCompleted,
+  completedTasksCount = 0,
   onClick,
 }: {
   phase: Phase;
   index: number;
   isActive: boolean;
   isCompleted: boolean;
+  completedTasksCount?: number;
   onClick: () => void;
 }) {
   const estTime = phase.estimatedMinutes
@@ -89,7 +97,11 @@ function PhaseSidebarItem({
           <div className="mt-1 flex items-center gap-1.5 font-mono text-[0.625rem] text-neutral-500 group-hover:text-neutral-400">
             {estTime && <span>{estTime}</span>}
             {estTime && taskCount > 0 && <span>•</span>}
-            {taskCount > 0 && <span>{taskCount} tasks</span>}
+            {taskCount > 0 && (
+              <span className={completedTasksCount > 0 ? "text-emerald-400 font-medium" : ""}>
+                {completedTasksCount > 0 ? `${completedTasksCount}/${taskCount} tasks` : `${taskCount} tasks`}
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -210,6 +222,7 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
   const [issueMessage, setIssueMessage] = useState("");
   const [issueSaving, setIssueSaving] = useState(false);
   const [issueFeedback, setIssueFeedback] = useState("");
+  const [verificationModalOpen, setVerificationModalOpen] = useState(false);
   const savedPhaseRestored = useRef(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
@@ -217,8 +230,16 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
     enrolled,
     currentPhaseIndex,
     completed,
+    completedTasks,
+    isVerified,
+    certificateId,
+    githubRepoUrl,
+    liveDemoUrl,
     hydrated,
     togglePhase,
+    toggleTask,
+    isTaskCompleted,
+    setVerificationSuccess,
     isCompleted,
     clearProgress,
     setActivePhase,
@@ -293,18 +314,9 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
 
   const handleToggleActivePhase = async () => {
     if (!activePhase) return;
-    const wasCompleted = isCompleted(activePhase.id);
-    if (!await togglePhase(activePhase.id)) return;
-    if (!wasCompleted && activeIndex + 1 < totalPhases) {
-      goTo(activeIndex + 1);
-      return;
-    }
-    if (wasCompleted) {
-      const firstIncomplete = project.phases.findIndex((phase) =>
-        phase.id === activePhase.id ? true : !completed.includes(phase.id)
-      );
-      goTo(firstIncomplete >= 0 ? firstIncomplete : activeIndex);
-    }
+    const activePhaseTaskIds = activePhase.tasks?.map((item) => item.id) ?? [];
+    await togglePhase(activePhase.id, activePhaseTaskIds);
+    // Do not auto-switch phase on completion: user remains on the current phase
   };
 
   const saveNote = async () => {
@@ -390,6 +402,7 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
               index={i}
               isActive={i === activeIndex}
               isCompleted={hydrated && isCompleted(phase.id)}
+              completedTasksCount={completedTasks[phase.id]?.length ?? 0}
               onClick={() => goTo(i)}
             />
           ))}
@@ -501,6 +514,22 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
                 )}
               </button>
             )}
+
+            {/* Verify Build / Certificate Header Button when all phases completed */}
+            {enrolled && hydrated && allDone && (
+              <button
+                type="button"
+                onClick={() => setVerificationModalOpen(true)}
+                className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                  isVerified
+                    ? "border border-emerald-500/40 bg-emerald-950/30 text-emerald-300 hover:bg-emerald-950/50"
+                    : "border border-white/20 bg-white/[0.08] text-white hover:bg-white/[0.15] shadow-xs"
+                }`}
+              >
+                <ShieldCheck className={`h-3.5 w-3.5 ${isVerified ? "text-emerald-400" : "text-white"}`} />
+                <span>{isVerified ? "Verified Proof" : "Verify Build"}</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -514,19 +543,53 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
             {/* Main content column */}
             <div className="flex-1 min-w-0">
               {allDone && hydrated && (
-                <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3.5 rounded-xl border border-emerald-500/30 bg-[#0A0A0E] p-4 shadow-md">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-950/60 text-emerald-400">
+                <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-xl border border-emerald-500/30 bg-[#0A0A0E] p-4 sm:p-5 shadow-lg">
+                  <div className="flex items-start gap-3.5">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-950/60 text-emerald-400 mt-0.5">
                       <Trophy className="h-5 w-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-semibold text-emerald-300">
-                        All Phases Completed!
-                      </h4>
-                      <p className="text-xs text-neutral-300 mt-0.5">
-                        Congratulations! You have completed every architectural phase in this project blueprint.
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-semibold text-emerald-300">
+                          All Phases Completed!
+                        </h4>
+                        {isVerified && (
+                          <span className="inline-flex items-center gap-1 rounded border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-emerald-300">
+                            <ShieldCheck className="h-3 w-3" />
+                            Verified Proof of Work
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-neutral-300 mt-1 max-w-xl leading-relaxed">
+                        {isVerified
+                          ? `Your repository has been verified against the production blueprint architecture. Certificate ID: ${certificateId}`
+                          : "Submit your public GitHub repository to run automated blueprint fingerprint checks and claim your shareable Proof of Work certificate."}
                       </p>
                     </div>
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-2">
+                    {isVerified && certificateId ? (
+                      <Link
+                        href={`/verify/${certificateId}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/20 px-3.5 py-2 text-xs font-semibold text-emerald-200 transition-all hover:bg-emerald-500/30"
+                      >
+                        <Award className="h-3.5 w-3.5" />
+                        <span>View Certificate</span>
+                        <ExternalLink className="h-3 w-3 opacity-70" />
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setVerificationModalOpen(true)}
+                        className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-white px-3.5 py-2 text-xs font-semibold text-black transition-all hover:bg-neutral-200 shadow-sm active:scale-95"
+                      >
+                        <ShieldCheck className="h-3.5 w-3.5" />
+                        <span>Verify & Claim Certificate</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -553,87 +616,164 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
                 </div>
               )}
 
-              {/* Tasks in this phase (In-flow checklist) */}
-              {activePhase.tasks && activePhase.tasks.length > 0 && (
-                <div id="phase-tasks-block" className="mb-8 rounded-xl border border-white/[0.08] bg-[#0A0A0E] shadow-sm overflow-hidden">
-                  <div className="flex items-center justify-between border-b border-white/[0.08] px-4 py-3 bg-[#07070A]">
-                    <div className="flex items-center gap-2">
-                      <Layers className="h-4 w-4 text-white" />
-                      <span className="font-mono text-xs font-semibold uppercase tracking-wider text-white">
-                        Milestone Tasks
+              {/* Mobile/Tablet Compact Milestones Bar (Only shown on screens < xl) */}
+              {activePhase.tasks && activePhase.tasks.length > 0 && (() => {
+                const phaseTasks = activePhase.tasks;
+                const activePhaseTaskIds = phaseTasks.map((t) => t.id);
+                const completedCountForPhase = phaseTasks.filter((t) =>
+                  isTaskCompleted(activePhase.id, t.id)
+                ).length;
+                const allPhaseTasksDone = completedCountForPhase === phaseTasks.length;
+
+                return (
+                  <div className="xl:hidden mb-6 rounded-xl border border-white/[0.08] bg-[#0A0A0E] p-4 shadow-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <Layers className="h-4 w-4 text-white" />
+                        <span className="font-mono text-xs font-semibold uppercase tracking-wider text-white">
+                          Phase Milestones
+                        </span>
+                        {allPhaseTasksDone && (
+                          <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-emerald-400 border border-emerald-500/20">
+                            Completed
+                          </span>
+                        )}
+                      </div>
+                      <span className="font-mono text-xs text-neutral-400">
+                        {completedCountForPhase}/{phaseTasks.length} done
                       </span>
                     </div>
-                    <span className="font-mono text-[0.6875rem] text-neutral-400">
-                      {activePhase.tasks.length} tasks scheduled
-                    </span>
-                  </div>
-                  <div className="divide-y divide-white/[0.04]">
-                    {activePhase.tasks.map((task, ti) => (
+
+                    <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
                       <div
-                        key={task.id}
-                        id={`task-item-${ti + 1}`}
-                        className="flex items-baseline gap-3.5 px-4 py-2.5 transition-colors hover:bg-white/[0.02]"
-                      >
-                        <span className="shrink-0 font-mono text-xs font-bold text-neutral-400">
-                          {String(ti + 1).padStart(2, "0")}
-                        </span>
-                        <span className="text-xs sm:text-[0.8125rem] text-neutral-200 leading-snug">
-                          {task.title}
-                        </span>
-                      </div>
-                    ))}
+                        className="h-full rounded-full bg-emerald-400 transition-all duration-300"
+                        style={{ width: `${(completedCountForPhase / phaseTasks.length) * 100}%` }}
+                      />
+                    </div>
+
+                    <div className="mt-3.5 space-y-2">
+                      {phaseTasks.map((task) => {
+                        const done = isTaskCompleted(activePhase.id, task.id);
+                        return (
+                          <button
+                            key={task.id}
+                            type="button"
+                            disabled={!enrolled}
+                            onClick={() => void toggleTask(activePhase.id, task.id, activePhaseTaskIds)}
+                            className={`flex w-full cursor-pointer items-start gap-2.5 rounded-lg border p-2 text-left transition-all ${
+                              done
+                                ? "border-emerald-500/20 bg-emerald-950/10 text-neutral-400"
+                                : "border-white/[0.06] bg-[#050507] text-neutral-200 hover:border-white/20 hover:text-white"
+                            }`}
+                          >
+                            <div className="mt-0.5 shrink-0">
+                              <div
+                                className={`flex h-4 w-4 items-center justify-center rounded-full border transition-all ${
+                                  done
+                                    ? "border-emerald-500 bg-emerald-500 text-black shadow-xs"
+                                    : "border-white/25 bg-white/[0.03] text-transparent"
+                                }`}
+                              >
+                                <Check className="h-2.5 w-2.5 stroke-[3]" />
+                              </div>
+                            </div>
+                            <span
+                              className={`text-xs leading-snug ${
+                                done
+                                  ? "line-through decoration-neutral-700 text-neutral-500"
+                                  : "text-neutral-200"
+                              }`}
+                            >
+                              {task.title}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               <MarkdownContent>{activePhase.content}</MarkdownContent>
             </div>
 
-            {/* Right-Side Tasks Quick Navigation Rail (Sticky on desktop) */}
-            {activePhase.tasks && activePhase.tasks.length > 0 && (
-              <aside className="hidden xl:block w-72 shrink-0 sticky top-4">
-                <div className="rounded-xl border border-white/[0.08] bg-[#0A0A0E] p-4 shadow-md">
-                  <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/[0.08]">
-                    <div className="flex items-center gap-2">
-                      <Layers className="h-4 w-4 text-white" />
-                      <span className="font-mono text-xs font-semibold uppercase tracking-wider text-white">
-                        Phase Tasks
+            {/* Right-Side Tasks Quick Navigation Rail (Sticky on desktop, compact & small) */}
+            {activePhase.tasks && activePhase.tasks.length > 0 && (() => {
+              const phaseTasks = activePhase.tasks;
+              const activePhaseTaskIds = phaseTasks.map((t) => t.id);
+              const completedCountForPhase = phaseTasks.filter((t) =>
+                isTaskCompleted(activePhase.id, t.id)
+              ).length;
+
+              return (
+                <aside className="hidden xl:block w-64 shrink-0 sticky top-4">
+                  <div className="rounded-xl border border-white/[0.08] bg-[#0A0A0E] p-3.5 shadow-md">
+                    <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-white/[0.08]">
+                      <div className="flex items-center gap-2">
+                        <Layers className="h-3.5 w-3.5 text-white" />
+                        <span className="font-mono text-xs font-semibold uppercase tracking-wider text-white">
+                          Phase Tasks
+                        </span>
+                      </div>
+                      <span className="font-mono text-[10px] text-neutral-400 px-2 py-0.5 rounded bg-[#07070A] border border-white/10 font-medium">
+                        {completedCountForPhase}/{phaseTasks.length}
                       </span>
                     </div>
-                    <span className="font-mono text-[10px] text-neutral-400 px-2 py-0.5 rounded bg-[#07070A] border border-white/10">
-                      {activePhase.tasks.length} total
-                    </span>
+                    <p className="text-[11px] text-neutral-400 mb-2 leading-relaxed">
+                      Milestones for this phase:
+                    </p>
+                    <nav className="space-y-1 max-h-[calc(100vh-16rem)] overflow-y-auto pr-1">
+                      {phaseTasks.map((task, ti) => {
+                        const done = isTaskCompleted(activePhase.id, task.id);
+                        return (
+                          <div
+                            key={task.id}
+                            className="group/item flex items-start gap-2 rounded-lg p-1.5 transition-colors hover:bg-white/[0.04]"
+                          >
+                            <button
+                              type="button"
+                              disabled={!enrolled}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                void toggleTask(activePhase.id, task.id, activePhaseTaskIds);
+                              }}
+                              className={`mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border transition-all ${
+                                done
+                                  ? "border-emerald-500 bg-emerald-500 text-black shadow-xs"
+                                  : "border-white/20 bg-white/[0.04] text-transparent hover:border-white/40"
+                              } ${!enrolled ? "cursor-not-allowed opacity-40" : "cursor-pointer"}`}
+                              title={done ? "Mark incomplete" : "Mark complete"}
+                            >
+                              <Check className="h-2.5 w-2.5 stroke-[3]" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                void toggleTask(activePhase.id, task.id, activePhaseTaskIds);
+                              }}
+                              className="w-full text-left flex items-start gap-2 text-neutral-400 hover:text-white group/name cursor-pointer min-w-0"
+                            >
+                              <span className="shrink-0 font-mono text-[10px] font-bold text-neutral-500 group-hover/name:text-neutral-300">
+                                {String(ti + 1).padStart(2, "0")}
+                              </span>
+                              <span
+                                className={`text-xs line-clamp-2 leading-snug transition-colors ${
+                                  done
+                                    ? "text-neutral-500 line-through decoration-neutral-700"
+                                    : "text-neutral-300 group-hover/name:text-white"
+                                }`}
+                              >
+                                {task.title}
+                              </span>
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </nav>
                   </div>
-                  <p className="text-[11px] text-neutral-400 mb-3 leading-relaxed">
-                    Milestones for this phase:
-                  </p>
-                  <nav className="space-y-1 max-h-[calc(100vh-16rem)] overflow-y-auto pr-1">
-                    {activePhase.tasks.map((task, ti) => (
-                      <button
-                        key={task.id}
-                        type="button"
-                        onClick={() => {
-                          const target = document.getElementById(`task-item-${ti + 1}`);
-                          if (target) {
-                            target.scrollIntoView({ behavior: "smooth", block: "center" });
-                            target.classList.add("bg-white/[0.06]");
-                            window.setTimeout(() => target.classList.remove("bg-white/[0.06]"), 1500);
-                          }
-                        }}
-                        className="w-full text-left flex items-start gap-2.5 rounded-lg p-2 text-xs transition-colors hover:bg-white/[0.04] text-neutral-400 hover:text-white group cursor-pointer"
-                      >
-                        <span className="mt-0.5 shrink-0 font-mono text-[10px] font-bold text-neutral-500 group-hover:text-neutral-300">
-                          {String(ti + 1).padStart(2, "0")}
-                        </span>
-                        <span className="line-clamp-2 leading-snug">
-                          {task.title}
-                        </span>
-                      </button>
-                    ))}
-                  </nav>
-                </div>
-              </aside>
-            )}
+                </aside>
+              );
+            })()}
           </div>
 
             {notesOpen && enrolled && (
@@ -732,18 +872,18 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
         </div>
 
         {/* Navigation footer */}
-        <div className="flex h-11 shrink-0 items-center justify-between border-t border-white/[0.08] bg-[#0A0A0E] px-3 sm:px-4 md:px-6">
+        <div className="flex h-12 shrink-0 items-center justify-between border-t border-white/[0.08] bg-[#0A0A0E] px-3 sm:px-4 md:px-6">
           <button
             onClick={() => goTo(activeIndex - 1)}
             disabled={activeIndex === 0}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs transition-colors ${
+            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all shadow-xs ${
               activeIndex === 0
-                ? "cursor-not-allowed text-neutral-600"
-                : "cursor-pointer text-neutral-400 hover:text-white"
+                ? "cursor-not-allowed border-white/[0.04] bg-white/[0.01] text-neutral-600 opacity-40"
+                : "cursor-pointer border-white/20 bg-white/[0.08] text-white hover:bg-white hover:text-black hover:border-white active:scale-95"
             }`}
           >
-            <ChevronLeft className="h-3.5 w-3.5" />
-            Previous
+            <ChevronLeft className="h-3.5 w-3.5 stroke-[2.5]" />
+            <span>Prev</span>
           </button>
 
           {/* Dot indicators */}
@@ -767,14 +907,14 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
           <button
             onClick={() => goTo(activeIndex + 1)}
             disabled={activeIndex === totalPhases - 1}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs transition-colors ${
+            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all shadow-xs ${
               activeIndex === totalPhases - 1
-                ? "cursor-not-allowed text-neutral-600"
-                : "cursor-pointer text-neutral-400 hover:text-white"
+                ? "cursor-not-allowed border-white/[0.04] bg-white/[0.01] text-neutral-600 opacity-40"
+                : "cursor-pointer border-white/20 bg-white/[0.08] text-white hover:bg-white hover:text-black hover:border-white active:scale-95"
             }`}
           >
-            Next
-            <ChevronRight className="h-3.5 w-3.5" />
+            <span>Next</span>
+            <ChevronRight className="h-3.5 w-3.5 stroke-[2.5]" />
           </button>
         </div>
       </div>
@@ -840,6 +980,7 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
                   index={i}
                   isActive={i === activeIndex}
                   isCompleted={hydrated && isCompleted(phase.id)}
+                  completedTasksCount={completedTasks[phase.id]?.length ?? 0}
                   onClick={() => {
                     goTo(i);
                     setMobileDrawerOpen(false);
@@ -870,6 +1011,19 @@ export function PhaseViewer({ project, initialPhaseId, progress }: PhaseViewerPr
           </div>
         </div>
       )}
+
+      {/* Verification & Proof of Work Modal */}
+      <ProjectVerificationModal
+        project={project}
+        isOpen={verificationModalOpen}
+        onClose={() => setVerificationModalOpen(false)}
+        existingCertificateId={certificateId}
+        existingGithubUrl={githubRepoUrl}
+        existingLiveUrl={liveDemoUrl}
+        onVerified={(data) => {
+          setVerificationSuccess(data);
+        }}
+      />
     </div>
   );
 }

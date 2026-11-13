@@ -53,29 +53,20 @@ export async function FeaturedProjectsSection() {
 
   return (
     <section id="projects" className="mb-20 sm:mb-28 lg:mb-32 scroll-mt-24">
-      {/* Header */}
-      <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="mb-2.5 inline-flex">
-            <span className="pill-mono">
-              <Sparkles className="h-3 w-3 text-white" />
-              <span>FLAGSHIP BLUEPRINTS</span>
-            </span>
-          </div>
-          <h2 className="font-sans text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
-            Featured Systems You Can Build
-          </h2>
-          <p className="mt-1.5 text-sm text-neutral-400">
-            Real software architectures with full source code guidance. No generic toy to-do apps.
-          </p>
+      {/* Header — Centered, Scaled & Crisp */}
+      <div className="mb-10 text-center flex flex-col items-center justify-center max-w-2xl mx-auto">
+        <div className="mb-2.5 inline-flex">
+          <span className="pill-mono">
+            <Sparkles className="h-3 w-3 text-white" />
+            <span>FLAGSHIP BLUEPRINTS</span>
+          </span>
         </div>
-        <Link
-          href="/projects"
-          className="group inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-white transition-opacity hover:opacity-80 whitespace-nowrap"
-        >
-          Browse All 7 Blueprints
-          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-        </Link>
+        <h2 className="font-sans text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-2">
+          Featured Systems You Can Build
+        </h2>
+        <p className="text-xs sm:text-sm text-neutral-400">
+          Real software architectures with full source code guidance. No generic toy to-do apps.
+        </p>
       </div>
 
       {/* Grid or Fallback */}

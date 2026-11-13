@@ -62,18 +62,18 @@ export function FaqSection() {
 
   return (
     <section id="faq" className="mb-20 sm:mb-28 lg:mb-32 scroll-mt-24">
-      {/* Header */}
+      {/* Header — Centered & Scaled */}
       <div className="mb-10 text-center">
-        <div className="mb-3 inline-flex">
+        <div className="mb-2.5 inline-flex">
           <span className="pill-mono">
             <HelpCircle className="h-3 w-3 text-white" />
             <span>FREQUENTLY ASKED QUESTIONS</span>
           </span>
         </div>
-        <h2 className="font-sans text-3xl sm:text-4xl font-extrabold tracking-tight text-white mb-3">
+        <h2 className="font-sans text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-2">
           Everything you need to know
         </h2>
-        <p className="mx-auto max-w-md text-sm leading-relaxed text-neutral-400">
+        <p className="mx-auto max-w-md text-xs sm:text-sm leading-relaxed text-neutral-400">
           Common questions about the curriculum, learning format, and portfolio deliverables.
         </p>
       </div>

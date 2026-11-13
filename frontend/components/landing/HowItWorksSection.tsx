@@ -43,18 +43,18 @@ const STEPS = [
 export function HowItWorksSection() {
   return (
     <section id="how-it-works" className="mb-20 sm:mb-28 lg:mb-32 scroll-mt-24">
-      {/* Header */}
-      <div className="mb-12 text-center">
-        <div className="mb-3 inline-flex">
+      {/* Header — Centered & Scaled */}
+      <div className="mb-10 text-center">
+        <div className="mb-2.5 inline-flex">
           <span className="pill-mono">
             <Zap className="h-3 w-3 text-white" />
             <span>THE LEARNING ENGINE</span>
           </span>
         </div>
-        <h2 className="font-sans text-3xl sm:text-4xl font-extrabold tracking-tight text-white mb-3">
+        <h2 className="font-sans text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-2">
           Curriculum, not a code dump.
         </h2>
-        <p className="mx-auto max-w-xl text-sm sm:text-base leading-relaxed text-neutral-400">
+        <p className="mx-auto max-w-lg text-xs sm:text-sm leading-relaxed text-neutral-400">
           You write every line of code locally. Step by step, with deep mental models, task checkpoints, and a verifiable production deployment.
         </p>
       </div>

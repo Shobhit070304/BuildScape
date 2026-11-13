@@ -34,6 +34,16 @@ function CopyablePre({ children, className, ...props }: ComponentProps<"pre">) {
     return <MermaidDiagram chart={code} />;
   }
 
+  let lang = "";
+  if (typeof className === "string") {
+    const match = className.match(/language-([a-zA-Z0-9_-]+)/);
+    if (match) lang = match[1];
+  }
+  if (!lang && isValidElement<{ className?: string }>(children) && typeof children.props.className === "string") {
+    const match = children.props.className.match(/language-([a-zA-Z0-9_-]+)/);
+    if (match) lang = match[1];
+  }
+
   const copyCode = async () => {
     try {
       await navigator.clipboard.writeText(code);
@@ -45,18 +55,33 @@ function CopyablePre({ children, className, ...props }: ComponentProps<"pre">) {
   };
 
   return (
-    <div className="group/code relative my-4 w-full max-w-full overflow-hidden rounded-xl border border-[#334155] shadow-lg shadow-black/40">
-      <button
-        type="button"
-        onClick={() => void copyCode()}
-        aria-label={copied ? "Code copied" : "Copy code"}
-        title={copied ? "Copied" : "Copy code or command"}
-        className="absolute right-2.5 top-2.5 z-10 inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/90 px-2.5 py-1 text-[11px] font-medium text-slate-300 opacity-100 transition-all hover:border-indigo-500 hover:text-white hover:bg-slate-700 sm:opacity-0 sm:group-hover/code:opacity-100 sm:focus:opacity-100 backdrop-blur-xs cursor-pointer"
-      >
-        {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-        {copied ? "Copied" : "Copy"}
-      </button>
-      <pre {...props} className={`!mt-0 !pt-10 overflow-x-auto bg-[#0B0F19] text-[#E2E8F0] ${className ?? ""}`}>
+    <div className="group/code relative my-5 w-full max-w-full overflow-hidden rounded-xl border border-white/[0.08] bg-[#07090F] shadow-2xl shadow-black/80">
+      {/* Code Header Bar with Window Controls & Language Tag */}
+      <div className="flex items-center justify-between border-b border-white/[0.08] bg-[#05060A] px-4 py-2">
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 opacity-80">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#EF4444]/70" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]/70" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[#10B981]/70" />
+          </div>
+          <span className="font-mono text-[11px] font-semibold text-neutral-400 uppercase tracking-wider ml-1">
+            {lang ? lang.toUpperCase() : "CODE"}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => void copyCode()}
+          aria-label={copied ? "Code copied" : "Copy code"}
+          title={copied ? "Copied" : "Copy code or command"}
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-medium text-neutral-300 transition-all hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
+        >
+          {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+          <span>{copied ? "Copied" : "Copy"}</span>
+        </button>
+      </div>
+
+      <pre {...props} className={`!mt-0 !p-4 sm:!p-5 overflow-x-auto bg-[#07090F] text-[#E2E8F0] font-mono text-[13px] leading-relaxed ${className ?? ""}`}>
         {children}
       </pre>
     </div>

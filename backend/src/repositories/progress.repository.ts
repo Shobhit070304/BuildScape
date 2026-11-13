@@ -1,10 +1,11 @@
 import { Types, type ClientSession } from "mongoose";
 import { UserProjectEnrollment } from "../models/UserProjectEnrollment";
 import { UserTaskProgress } from "../models/UserTaskProgress";
+import { UserMilestoneTaskProgress } from "../models/UserMilestoneTaskProgress";
 
 const asObjectId = (value: string) => new Types.ObjectId(value);
 
-// Enrollment and phase completion persistence operations.
+// Enrollment, phase completion, and task checklist persistence operations.
 export const progressRepository = {
   enroll: async (userId: string, projectId: Types.ObjectId) => {
     const query = { userId: asObjectId(userId), projectId };
@@ -28,6 +29,11 @@ export const progressRepository = {
     const query = UserProjectEnrollment.findOne({ userId: asObjectId(userId), projectId });
     return session ? query.session(session) : query;
   },
+
+  findEnrollmentByCertificateId: (certificateId: string) =>
+    UserProjectEnrollment.findOne({ certificateId, isVerified: true })
+      .populate("userId", "name avatar username email")
+      .populate("projectId"),
 
   countEnrollments: (projectId: Types.ObjectId) =>
     UserProjectEnrollment.countDocuments({ projectId }),
@@ -59,12 +65,98 @@ export const progressRepository = {
       { returnDocument: "after", session }
     ),
 
-  clearPhaseProgress: (userId: string, projectId: Types.ObjectId, session?: ClientSession) =>
-    UserTaskProgress.deleteMany({ userId: asObjectId(userId), projectId }, { session }),
+  setVerification: (
+    userId: string,
+    projectId: Types.ObjectId,
+    data: {
+      githubRepoUrl: string;
+      liveDemoUrl?: string;
+      certificateId: string;
+      verificationDetails: {
+        commitCount?: number;
+        repoOwner?: string;
+        repoName?: string;
+        fingerprintMatched?: string[];
+        verifiedChecks?: string[];
+      };
+    },
+    session?: ClientSession
+  ) =>
+    UserProjectEnrollment.findOneAndUpdate(
+      { userId: asObjectId(userId), projectId },
+      {
+        $set: {
+          isVerified: true,
+          verifiedAt: new Date(),
+          githubRepoUrl: data.githubRepoUrl,
+          liveDemoUrl: data.liveDemoUrl,
+          certificateId: data.certificateId,
+          verificationDetails: data.verificationDetails,
+          completedAt: new Date(),
+        },
+      },
+      { returnDocument: "after", session }
+    ),
+
+  toggleMilestoneTask: async (
+    userId: string,
+    projectId: Types.ObjectId,
+    phaseId: string,
+    taskId: string,
+    completed: boolean,
+    session?: ClientSession
+  ) => {
+    const filter = { userId: asObjectId(userId), projectId, phaseId, taskId };
+    if (completed) {
+      await UserMilestoneTaskProgress.findOneAndUpdate(
+        filter,
+        { ...filter, completedAt: new Date() },
+        { upsert: true, returnDocument: "after", session }
+      );
+    } else {
+      await UserMilestoneTaskProgress.findOneAndDelete(filter, { session });
+    }
+  },
+
+  markAllPhaseTasksComplete: async (
+    userId: string,
+    projectId: Types.ObjectId,
+    phaseId: string,
+    taskIds: string[],
+    session?: ClientSession
+  ) => {
+    if (!taskIds.length) return;
+    const now = new Date();
+    const ops = taskIds.map((taskId) => ({
+      updateOne: {
+        filter: { userId: asObjectId(userId), projectId, phaseId, taskId },
+        update: { $set: { userId: asObjectId(userId), projectId, phaseId, taskId, completedAt: now } },
+        upsert: true,
+      },
+    }));
+    await UserMilestoneTaskProgress.bulkWrite(ops, { session });
+  },
+
+  listCompletedTasks: async (userId: string, projectId: Types.ObjectId, session?: ClientSession) => {
+    const query = UserMilestoneTaskProgress.find({ userId: asObjectId(userId), projectId }).select("phaseId taskId");
+    const records = await (session ? query.session(session) : query);
+    const map: Record<string, string[]> = {};
+    for (const record of records) {
+      if (!map[record.phaseId]) map[record.phaseId] = [];
+      map[record.phaseId].push(record.taskId);
+    }
+    return map;
+  },
+
+  clearPhaseProgress: async (userId: string, projectId: Types.ObjectId, session?: ClientSession) => {
+    await UserTaskProgress.deleteMany({ userId: asObjectId(userId), projectId }, { session });
+    await UserMilestoneTaskProgress.deleteMany({ userId: asObjectId(userId), projectId }, { session });
+  },
 
   deleteProjectData: async (projectId: Types.ObjectId, session: ClientSession) => {
     await UserProjectEnrollment.deleteMany({ projectId }, { session });
     await UserTaskProgress.deleteMany({ projectId }, { session });
+    await UserMilestoneTaskProgress.deleteMany({ projectId }, { session });
   },
 
   listCompletedPhases: (userId: string, projectId: Types.ObjectId, session?: ClientSession) => {

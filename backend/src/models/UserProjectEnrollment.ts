@@ -10,6 +10,14 @@ export interface IUserProjectEnrollment {
   liveDemoUrl?: string;
   isVerified?: boolean;
   verifiedAt?: Date;
+  certificateId?: string;
+  verificationDetails?: {
+    commitCount?: number;
+    repoOwner?: string;
+    repoName?: string;
+    fingerprintMatched?: string[];
+    verifiedChecks?: string[];
+  };
 }
 
 const EnrollmentSchema = new Schema<IUserProjectEnrollment>(
@@ -22,6 +30,14 @@ const EnrollmentSchema = new Schema<IUserProjectEnrollment>(
     liveDemoUrl: { type: String, trim: true },
     isVerified: { type: Boolean, default: false },
     verifiedAt: { type: Date },
+    certificateId: { type: String, trim: true },
+    verificationDetails: {
+      commitCount: Number,
+      repoOwner: String,
+      repoName: String,
+      fingerprintMatched: [String],
+      verifiedChecks: [String],
+    },
   },
   { timestamps: { createdAt: "enrolledAt", updatedAt: false } }
 );
@@ -29,6 +45,7 @@ const EnrollmentSchema = new Schema<IUserProjectEnrollment>(
 // One enrollment per user-project pair
 EnrollmentSchema.index({ userId: 1, projectId: 1 }, { unique: true });
 EnrollmentSchema.index({ projectId: 1 });
+EnrollmentSchema.index({ certificateId: 1 }, { unique: true, sparse: true });
 
 export const UserProjectEnrollment = mongoose.model<IUserProjectEnrollment>(
   "UserProjectEnrollment",

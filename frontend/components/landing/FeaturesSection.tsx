@@ -10,18 +10,18 @@ import {
 export function FeaturesSection() {
   return (
     <section id="features" className="mb-20 sm:mb-28 lg:mb-32 scroll-mt-24">
-      {/* Section Header */}
-      <div className="mb-12 text-center">
-        <div className="mb-3 inline-flex">
+      {/* Section Header — Centered & Scaled */}
+      <div className="mb-10 text-center">
+        <div className="mb-2.5 inline-flex">
           <span className="pill-mono">
             <Sparkles className="h-3 w-3 text-white" />
             <span>ENGINEERING CAPABILITIES</span>
           </span>
         </div>
-        <h2 className="font-sans text-3xl sm:text-4xl font-extrabold tracking-tight text-white mb-3">
+        <h2 className="font-sans text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-2">
           Built for engineers who demand rigor.
         </h2>
-        <p className="mx-auto max-w-xl text-sm sm:text-base leading-relaxed text-neutral-400">
+        <p className="mx-auto max-w-lg text-xs sm:text-sm leading-relaxed text-neutral-400">
           No shallow toy examples. Every blueprint covers production telemetry, real database transactions, concurrency safety, and cloud deployments.
         </p>
       </div>

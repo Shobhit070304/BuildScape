@@ -57,18 +57,18 @@ export function ComparisonSection() {
 
   return (
     <section id="comparison" className="mb-20 sm:mb-28 lg:mb-32 scroll-mt-24">
-      {/* Section Header */}
+      {/* Section Header — Centered & Scaled */}
       <div className="mb-10 text-center">
-        <div className="mb-3 inline-flex">
+        <div className="mb-2.5 inline-flex">
           <span className="pill-mono">
             <Sparkles className="h-3 w-3 text-white" />
             <span>THE REAL DIFFERENCE</span>
           </span>
         </div>
-        <h2 className="font-sans text-3xl sm:text-4xl font-extrabold tracking-tight text-white mb-3">
+        <h2 className="font-sans text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-2">
           Tutorial Hell vs. The BuildScape Standard
         </h2>
-        <p className="mx-auto max-w-lg text-sm leading-relaxed text-neutral-400">
+        <p className="mx-auto max-w-lg text-xs sm:text-sm leading-relaxed text-neutral-400">
           Traditional tutorials give you passive syntax to memorize. BuildScape gives you production engineering judgment you own.
         </p>
       </div>
