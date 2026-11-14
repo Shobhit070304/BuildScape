@@ -10,9 +10,11 @@ import {
   RefreshCw,
   Loader2,
   ArrowRight,
+  Bookmark,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { ProjectCard } from "@/components/ProjectCard";
+import { TrackSidebarRail } from "@/components/TrackSidebarRail";
 import { mapApiProject } from "@/lib/projects";
 import { api, type EnrolledProjectItem } from "@/lib/api";
 import type { Project } from "@/lib/projects";
@@ -33,7 +35,7 @@ const CORE_TRACKS = [
 ];
 
 export default function ProjectsPage() {
-  const { user } = useAuth();
+  const { user, savedProjects } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [enrollments, setEnrollments] = useState<EnrolledProjectItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,6 +43,7 @@ export default function ProjectsPage() {
   const [search, setSearch] = useState("");
   const [selectedTrack, setSelectedTrack] = useState<string | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
 
   const loadProjects = useCallback(() => {
     api
@@ -137,14 +140,27 @@ export default function ProjectsPage() {
       const matchLevel =
         !selectedLevel || p.difficulty.toLowerCase() === selectedLevel.toLowerCase();
 
-      return matchSearch && matchTrack && matchLevel;
+      const matchSaved = !showSavedOnly || savedProjects.includes(p.slug);
+
+      return matchSearch && matchTrack && matchLevel && matchSaved;
     });
-  }, [projects, search, selectedTrack, selectedLevel]);
+  }, [projects, search, selectedTrack, selectedLevel, showSavedOnly, savedProjects]);
 
   return (
     <>
       <Navbar />
       <main className="w-full bg-[#050507] min-h-screen text-white pb-24 relative overflow-hidden">
+        {/* Track Hover Slider Rail */}
+        <TrackSidebarRail
+          selectedTrack={selectedTrack}
+          onSelectTrack={(track) => {
+            setShowSavedOnly(false);
+            setSelectedTrack(track);
+          }}
+          showSavedOnly={showSavedOnly}
+          onToggleSaved={setShowSavedOnly}
+        />
+
         {/* Rich Ambient Atmospheric Lighting */}
         <div
           className="pointer-events-none absolute left-1/2 top-0 h-[500px] w-full max-w-7xl -translate-x-1/2 bg-[radial-gradient(ellipse_80%_60%_at_50%_-15%,rgba(99,102,241,0.14),rgba(168,85,247,0.06)_40%,transparent_75%)]"
@@ -215,22 +231,45 @@ export default function ProjectsPage() {
               <div className="flex flex-wrap items-center gap-1.5 flex-1">
                 <button
                   type="button"
-                  onClick={() => setSelectedTrack(null)}
+                  onClick={() => {
+                    setShowSavedOnly(false);
+                    setSelectedTrack(null);
+                  }}
                   className={`rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all ${
-                    selectedTrack === null
+                    selectedTrack === null && !showSavedOnly
                       ? "bg-white text-black shadow-xs font-bold"
                       : "text-neutral-400 hover:text-white hover:bg-white/[0.04]"
                   }`}
                 >
                   All
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSavedOnly(!showSavedOnly);
+                    setSelectedTrack(null);
+                  }}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all ${
+                    showSavedOnly
+                      ? "bg-indigo-600 text-white shadow-xs font-bold"
+                      : "text-neutral-400 hover:text-white hover:bg-white/[0.04]"
+                  }`}
+                >
+                  <Bookmark className={`h-3 w-3 ${showSavedOnly ? "fill-white" : ""}`} />
+                  <span>Saved{savedProjects.length > 0 ? ` (${savedProjects.length})` : ""}</span>
+                </button>
+
                 {availableTracks.map((track) => {
-                  const isSelected = selectedTrack === track;
+                  const isSelected = selectedTrack === track && !showSavedOnly;
                   return (
                     <button
                       type="button"
                       key={track}
-                      onClick={() => setSelectedTrack(isSelected ? null : track)}
+                      onClick={() => {
+                        setShowSavedOnly(false);
+                        setSelectedTrack(isSelected ? null : track);
+                      }}
                       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all ${
                         isSelected
                           ? "bg-white text-black shadow-xs font-bold"

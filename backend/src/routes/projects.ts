@@ -21,6 +21,8 @@ import {
   getProjectCertificate,
   getPublicStats,
   getVerifiedShowcases,
+  toggleSaveProject,
+  getMySavedProjects,
 } from "../controllers/projects.controller";
 import { authenticate } from "../middleware/authenticate";
 import { requireAdmin } from "../middleware/authorize";
@@ -37,6 +39,7 @@ const feedbackLimiter = rateLimit({
 
 // User enrolled projects (must be before /:slug)
 router.get("/my/enrolled", authenticate, getEnrolledProjects);
+router.get("/my/saved", authenticate, getMySavedProjects);
 router.get("/my/issues", authenticate, getMyIssues);
 
 // Public verifiable certificate lookup (must be before /:slug)
@@ -55,6 +58,7 @@ router.delete("/:slug", authenticate, requireAdmin, deleteProject);
 
 // Protected student actions
 router.post("/:slug/enroll", authenticate, enrollProject);
+router.post("/:slug/save", authenticate, toggleSaveProject);
 router.post("/:slug/phases/:phaseId/complete", authenticate, completePhase);
 router.delete("/:slug/phases/:phaseId/complete", authenticate, uncompletePhase);
 router.post("/:slug/phases/:phaseId/tasks/:taskId/toggle", authenticate, toggleTaskProgress);

@@ -17,6 +17,7 @@ import {
   ExternalLink,
   BookOpen,
   Star,
+  Bookmark,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { ProjectVerificationModal } from "@/components/ProjectVerificationModal";
@@ -41,7 +42,7 @@ const STATUS_STYLES: Record<
 };
 
 export default function ProfilePage() {
-  const { user, isLoading: authLoading, login, logout, updateUsername, updateProfile } = useAuth();
+  const { user, isLoading: authLoading, savedProjects, login, logout, updateUsername, updateProfile } = useAuth();
   const [enrollments, setEnrollments] = useState<EnrolledProjectItem[]>([]);
   const [loadingEnrollments, setLoadingEnrollments] = useState(false);
   const [issues, setIssues] = useState<UserReportedIssue[]>([]);
@@ -205,6 +206,14 @@ export default function ProfilePage() {
                 />
               </div>
               {signInError && <p className="mt-3 text-xs text-rose-300">{signInError}</p>}
+              <div className="mt-4">
+                <Link
+                  href="/login?next=/profile"
+                  className="text-[11px] text-neutral-400 hover:text-white underline underline-offset-2 transition-colors"
+                >
+                  Or open dedicated Sign In page
+                </Link>
+              </div>
             </div>
           ) : (
             /* ───────────────── MINIMAL PROFILE LAYOUT (IMAGE 2) ───────────────── */
@@ -393,6 +402,46 @@ export default function ProfilePage() {
                     </div>
                   )}
                 </section>
+
+                {/* ── SAVED TO BUILD QUEUE ── */}
+                {savedProjects && savedProjects.length > 0 && (
+                  <section className="pt-2">
+                    <div className="flex items-center justify-between mb-4 border-b border-white/[0.08] pb-2">
+                      <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
+                        <Bookmark className="h-3 w-3 fill-indigo-400" />
+                        <span>SAVED TO BUILD QUEUE</span>
+                      </span>
+                      <span className="font-mono text-xs text-neutral-500">
+                        {savedProjects.length} bookmarked
+                      </span>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      {savedProjects.map((slug) => (
+                        <div
+                          key={slug}
+                          className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-[#0A0A0E] p-3.5 sm:p-4 hover:border-white/20 transition-all"
+                        >
+                          <div className="min-w-0 pr-3">
+                            <h4 className="font-sans font-bold text-xs sm:text-sm text-white capitalize truncate">
+                              {slug.replace(/-/g, " ")}
+                            </h4>
+                            <p className="font-mono text-[10px] text-neutral-400 mt-0.5">
+                              Bookmarked for your learning queue
+                            </p>
+                          </div>
+                          <Link
+                            href={`/projects/${slug}`}
+                            className="inline-flex items-center gap-1 rounded-lg bg-white/[0.06] border border-white/10 px-3 py-1 font-mono text-[11px] text-white hover:bg-white hover:text-black transition-colors shrink-0"
+                          >
+                            <span>View</span>
+                            <ArrowRight className="h-3 w-3" />
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
               </div>
 
               {/* ── Right Column: Account & Actions Cards (4 Cols) ── */}

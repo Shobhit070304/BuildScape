@@ -3,29 +3,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { LogOut, AlertCircle } from "lucide-react";
-import { GoogleLogin } from "@react-oauth/google";
+import { LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Logo } from "@/components/Logo";
 
 export function Navbar() {
-  const { user, isLoading, login, logout } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [loginError, setLoginError] = useState(false);
   const [logoutError, setLogoutError] = useState(false);
-
-  const handleGoogleSuccess = async (credential?: string) => {
-    if (!credential) {
-      setLoginError(true);
-      return;
-    }
-    setLoginError(false);
-    try {
-      await login(credential);
-    } catch {
-      setLoginError(true);
-    }
-  };
 
   const handleLogout = async () => {
     setLogoutError(false);
@@ -64,6 +49,13 @@ export function Navbar() {
             className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-white hover:bg-white/[0.05]"
           >
             Projects
+          </Link>
+
+          <Link
+            href="/roadmaps"
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-white hover:bg-white/[0.05]"
+          >
+            Roadmaps
           </Link>
 
           <Link
@@ -144,24 +136,12 @@ export function Navbar() {
               </button>
             </div>
           ) : (
-            <div className="flex flex-col items-end gap-1">
-              <div className="scale-[0.85] origin-right">
-                <GoogleLogin
-                  onSuccess={(res) => void handleGoogleSuccess(res.credential)}
-                  onError={() => setLoginError(true)}
-                  size="medium"
-                  shape="pill"
-                  theme="filled_black"
-                  text="signin_with"
-                />
-              </div>
-              {loginError && (
-                <span className="flex items-center gap-1 text-[10px] text-rose-400">
-                  <AlertCircle className="h-2.5 w-2.5" />
-                  Sign-in failed. Please try again.
-                </span>
-              )}
-            </div>
+            <Link
+              href="/login"
+              className="inline-flex items-center rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-neutral-200 transition-all hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
+            >
+              Sign In
+            </Link>
           )}
           {logoutError && (
             <span role="alert" className="text-[10px] text-rose-400">

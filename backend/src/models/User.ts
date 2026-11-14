@@ -13,6 +13,7 @@ export interface IUser {
   portfolioUrl?: string;
   linkedinUrl?: string;
   skills?: string[];
+  savedProjects?: string[];
   role: "user" | "admin";
   createdAt?: Date;
   updatedAt?: Date;
@@ -32,6 +33,7 @@ const UserSchema = new Schema<IUser>(
     portfolioUrl: { type: String, default: "" },
     linkedinUrl: { type: String, default: "" },
     skills: { type: [String], default: [] },
+    savedProjects: { type: [String], default: [] },
     role: { type: String, enum: ["user", "admin"], default: "user" },
   },
   { timestamps: true }

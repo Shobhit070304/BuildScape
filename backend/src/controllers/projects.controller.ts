@@ -178,3 +178,45 @@ export const getProjectCertificate = asyncHandler(async (req, res) => {
   const certificate = await projectsService.getCertificate(String(certificateId));
   res.json({ certificate });
 });
+
+export const toggleSaveProject = asyncHandler(async (req, res) => {
+  const userId = req.user!.userId;
+  const { slug } = req.params;
+  const cleanSlug = String(slug).trim().toLowerCase();
+
+  const user = await User.findById(userId);
+  if (!user) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+
+  const alreadySaved = (user.savedProjects || []).includes(cleanSlug);
+  let updatedUser;
+
+  if (alreadySaved) {
+    updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $pull: { savedProjects: cleanSlug } },
+      { new: true }
+    );
+  } else {
+    updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $addToSet: { savedProjects: cleanSlug } },
+      { new: true }
+    );
+  }
+
+  res.json({
+    saved: !alreadySaved,
+    savedProjects: updatedUser?.savedProjects || [],
+  });
+});
+
+export const getMySavedProjects = asyncHandler(async (req, res) => {
+  const userId = req.user!.userId;
+  const user = await User.findById(userId).select("savedProjects").lean();
+  res.json({
+    savedProjects: user?.savedProjects || [],
+  });
+});

@@ -13,9 +13,11 @@ import { api, AuthUser } from "@/lib/api";
 interface AuthContextValue {
   user: AuthUser | null;
   isLoading: boolean;
+  savedProjects: string[];
   login: (credential: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUsername: (username: string) => Promise<void>;
+  toggleSaveProject: (slug: string) => Promise<boolean>;
   updateProfile: (data: {
     name?: string;
     bio?: string;
@@ -31,15 +33,30 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue>({
   user: null,
   isLoading: true,
+  savedProjects: [],
   login: async () => {},
   logout: async () => {},
   updateUsername: async () => {},
+  toggleSaveProject: async () => false,
   updateProfile: async () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const savedProjects = user?.savedProjects ?? [];
+
+  const toggleSaveProject = useCallback(async (slug: string): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      const res = await api.toggleSaveProject(slug);
+      setUser((current) => current ? { ...current, savedProjects: res.savedProjects } : current);
+      return res.saved;
+    } catch {
+      return false;
+    }
+  }, [user]);
 
   // Restore session via cookie from backend on mount
   useEffect(() => {
@@ -92,7 +109,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, updateUsername, updateProfile }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        savedProjects,
+        login,
+        logout,
+        updateUsername,
+        toggleSaveProject,
+        updateProfile,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

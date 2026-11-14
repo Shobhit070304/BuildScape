@@ -55,6 +55,7 @@ export const getMe = asyncHandler(async (req, res) => {
       portfolioUrl: user.portfolioUrl ?? "",
       linkedinUrl: user.linkedinUrl ?? "",
       skills: user.skills ?? [],
+      savedProjects: user.savedProjects ?? [],
       role: user.role,
     },
   });
@@ -80,6 +81,7 @@ export const editProfile = asyncHandler(async (req, res) => {
       portfolioUrl: user.portfolioUrl ?? "",
       linkedinUrl: user.linkedinUrl ?? "",
       skills: user.skills ?? [],
+      savedProjects: user.savedProjects ?? [],
       role: user.role,
     },
   });

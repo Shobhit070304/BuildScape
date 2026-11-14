@@ -176,6 +176,14 @@ export const api = {
       method: "POST",
     }),
 
+  toggleSaveProject: (slug: string) =>
+    request<{ saved: boolean; savedProjects: string[] }>(`/api/projects/${slug}/save`, {
+      method: "POST",
+    }),
+
+  getMySavedProjects: () =>
+    request<{ savedProjects: string[] }>("/api/projects/my/saved"),
+
   getProgress: (slug: string) =>
     request<ProgressResponse>(`/api/projects/${slug}/progress`),
 
@@ -469,6 +477,7 @@ export interface AuthUser {
   portfolioUrl?: string;
   linkedinUrl?: string;
   skills?: string[];
+  savedProjects?: string[];
   role?: "user" | "admin";
 }
 

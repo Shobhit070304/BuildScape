@@ -52,6 +52,7 @@ export async function loginWithGoogle(credential: string) {
       portfolioUrl: user.portfolioUrl,
       linkedinUrl: user.linkedinUrl,
       skills: user.skills,
+      savedProjects: user.savedProjects ?? [],
       role: effectiveRole,
     },
   };
