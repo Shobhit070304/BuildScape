@@ -16,9 +16,12 @@ import {
   Sparkles,
   ExternalLink,
   BookOpen,
+  Star,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { ProjectVerificationModal } from "@/components/ProjectVerificationModal";
+import { ActivityHeatmap } from "@/components/ActivityHeatmap";
+import { ReviewModal } from "@/components/ReviewModal";
 import { useAuth } from "@/context/AuthContext";
 import {
   api,
@@ -47,6 +50,7 @@ export default function ProfilePage() {
   // Modals for Actions
   const [showEditModal, setShowEditModal] = useState(false);
   const [showIssuesModal, setShowIssuesModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
 
   // Profile Edit fields
   const [usernameDraft, setUsernameDraft] = useState("");
@@ -161,8 +165,21 @@ export default function ProfilePage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen w-full bg-[#050507] pb-24 pt-8 text-white">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <main className="min-h-screen w-full bg-[#050507] pb-24 pt-8 text-white relative overflow-hidden">
+        {/* Ambient Gradient Lighting */}
+        <div
+          className="pointer-events-none absolute left-1/2 top-0 h-[450px] w-full max-w-6xl -translate-x-1/2 bg-[radial-gradient(ellipse_70%_50%_at_50%_-10%,rgba(99,102,241,0.14),rgba(147,51,234,0.05)_40%,transparent_75%)]"
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute right-[-10%] top-[30%] h-[450px] w-[450px] rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.05)_0%,transparent_70%)] blur-[100px]"
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute left-[-10%] bottom-[20%] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.05)_0%,transparent_70%)] blur-[110px]"
+          aria-hidden="true"
+        />
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 relative">
           {authLoading ? (
             <div className="flex h-56 items-center justify-center">
               <Loader2 className="h-6 w-6 animate-spin text-white" />
@@ -277,6 +294,11 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 </div>
+
+                {/* ── DAILY BUILDING HEATMAP & CODING STREAK ── */}
+                {user.username && (
+                  <ActivityHeatmap username={user.username} />
+                )}
 
                 {/* ── RECENT ACTIVITY SECTION ── */}
                 <section className="pt-2">
@@ -405,6 +427,15 @@ export default function ProfilePage() {
                   >
                     <Sparkles className="h-3.5 w-3.5 text-purple-400" />
                     <span>Configure Profile &amp; Bio</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowReviewModal(true)}
+                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs text-neutral-300 hover:bg-white/[0.04] hover:text-white transition-colors cursor-pointer text-left"
+                  >
+                    <Star className="h-3.5 w-3.5 text-amber-400" />
+                    <span>Review BuildScape</span>
                   </button>
 
                   <Link
@@ -644,6 +675,11 @@ export default function ProfilePage() {
             }}
           />
         )}
+        {/* Review Modal */}
+        <ReviewModal
+          isOpen={showReviewModal}
+          onClose={() => setShowReviewModal(false)}
+        />
       </main>
     </>
   );

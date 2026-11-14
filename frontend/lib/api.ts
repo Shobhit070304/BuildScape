@@ -299,6 +299,26 @@ export const api = {
       projects: PublicUserProject[];
     }>(`/api/users/${encodeURIComponent(username)}`),
 
+  getUserActivity: (username: string) =>
+    request<UserActivityResponse>(`/api/users/${encodeURIComponent(username)}/activity`),
+
+  getGlobalReviews: () =>
+    request<GlobalReviewsResponse>("/api/reviews"),
+
+  getMyReview: () =>
+    request<MyReviewResponse>("/api/reviews/me"),
+
+  submitReview: (data: { rating: number; headline?: string; comment: string }) =>
+    request<{ review: GlobalReviewItem }>("/api/reviews", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  deleteReview: () =>
+    request<{ success: boolean; message: string }>("/api/reviews", {
+      method: "DELETE",
+    }),
+
   getDiscussions: (params?: {
     category?: string;
     projectSlug?: string;
@@ -709,4 +729,51 @@ export interface AdminDiscussionItem {
     avatar?: string;
   };
   createdAt: string;
+}
+
+export interface UserActivityDay {
+  date: string;
+  count: number;
+  level: number;
+}
+
+export interface UserActivityResponse {
+  calendar: UserActivityDay[];
+  totalContributions: number;
+  currentStreak: number;
+  longestStreak: number;
+}
+
+export interface GlobalReviewItem {
+  id: string;
+  rating: number;
+  headline: string;
+  comment: string;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    username: string;
+    avatar?: string;
+    githubUrl?: string;
+  };
+}
+
+export interface GlobalReviewsResponse {
+  reviews: GlobalReviewItem[];
+  stats: {
+    averageRating: number;
+    totalReviews: number;
+  };
+}
+
+export interface MyReviewResponse {
+  review: {
+    id: string;
+    rating: number;
+    headline: string;
+    comment: string;
+    createdAt: string;
+    updatedAt: string;
+  } | null;
 }

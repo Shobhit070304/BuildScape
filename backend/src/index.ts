@@ -16,6 +16,7 @@ import adminRouter from "./routes/admin";
 import assistantRouter from "./routes/assistant";
 import usersRouter from "./routes/users";
 import discussionsRouter from "./routes/discussions";
+import reviewsRouter from "./routes/reviews";
 
 validateEnv();
 
@@ -45,6 +46,7 @@ app.use("/api/admin", adminRouter);
 app.use("/api/assistant", assistantRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/discussions", discussionsRouter);
+app.use("/api/reviews", reviewsRouter);
 
 // Error handling (must be last)
 app.use(notFound);

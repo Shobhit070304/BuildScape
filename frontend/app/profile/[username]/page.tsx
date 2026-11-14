@@ -39,6 +39,7 @@ function LinkedinIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
   );
 }
 import { Navbar } from "@/components/Navbar";
+import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { useAuth } from "@/context/AuthContext";
 import {
   api,
@@ -123,10 +124,24 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
   });
 
   return (
-    <div className="min-h-screen bg-[#050507] text-white">
+    <div className="min-h-screen bg-[#050507] text-white relative overflow-hidden">
       <Navbar />
 
-      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      {/* Ambient Gradient Lighting */}
+      <div
+        className="pointer-events-none absolute left-1/2 top-0 h-[450px] w-full max-w-5xl -translate-x-1/2 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(99,102,241,0.15),rgba(147,51,234,0.06)_40%,transparent_75%)]"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute right-[-5%] top-[25%] h-[400px] w-[400px] rounded-full bg-[radial-gradient(circle,rgba(6,182,212,0.05)_0%,transparent_70%)] blur-[100px]"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute left-[-5%] top-[55%] h-[450px] w-[450px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.05)_0%,transparent_70%)] blur-[110px]"
+        aria-hidden="true"
+      />
+
+      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 relative">
         {/* Profile Card Header */}
         <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0A0A0E] shadow-2xl">
           {/* Subtle Ambient Background Banner */}
@@ -293,6 +308,11 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
             </span>
             <span className="text-xs text-neutral-400 mt-1 block">Accepted Solutions</span>
           </div>
+        </div>
+
+        {/* Daily Building Heatmap & Coding Streak */}
+        <div className="mt-6">
+          <ActivityHeatmap username={profile.username} />
         </div>
 
         {/* Projects Showcase Section */}

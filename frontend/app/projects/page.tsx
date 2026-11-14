@@ -144,10 +144,18 @@ export default function ProjectsPage() {
   return (
     <>
       <Navbar />
-      <main className="w-full bg-[#050507] min-h-screen text-white pb-24 relative">
-        {/* Subtle Obsidian Atmospheric Top Radial Glow */}
+      <main className="w-full bg-[#050507] min-h-screen text-white pb-24 relative overflow-hidden">
+        {/* Rich Ambient Atmospheric Lighting */}
         <div
-          className="pointer-events-none absolute left-1/2 top-0 h-96 w-full -translate-x-1/2 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.04),transparent_65%)]"
+          className="pointer-events-none absolute left-1/2 top-0 h-[500px] w-full max-w-7xl -translate-x-1/2 bg-[radial-gradient(ellipse_80%_60%_at_50%_-15%,rgba(99,102,241,0.14),rgba(168,85,247,0.06)_40%,transparent_75%)]"
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute right-[-5%] top-[20%] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle,rgba(6,182,212,0.06)_0%,transparent_70%)] blur-[120px]"
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute left-[-5%] top-[50%] h-[550px] w-[550px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.06)_0%,transparent_70%)] blur-[130px]"
           aria-hidden="true"
         />
 

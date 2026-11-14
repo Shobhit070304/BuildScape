@@ -133,10 +133,18 @@ export default function ShowcasesPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen w-full bg-[#050507] pb-24 pt-8 text-white relative">
-        {/* Subtle Obsidian Atmospheric Top Radial Glow */}
+      <main className="min-h-screen w-full bg-[#050507] pb-24 pt-8 text-white relative overflow-hidden">
+        {/* Rich Ambient Atmospheric Radial Glow */}
         <div
-          className="pointer-events-none absolute left-1/2 top-0 h-96 w-full -translate-x-1/2 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.06),transparent_70%)]"
+          className="pointer-events-none absolute left-1/2 top-0 h-[450px] w-full max-w-7xl -translate-x-1/2 bg-[radial-gradient(ellipse_80%_60%_at_50%_-15%,rgba(99,102,241,0.14),rgba(147,51,234,0.06)_40%,transparent_75%)]"
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute right-[-5%] top-[20%] h-[400px] w-[400px] rounded-full bg-[radial-gradient(circle,rgba(6,182,212,0.05)_0%,transparent_70%)] blur-[110px]"
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute left-[-5%] top-[50%] h-[450px] w-[450px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.05)_0%,transparent_70%)] blur-[120px]"
           aria-hidden="true"
         />
 
