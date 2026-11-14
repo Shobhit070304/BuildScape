@@ -10,6 +10,9 @@ export interface TrackMetadata {
   };
 }
 
+export const CANONICAL_LEVELS = ["Beginner", "Intermediate", "Advanced"] as const;
+export type CanonicalLevel = (typeof CANONICAL_LEVELS)[number];
+
 export const TRACKS_DATA: Record<string, TrackMetadata> = {
   golang: {
     slug: "golang",
@@ -87,12 +90,44 @@ export const TRACKS_DATA: Record<string, TrackMetadata> = {
 
 export function normalizeTrackSlug(trackName: string): string {
   const clean = trackName.toLowerCase().trim();
-  if (clean === "spring boot" || clean === "springboot") return "spring-boot";
+  if (clean === "spring boot" || clean === "springboot" || clean === "spring") return "spring-boot";
   if (clean === "go" || clean === "golang") return "golang";
+  if (clean === "ts" || clean === "typescript" || clean.includes("next.js & typescript")) return "typescript";
   return clean;
 }
 
 export function getTrackBySlug(slug: string): TrackMetadata | undefined {
   const norm = normalizeTrackSlug(slug);
   return TRACKS_DATA[norm];
+}
+
+/**
+ * Robust matching between project track label and target track slug/name.
+ * Seamlessly matches combinations like "Next.js & TypeScript" -> typescript, react.
+ */
+export function isProjectInTrack(projectTrack: string, trackSlugOrName: string): boolean {
+  if (!projectTrack) return false;
+  const p = projectTrack.toLowerCase().trim();
+  const t = normalizeTrackSlug(trackSlugOrName);
+
+  if (t === "golang") {
+    return p.includes("golang") || p.includes("go");
+  }
+  if (t === "typescript") {
+    return p.includes("typescript") || p.includes("next.js");
+  }
+  if (t === "python") {
+    return p.includes("python") || p.includes("fastapi");
+  }
+  if (t === "spring-boot") {
+    return p.includes("spring");
+  }
+  if (t === "rust") {
+    return p.includes("rust");
+  }
+  if (t === "react") {
+    return p.includes("react") || p.includes("next.js");
+  }
+
+  return p.includes(t);
 }

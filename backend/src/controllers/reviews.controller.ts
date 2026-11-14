@@ -1,54 +1,62 @@
 import { asyncHandler } from "../middleware/asyncHandler";
 import { Review } from "../models/Review";
 import { HttpError } from "../services/httpError";
+import { cacheAside, invalidateReviewsCache, cacheKeys } from "../services/cache.service";
 
 export const getGlobalReviews = asyncHandler(async (_req, res) => {
-  const reviews = await Review.find({ isFeatured: true })
-    .populate("userId", "name username avatar githubUrl")
-    .sort({ createdAt: -1 })
-    .limit(20)
-    .lean();
+  const result = await cacheAside(
+    cacheKeys.reviewsGlobal,
+    async () => {
+      const reviews = await Review.find({ isFeatured: true })
+        .populate("userId", "name username avatar githubUrl")
+        .sort({ createdAt: -1 })
+        .limit(20)
+        .lean();
 
-  const formattedReviews = reviews
-    .filter((r) => r.userId != null)
-    .map((r) => {
-      const user = r.userId as unknown as {
-        _id: string;
-        name: string;
-        username: string;
-        avatar?: string;
-        githubUrl?: string;
-      };
+      const formattedReviews = reviews
+        .filter((r) => r.userId != null)
+        .map((r) => {
+          const u = (r.userId || {}) as unknown as {
+            _id?: { toString(): string } | string;
+            name?: string;
+            username?: string;
+            avatar?: string;
+            githubUrl?: string;
+          };
+          return {
+            id: r._id.toString(),
+            rating: r.rating,
+            headline: r.headline || "Verified Builder",
+            comment: r.comment,
+            createdAt: r.createdAt,
+            user: {
+              id: u._id?.toString() || "",
+              name: u.name || "Anonymous Builder",
+              username: u.username || "",
+              avatar: u.avatar || "",
+              githubUrl: u.githubUrl || "",
+            },
+          };
+        });
+
+      const totalReviews = formattedReviews.length;
+      const averageRating =
+        totalReviews > 0
+          ? Number((formattedReviews.reduce((acc, curr) => acc + curr.rating, 0) / totalReviews).toFixed(1))
+          : 5.0;
+
       return {
-        id: r._id.toString(),
-        rating: r.rating,
-        headline: r.headline || "Verified Builder",
-        comment: r.comment,
-        createdAt: r.createdAt,
-        user: {
-          id: user._id.toString(),
-          name: user.name,
-          username: user.username,
-          avatar: user.avatar,
-          githubUrl: user.githubUrl,
+        reviews: formattedReviews,
+        stats: {
+          averageRating,
+          totalReviews,
         },
       };
-    });
-
-  // Calculate real average rating
-  const totalReviews = formattedReviews.length;
-  const averageRating =
-    totalReviews > 0
-      ? Number((formattedReviews.reduce((acc, curr) => acc + curr.rating, 0) / totalReviews).toFixed(1))
-      : 5.0;
-
-  res.json({
-    reviews: formattedReviews,
-    stats: {
-      averageRating,
-      totalReviews,
     },
-  });
+    300 // 5 minutes cache
+  );
+
+  res.json(result);
 });
 
 export const getMyReview = asyncHandler(async (req, res) => {
@@ -108,10 +116,17 @@ export const createOrUpdateReview = asyncHandler(async (req, res) => {
     { upsert: true, new: true, setDefaultsOnInsert: true }
   ).populate("userId", "name username avatar githubUrl");
 
-  const user = savedReview.userId as unknown as {
-    _id: string;
-    name: string;
-    username: string;
+  if (!savedReview) {
+    throw new HttpError(500, "Failed to save review");
+  }
+
+  // Invalidate Redis reviews cache
+  await invalidateReviewsCache();
+
+  const u = (savedReview.userId || {}) as unknown as {
+    _id?: { toString(): string } | string;
+    name?: string;
+    username?: string;
     avatar?: string;
     githubUrl?: string;
   };
@@ -124,11 +139,11 @@ export const createOrUpdateReview = asyncHandler(async (req, res) => {
       comment: savedReview.comment,
       createdAt: savedReview.createdAt,
       user: {
-        id: user._id.toString(),
-        name: user.name,
-        username: user.username,
-        avatar: user.avatar,
-        githubUrl: user.githubUrl,
+        id: u._id?.toString() || userId,
+        name: u.name || req.user?.name || "Verified Builder",
+        username: u.username || "",
+        avatar: u.avatar || "",
+        githubUrl: u.githubUrl || "",
       },
     },
   });
@@ -141,5 +156,6 @@ export const deleteMyReview = asyncHandler(async (req, res) => {
   }
 
   await Review.findOneAndDelete({ userId });
+  await invalidateReviewsCache();
   res.json({ success: true, message: "Review deleted successfully" });
 });

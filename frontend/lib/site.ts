@@ -8,6 +8,9 @@ export function getSiteUrl(): string {
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL.replace(/\/+$/, "")}`;
   }
+  if (process.env.NODE_ENV === "development") {
+    return "http://localhost:3000";
+  }
   return "https://buildscape.vercel.app";
 }
 

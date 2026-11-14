@@ -133,8 +133,8 @@ export function AuthConstellation() {
       </div>
 
       {/* Main Constellation Canvas */}
-      <div className="relative z-10 my-auto py-4 flex items-center justify-center min-h-[340px] sm:min-h-[380px]">
-        <div className="relative h-[320px] w-full max-w-[460px] sm:h-[370px]">
+      <div className="relative z-10 my-auto py-4 flex items-center justify-center min-h-85 sm:min-h-95">
+        <div className="relative h-80 w-full max-w-115 sm:h-92.5">
           {/* SVG Vector Circuit Lines */}
           <svg
             className="absolute inset-0 h-full w-full pointer-events-none"
@@ -199,7 +199,7 @@ export function AuthConstellation() {
           >
             <div className="relative group cursor-pointer flex flex-col items-center justify-center h-full w-full rounded-2xl border border-white/20 bg-[#0B0B12]/95 p-2 shadow-xl shadow-indigo-500/15 backdrop-blur-md transition-all duration-300 hover:scale-105 hover:border-indigo-400/50">
               <div className="absolute -inset-1 rounded-2xl bg-indigo-500/15 blur-md opacity-40 group-hover:opacity-75 transition-opacity" />
-              <div className="relative flex items-center justify-center h-8 w-8 rounded-xl bg-white/[0.08] border border-white/10 mb-1">
+              <div className="relative flex items-center justify-center h-8 w-8 rounded-xl bg-white/8 border border-white/10 mb-1">
                 <Image
                   src="/icon.svg"
                   alt="BuildScape Core"
@@ -234,11 +234,11 @@ export function AuthConstellation() {
                   className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 shadow-lg backdrop-blur-md transition-all duration-300 ${
                     isHovered
                       ? "border-white/40 bg-[#161624] scale-110 shadow-indigo-500/30"
-                      : "border-white/[0.08] bg-[#0A0A10]/90 hover:border-white/25 hover:bg-[#12121D]"
+                      : "border-white/8 bg-[#0A0A10]/90 hover:border-white/25 hover:bg-[#12121D]"
                   }`}
                 >
                   <div
-                    className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] ${node.color}`}
+                    className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-lg bg-white/6 ${node.color}`}
                   >
                     <IconComp className="h-3 w-3" />
                   </div>
@@ -264,7 +264,7 @@ export function AuthConstellation() {
         {["Go", "Docker", "Redis", "Postgres", "Kafka", "Python"].map((tech) => (
           <span
             key={tech}
-            className="rounded-md border border-white/[0.06] bg-white/[0.02] px-2 py-0.5 text-neutral-400"
+            className="rounded-md border border-white/6 bg-white/2 px-2 py-0.5 text-neutral-400"
           >
             {tech}
           </span>

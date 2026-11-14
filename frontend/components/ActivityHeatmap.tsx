@@ -149,7 +149,7 @@ export function ActivityHeatmap({ username, initialData }: ActivityHeatmapProps)
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-6 text-center">
+      <div className="rounded-2xl border border-white/8 bg-[#0A0A0E] p-6 text-center">
         <div className="flex items-center justify-center gap-2 text-xs font-mono text-neutral-400">
           <Loader2 className="h-4 w-4 animate-spin text-white" />
           <span>Loading activity graph...</span>
@@ -163,9 +163,9 @@ export function ActivityHeatmap({ username, initialData }: ActivityHeatmapProps)
   }
 
   return (
-    <div className="relative rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-5 sm:p-6 shadow-xl">
+    <div className="relative rounded-2xl border border-white/8 bg-[#0A0A0E] p-5 sm:p-6 shadow-xl">
       {/* Heatmap Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-5 pb-4 border-b border-white/[0.06]">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-5 pb-4 border-b border-white/6">
         <div className="flex items-center gap-2.5">
           <Calendar className="h-4 w-4 text-emerald-400" />
           <div>
@@ -185,7 +185,7 @@ export function ActivityHeatmap({ username, initialData }: ActivityHeatmapProps)
             className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-mono font-medium border transition-colors ${
               data.currentStreak > 0
                 ? "border-emerald-500/30 bg-emerald-950/40 text-emerald-300 shadow-xs shadow-emerald-500/10"
-                : "border-white/10 bg-white/[0.03] text-neutral-400"
+                : "border-white/10 bg-white/3 text-neutral-400"
             }`}
           >
             <Flame
@@ -200,7 +200,7 @@ export function ActivityHeatmap({ username, initialData }: ActivityHeatmapProps)
           </div>
 
           {/* Longest Streak */}
-          <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1 text-xs font-mono text-neutral-300">
+          <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/3 px-2.5 py-1 text-xs font-mono text-neutral-300">
             <Zap className="h-3.5 w-3.5 text-amber-400" />
             <span>
               <strong className="font-bold text-white">{data.longestStreak}</strong> best record
@@ -211,7 +211,7 @@ export function ActivityHeatmap({ username, initialData }: ActivityHeatmapProps)
 
       {/* Grid Container with Horizontal Scroll */}
       <div className="relative overflow-x-auto pb-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10" ref={scrollRef}>
-        <div className="min-w-[720px] select-none">
+        <div className="min-w-180 select-none">
           {/* Month labels header */}
           <div className="relative h-5 mb-1.5 ml-7 text-[10px] font-mono text-neutral-500">
             {monthHeaders.map((header, idx) => (
@@ -272,7 +272,7 @@ export function ActivityHeatmap({ username, initialData }: ActivityHeatmapProps)
       </div>
 
       {/* Legend & Summary Footer */}
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-white/[0.05] text-[11px] font-mono text-neutral-500">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-white/5 text-[11px] font-mono text-neutral-500">
         <div className="flex items-center gap-1.5">
           <Award className="h-3.5 w-3.5 text-neutral-400" />
           <span>Real commit & task progression telemetry</span>
@@ -280,7 +280,7 @@ export function ActivityHeatmap({ username, initialData }: ActivityHeatmapProps)
 
         <div className="flex items-center gap-1.5">
           <span>Less</span>
-          <div className="h-2.5 w-2.5 rounded-xs bg-white/[0.04] border border-white/[0.04]" />
+          <div className="h-2.5 w-2.5 rounded-xs bg-white/4 border border-white/4" />
           <div className="h-2.5 w-2.5 rounded-xs bg-emerald-950/90 border border-emerald-800/40" />
           <div className="h-2.5 w-2.5 rounded-xs bg-emerald-700/80 border border-emerald-600/50" />
           <div className="h-2.5 w-2.5 rounded-xs bg-emerald-500 border border-emerald-400/60" />

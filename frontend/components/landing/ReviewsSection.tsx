@@ -51,20 +51,22 @@ export function ReviewsSection() {
 
   const handleReviewDeleted = () => {
     if (!user) return;
-    setReviews((prev) => prev.filter((r) => r.user.username !== user.username));
+    setReviews((prev) =>
+      prev.filter((r) => r.user.id !== user.id && (!user.username || r.user.username !== user.username))
+    );
   };
 
   return (
     <section className="relative py-20 sm:py-28 overflow-hidden">
       {/* Soft atmospheric gradient glow behind reviews */}
       <div
-        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-full max-w-5xl rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.06)_0%,rgba(168,85,247,0.03)_40%,transparent_70%)] blur-[100px]"
+        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-125 w-full max-w-5xl rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.06)_0%,rgba(168,85,247,0.03)_40%,transparent_70%)] blur-[100px]"
         aria-hidden="true"
       />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Minimal Sleek Header */}
-        <div className="flex items-center justify-between pb-8 mb-8 border-b border-white/[0.06]">
+        <div className="flex items-center justify-between pb-8 mb-8 border-b border-white/6">
           <div>
             <span className="font-mono text-[11px] font-semibold tracking-widest text-neutral-400 uppercase">
               REVIEWS
@@ -117,7 +119,7 @@ export function ReviewsSection() {
               return (
                 <div
                   key={rev.id}
-                  className="group flex flex-col justify-between rounded-xl p-3 sm:p-4 transition-colors hover:bg-white/[0.02]"
+                  className="group flex flex-col justify-between rounded-xl p-3 sm:p-4 transition-colors hover:bg-white/2"
                 >
                   <div>
                     {/* User Info & Simple Clean Stars */}
@@ -136,7 +138,7 @@ export function ReviewsSection() {
                               className="rounded-full object-cover ring-1 ring-white/10"
                             />
                           ) : (
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.08] font-mono text-xs font-bold text-white ring-1 ring-white/10">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/8 font-mono text-xs font-bold text-white ring-1 ring-white/10">
                               {rev.user.name.slice(0, 1).toUpperCase()}
                             </div>
                           )}

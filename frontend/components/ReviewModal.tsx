@@ -107,7 +107,7 @@ export function ReviewModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-6 sm:p-7 shadow-2xl">
+      <div className="relative w-full max-w-md rounded-2xl border border-white/8 bg-[#0A0A0E] p-6 sm:p-7 shadow-2xl">
         {/* Close Button */}
         <button
           type="button"
@@ -183,7 +183,7 @@ export function ReviewModal({
                 placeholder="What did you think of the project builds and experience?"
                 rows={4}
                 maxLength={1000}
-                className="w-full resize-none rounded-xl border border-white/[0.08] bg-[#07070A] p-3.5 text-xs text-white placeholder-neutral-500 focus:border-white/20 focus:outline-hidden leading-relaxed"
+                className="w-full resize-none rounded-xl border border-white/8 bg-[#07070A] p-3.5 text-xs text-white placeholder-neutral-500 focus:border-white/20 focus:outline-hidden leading-relaxed"
               />
             </div>
 

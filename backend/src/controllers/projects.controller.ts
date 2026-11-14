@@ -4,23 +4,30 @@ import { feedbackService } from "../services/feedback.service";
 import { User } from "../models/User";
 import { Project } from "../models/Project";
 import { UserProjectEnrollment } from "../models/UserProjectEnrollment";
+import { cacheAside, cacheKeys } from "../services/cache.service";
 
 // Keep HTTP parsing and response formatting in controllers.
 export const getPublicStats = asyncHandler(async (_req, res) => {
-  const [totalUsers, totalProjects, totalEnrollments, completedEnrollments] = await Promise.all([
-    User.countDocuments(),
-    Project.countDocuments(),
-    UserProjectEnrollment.countDocuments(),
-    UserProjectEnrollment.countDocuments({ completedAt: { $ne: null } }),
-  ]);
-  res.json({
-    stats: {
-      totalUsers,
-      totalProjects,
-      totalEnrollments,
-      completedEnrollments,
+  const stats = await cacheAside(
+    cacheKeys.statsPublic,
+    async () => {
+      const [totalUsers, totalProjects, totalEnrollments, completedEnrollments] = await Promise.all([
+        User.countDocuments(),
+        Project.countDocuments(),
+        UserProjectEnrollment.countDocuments(),
+        UserProjectEnrollment.countDocuments({ completedAt: { $ne: null } }),
+      ]);
+      return {
+        totalUsers,
+        totalProjects,
+        totalEnrollments,
+        completedEnrollments,
+      };
     },
-  });
+    120 // 2 minutes cache
+  );
+
+  res.json({ stats });
 });
 
 export const getVerifiedShowcases = asyncHandler(async (_req, res) => {
@@ -184,28 +191,27 @@ export const toggleSaveProject = asyncHandler(async (req, res) => {
   const { slug } = req.params;
   const cleanSlug = String(slug).trim().toLowerCase();
 
-  const user = await User.findById(userId);
+  // Validate that project actually exists before saving
+  const projectExists = await Project.exists({ slug: cleanSlug });
+  if (!projectExists) {
+    res.status(404).json({ error: "Project not found" });
+    return;
+  }
+
+  const user = await User.findById(userId).select("savedProjects");
   if (!user) {
     res.status(404).json({ error: "User not found" });
     return;
   }
 
   const alreadySaved = (user.savedProjects || []).includes(cleanSlug);
-  let updatedUser;
-
-  if (alreadySaved) {
-    updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $pull: { savedProjects: cleanSlug } },
-      { new: true }
-    );
-  } else {
-    updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $addToSet: { savedProjects: cleanSlug } },
-      { new: true }
-    );
-  }
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    alreadySaved
+      ? { $pull: { savedProjects: cleanSlug } }
+      : { $addToSet: { savedProjects: cleanSlug } },
+    { new: true }
+  ).select("savedProjects");
 
   res.json({
     saved: !alreadySaved,
@@ -216,7 +222,22 @@ export const toggleSaveProject = asyncHandler(async (req, res) => {
 export const getMySavedProjects = asyncHandler(async (req, res) => {
   const userId = req.user!.userId;
   const user = await User.findById(userId).select("savedProjects").lean();
+  const savedSlugs = user?.savedProjects || [];
+
+  if (savedSlugs.length === 0) {
+    res.json({
+      savedProjects: [],
+      projects: [],
+    });
+    return;
+  }
+
+  const projects = await Project.find({ slug: { $in: savedSlugs } })
+    .select("title slug track difficulty estimatedHours techStack tagline category")
+    .lean();
+
   res.json({
-    savedProjects: user?.savedProjects || [],
+    savedProjects: savedSlugs,
+    projects,
   });
 });

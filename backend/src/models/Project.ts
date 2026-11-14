@@ -49,4 +49,6 @@ const ProjectSchema = new Schema<IProject>(
   { timestamps: true }
 );
 
+ProjectSchema.index({ track: 1, difficulty: 1 });
+
 export const Project = mongoose.model<IProject>("Project", ProjectSchema);

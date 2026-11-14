@@ -16,9 +16,10 @@ import {
 import { Navbar } from "@/components/Navbar";
 import { TechIcon } from "@/components/TechBadge";
 import { ProjectCard } from "@/components/ProjectCard";
+import { TrackSidebarRail } from "@/components/TrackSidebarRail";
 import { api, type EnrolledProjectItem } from "@/lib/api";
 import { mapApiProject, type Project } from "@/lib/projects";
-import { getTrackBySlug, TRACKS_DATA } from "@/lib/tracks";
+import { getTrackBySlug, TRACKS_DATA, isProjectInTrack } from "@/lib/tracks";
 import { useAuth } from "@/context/AuthContext";
 
 const LEVELS = ["Beginner", "Intermediate", "Advanced"] as const;
@@ -70,7 +71,7 @@ export default function DedicatedTrackPage({
   // Filter projects for this track
   const trackProjects = useMemo(() => {
     return projects.filter(
-      (p) => p.track.toLowerCase() === trackMeta.name.toLowerCase()
+      (p) => isProjectInTrack(p.track, trackMeta.slug)
     );
   }, [projects, trackMeta]);
 
@@ -97,18 +98,21 @@ export default function DedicatedTrackPage({
   return (
     <>
       <Navbar />
-      <main className="w-full bg-[#050507] min-h-screen text-white pb-24 relative overflow-hidden">
+      <main className="w-full bg-bg min-h-screen text-white pb-24 relative overflow-hidden">
+        {/* Full-Height Track Slider Rail */}
+        <TrackSidebarRail />
+
         {/* Ambient atmospheric gradients */}
         <div
-          className="pointer-events-none absolute left-0 top-0 h-[450px] w-full bg-[radial-gradient(ellipse_80%_50%_at_20%_-10%,rgba(99,102,241,0.15),transparent_70%)]"
+          className="pointer-events-none absolute left-0 top-0 h-112.5 w-full bg-[radial-gradient(ellipse_80%_50%_at_20%_-10%,rgba(99,102,241,0.15),transparent_70%)]"
           aria-hidden="true"
         />
         <div
-          className="pointer-events-none absolute right-[-10%] top-[30%] h-[400px] w-[400px] rounded-full bg-[radial-gradient(circle,rgba(6,182,212,0.05)_0%,transparent_70%)] blur-[100px]"
+          className="pointer-events-none absolute right-[-10%] top-[30%] h-100 w-100 rounded-full bg-[radial-gradient(circle,rgba(6,182,212,0.05)_0%,transparent_70%)] blur-[100px]"
           aria-hidden="true"
         />
 
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 relative">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 xl:pl-24 pt-10 sm:pt-12 relative">
           {/* Back Navigation Breadcrumb */}
           <div className="mb-6">
             <Link
@@ -121,9 +125,9 @@ export default function DedicatedTrackPage({
           </div>
 
           {/* ───────────────── TRACK HEADER (LEFT-ALIGNED) ───────────────── */}
-          <div className="mb-10 pb-8 border-b border-white/[0.08]">
+          <div className="mb-10 pb-8 border-b border-white/8">
             <div className="flex items-start gap-4 mb-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white shadow-md">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/4 text-white shadow-md">
                 <TechIcon name={trackMeta.name} className="h-6 w-6" />
               </div>
               <div>
@@ -179,7 +183,7 @@ export default function DedicatedTrackPage({
               {/* User Running Projects in This Stack */}
               {runningProjects.length > 0 && (
                 <section>
-                  <div className="flex items-center justify-between mb-3 pb-1 border-b border-white/[0.06]">
+                  <div className="flex items-center justify-between mb-3 pb-1 border-b border-white/6">
                     <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-emerald-400">
                       YOUR ACTIVE BUILDS IN {trackMeta.name.toUpperCase()}
                     </span>
@@ -193,7 +197,7 @@ export default function DedicatedTrackPage({
                       <Link
                         key={item.enrollmentId}
                         href={`/projects/${item.project.slug}/workspace`}
-                        className="group flex items-center justify-between rounded-xl border border-white/[0.08] bg-[#0A0A0E] p-3.5 transition-all hover:border-white/20 hover:bg-[#0E0E14]"
+                        className="group flex items-center justify-between rounded-xl border border-white/8 bg-[#0A0A0E] p-3.5 transition-all hover:border-white/20 hover:bg-surface-card"
                       >
                         <div className="min-w-0 pr-3">
                           <h3 className="font-sans text-xs sm:text-sm font-bold text-white group-hover:text-indigo-200 truncate">
@@ -227,7 +231,7 @@ export default function DedicatedTrackPage({
                   return (
                     <section key={level} className="space-y-3">
                       {/* Level Heading */}
-                      <div className="flex items-center justify-between border-b border-white/[0.08] pb-2">
+                      <div className="flex items-center justify-between border-b border-white/8 pb-2">
                         <div className="flex items-center gap-2">
                           <span className="font-mono text-xs font-bold text-white tracking-wide">
                             {level.toUpperCase()}
@@ -256,7 +260,7 @@ export default function DedicatedTrackPage({
                             <div key={proj.id}>
                               <ProjectCard project={proj} />
                               {idx < levelProjects.length - 1 && (
-                                <div className="h-[1px] w-full bg-white/[0.04] my-4" />
+                                <div className="h-px w-full bg-white/4 my-4" />
                               )}
                             </div>
                           ))}
@@ -271,8 +275,8 @@ export default function DedicatedTrackPage({
             {/* Right 4 Cols: "Small box with info that will be helpful to user" */}
             <div className="lg:col-span-4 space-y-4">
               {/* Helpful Track Guide Box */}
-              <div className="rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-5 shadow-lg space-y-4 font-mono text-xs">
-                <div className="flex items-center gap-2 border-b border-white/[0.06] pb-3">
+              <div className="rounded-2xl border border-white/8 bg-[#0A0A0E] p-5 shadow-lg space-y-4 font-mono text-xs">
+                <div className="flex items-center gap-2 border-b border-white/6 pb-3">
                   <Terminal className="h-4 w-4 text-indigo-400" />
                   <span className="font-sans font-bold text-xs text-white">
                     {trackMeta.name} Builder Guide
@@ -295,7 +299,7 @@ export default function DedicatedTrackPage({
                 </div>
 
                 {/* Core Libraries */}
-                <div className="border-t border-white/[0.06] pt-3">
+                <div className="border-t border-white/6 pt-3">
                   <span className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wider block mb-1.5">
                     CORE ECOSYSTEM LIBRARIES
                   </span>
@@ -303,7 +307,7 @@ export default function DedicatedTrackPage({
                     {trackMeta.helpfulInfo.coreLibraries.map((lib) => (
                       <span
                         key={lib}
-                        className="rounded bg-white/[0.04] px-1.5 py-0.5 text-[10px] text-neutral-300 border border-white/[0.04]"
+                        className="rounded bg-white/4 px-1.5 py-0.5 text-[10px] text-neutral-300 border border-white/4"
                       >
                         {lib}
                       </span>
@@ -312,7 +316,7 @@ export default function DedicatedTrackPage({
                 </div>
 
                 {/* Key Patterns */}
-                <div className="border-t border-white/[0.06] pt-3">
+                <div className="border-t border-white/6 pt-3">
                   <span className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wider block mb-1.5">
                     ARCHITECTURE PATTERNS
                   </span>
@@ -327,7 +331,7 @@ export default function DedicatedTrackPage({
                 </div>
 
                 {/* Quick Pro Tip Box */}
-                <div className="border-t border-white/[0.06] pt-3">
+                <div className="border-t border-white/6 pt-3">
                   <span className="text-[10px] text-amber-400 font-semibold uppercase tracking-wider block mb-1">
                     ENGINEERING TIP
                   </span>
@@ -338,7 +342,7 @@ export default function DedicatedTrackPage({
               </div>
 
               {/* Other Tracks Quick Switcher */}
-              <div className="rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-4 font-mono text-xs space-y-2">
+              <div className="rounded-2xl border border-white/8 bg-[#0A0A0E] p-4 font-mono text-xs space-y-2">
                 <span className="text-[10px] uppercase tracking-wider text-neutral-400 block mb-1">
                   EXPLORE OTHER TRACKS
                 </span>
@@ -349,7 +353,7 @@ export default function DedicatedTrackPage({
                       <Link
                         key={t.slug}
                         href={`/tracks/${t.slug}`}
-                        className="flex items-center justify-between rounded-lg px-2 py-1.5 text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors"
+                        className="flex items-center justify-between rounded-lg px-2 py-1.5 text-neutral-400 hover:text-white hover:bg-white/4 transition-colors"
                       >
                         <div className="flex items-center gap-2">
                           <TechIcon name={t.name} className="h-3.5 w-3.5" />

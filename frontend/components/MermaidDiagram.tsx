@@ -266,9 +266,9 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
 
   return (
     <>
-      <div className="my-6 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0A0A0E] shadow-2xl shadow-black/60 group/diagram">
+      <div className="my-6 overflow-hidden rounded-2xl border border-white/8 bg-[#0A0A0E] shadow-2xl shadow-black/60 group/diagram">
         {/* Header bar */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.08] bg-[#07070A] px-4 py-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/8 bg-[#07070A] px-4 py-2.5">
           <div className="flex items-center gap-2">
             <Network className="h-4 w-4 text-emerald-400" />
             <span className="font-mono text-xs font-semibold text-neutral-200 uppercase tracking-wider">
@@ -279,13 +279,13 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
           <div className="flex items-center gap-1.5 flex-wrap">
             {/* Inline Quick Zoom Controls */}
             {!showCode && svgHtml && (
-              <div className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.03] p-0.5 mr-1">
+              <div className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/3 p-0.5 mr-1">
                 <button
                   type="button"
                   onClick={handleZoomOut}
                   title="Zoom Out (-)"
                   aria-label="Zoom Out"
-                  className="rounded p-1 text-neutral-400 hover:bg-white/[0.08] hover:text-white transition-colors cursor-pointer"
+                  className="rounded p-1 text-neutral-400 hover:bg-white/8 hover:text-white transition-colors cursor-pointer"
                 >
                   <ZoomOut className="h-3.5 w-3.5" />
                 </button>
@@ -302,7 +302,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
                   onClick={handleZoomIn}
                   title="Zoom In (+)"
                   aria-label="Zoom In"
-                  className="rounded p-1 text-neutral-400 hover:bg-white/[0.08] hover:text-white transition-colors cursor-pointer"
+                  className="rounded p-1 text-neutral-400 hover:bg-white/8 hover:text-white transition-colors cursor-pointer"
                 >
                   <ZoomIn className="h-3.5 w-3.5" />
                 </button>
@@ -318,7 +318,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
                   setIsExpanded(true);
                 }}
                 title="Fullscreen Interactive Viewer"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-medium text-neutral-200 hover:bg-white/[0.08] hover:text-white transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/4 px-2.5 py-1 text-[11px] font-medium text-neutral-200 hover:bg-white/8 hover:text-white transition-colors cursor-pointer"
               >
                 <Maximize2 className="h-3 w-3 text-emerald-400" />
                 <span>Expand &amp; Pan</span>
@@ -328,7 +328,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
             <button
               type="button"
               onClick={() => setShowCode((prev) => !prev)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-medium text-neutral-300 hover:bg-white/[0.08] hover:text-white transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/4 px-2.5 py-1 text-[11px] font-medium text-neutral-300 hover:bg-white/8 hover:text-white transition-colors cursor-pointer"
             >
               <Code2 className="h-3 w-3" />
               <span>{showCode ? "View Blueprint" : "View Code"}</span>
@@ -338,7 +338,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
               type="button"
               onClick={() => void copyCode()}
               aria-label="Copy diagram source"
-              className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-medium text-neutral-300 hover:bg-white/[0.08] hover:text-white transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/4 px-2.5 py-1 text-[11px] font-medium text-neutral-300 hover:bg-white/8 hover:text-white transition-colors cursor-pointer"
             >
               {copiedCode ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
               <span>{copiedCode ? "Copied" : "Copy"}</span>
@@ -352,7 +352,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
             <code>{chart.trim()}</code>
           </pre>
         ) : loading ? (
-          <div className="flex min-h-[240px] items-center justify-center p-8 text-xs text-neutral-400 font-mono gap-2.5">
+          <div className="flex min-h-60 items-center justify-center p-8 text-xs text-neutral-400 font-mono gap-2.5">
             <Loader2 className="h-4 w-4 animate-spin text-white" />
             <span>Rendering interactive architecture diagram...</span>
           </div>
@@ -372,11 +372,11 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
               setIsExpanded(true);
             }}
             title="Click to open interactive fullscreen pan & zoom viewer"
-            className="overflow-x-auto p-6 sm:p-8 min-h-[300px] flex items-center justify-center bg-[#07070A]/50 cursor-zoom-in relative select-none"
+            className="overflow-x-auto p-6 sm:p-8 min-h-75 flex items-center justify-center bg-[#07070A]/50 cursor-zoom-in relative select-none"
           >
             <div
               style={{ transform: `scale(${zoom})`, transformOrigin: "center center" }}
-              className="transition-transform duration-150 [&_svg]:min-w-[600px] sm:[&_svg]:min-w-[760px] [&_svg]:max-w-none [&_svg]:h-auto flex justify-center pointer-events-none"
+              className="transition-transform duration-150 [&_svg]:min-w-150 sm:[&_svg]:min-w-190 [&_svg]:max-w-none [&_svg]:h-auto flex justify-center pointer-events-none"
               dangerouslySetInnerHTML={{ __html: svgHtml }}
             />
             {/* Click-to-interact hover overlay hint */}
@@ -390,9 +390,9 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
 
       {/* ────────────────── FULLSCREEN INTERACTIVE LIGHTBOX MODAL ────────────────── */}
       {isExpanded && svgHtml && (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-[#050507]/95 backdrop-blur-xl animate-in fade-in duration-200 select-none overflow-hidden">
+        <div className="fixed inset-0 z-100 flex flex-col bg-bg/95 backdrop-blur-xl animate-in fade-in duration-200 select-none overflow-hidden">
           {/* Top Control Bar */}
-          <div className="flex items-center justify-between border-b border-white/[0.08] bg-[#07070A]/80 px-4 sm:px-6 py-3.5 backdrop-blur-md shrink-0">
+          <div className="flex items-center justify-between border-b border-white/8 bg-[#07070A]/80 px-4 sm:px-6 py-3.5 backdrop-blur-md shrink-0">
             <div className="flex items-center gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-950/40 text-emerald-400 shadow-sm">
                 <Network className="h-4 w-4" />
@@ -413,7 +413,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
                 type="button"
                 onClick={downloadPng}
                 title="Download 2x High-Resolution PNG"
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-mono font-medium text-neutral-200 hover:bg-white/[0.08] hover:text-white transition-colors cursor-pointer"
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/4 px-3 py-1.5 text-xs font-mono font-medium text-neutral-200 hover:bg-white/8 hover:text-white transition-colors cursor-pointer"
               >
                 <Download className="h-3.5 w-3.5 text-emerald-400" />
                 <span>Export PNG</span>
@@ -423,7 +423,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
                 type="button"
                 onClick={copySvg}
                 title="Copy Vector SVG to Clipboard"
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-mono font-medium text-neutral-200 hover:bg-white/[0.08] hover:text-white transition-colors cursor-pointer"
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/4 px-3 py-1.5 text-xs font-mono font-medium text-neutral-200 hover:bg-white/8 hover:text-white transition-colors cursor-pointer"
               >
                 {copiedSvg ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <FileCode className="h-3.5 w-3.5 text-indigo-400" />}
                 <span>{copiedSvg ? "SVG Copied" : "Copy SVG"}</span>
@@ -432,7 +432,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
               <button
                 type="button"
                 onClick={() => setIsExpanded(false)}
-                className="rounded-lg border border-white/10 bg-white/[0.06] p-2 text-neutral-300 hover:bg-white hover:text-black transition-all cursor-pointer shadow-sm"
+                className="rounded-lg border border-white/10 bg-white/6 p-2 text-neutral-300 hover:bg-white hover:text-black transition-all cursor-pointer shadow-sm"
                 aria-label="Exit fullscreen"
                 title="Close (Esc)"
               >
@@ -453,7 +453,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
             onTouchEnd={handleTouchEnd}
             onWheel={handleWheel}
             onDoubleClick={handleResetView}
-            className={`flex-1 relative overflow-hidden flex items-center justify-center p-6 bg-[#050507] ${
+            className={`flex-1 relative overflow-hidden flex items-center justify-center p-6 bg-bg ${
               isDragging ? "cursor-grabbing" : "cursor-grab"
             }`}
           >
@@ -475,7 +475,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
                 transformOrigin: "center center",
                 transition: isDragging ? "none" : "transform 0.08s ease-out",
               }}
-              className="[&_svg]:min-w-[850px] sm:[&_svg]:min-w-[1100px] [&_svg]:max-w-none [&_svg]:h-auto flex justify-center pointer-events-none drop-shadow-2xl"
+              className="[&_svg]:min-w-212.5 sm:[&_svg]:min-w-275 [&_svg]:max-w-none [&_svg]:h-auto flex justify-center pointer-events-none drop-shadow-2xl"
               dangerouslySetInnerHTML={{ __html: svgHtml }}
             />
 
@@ -485,7 +485,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
                 type="button"
                 onClick={handleZoomOut}
                 title="Zoom Out (-)"
-                className="rounded-xl p-2 text-neutral-400 hover:bg-white/[0.08] hover:text-white transition-colors cursor-pointer"
+                className="rounded-xl p-2 text-neutral-400 hover:bg-white/8 hover:text-white transition-colors cursor-pointer"
               >
                 <ZoomOut className="h-4 w-4" />
               </button>
@@ -503,30 +503,30 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
                 type="button"
                 onClick={handleZoomIn}
                 title="Zoom In (+)"
-                className="rounded-xl p-2 text-neutral-400 hover:bg-white/[0.08] hover:text-white transition-colors cursor-pointer"
+                className="rounded-xl p-2 text-neutral-400 hover:bg-white/8 hover:text-white transition-colors cursor-pointer"
               >
                 <ZoomIn className="h-4 w-4" />
               </button>
 
-              <div className="h-4 w-[1px] bg-white/10 mx-1" />
+              <div className="h-4 w-px bg-white/10 mx-1" />
 
               <button
                 type="button"
                 onClick={handleResetView}
                 title="Reset Position (Pan 0,0 & Zoom 100%)"
-                className="flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-mono text-neutral-400 hover:bg-white/[0.08] hover:text-white transition-colors cursor-pointer"
+                className="flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-mono text-neutral-400 hover:bg-white/8 hover:text-white transition-colors cursor-pointer"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Reset</span>
               </button>
 
-              <div className="h-4 w-[1px] bg-white/10 mx-1" />
+              <div className="h-4 w-px bg-white/10 mx-1" />
 
               <button
                 type="button"
                 onClick={downloadPng}
                 title="Download High-Res PNG"
-                className="flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-mono text-emerald-400 hover:bg-white/[0.08] hover:text-emerald-300 transition-colors cursor-pointer"
+                className="flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-mono text-emerald-400 hover:bg-white/8 hover:text-emerald-300 transition-colors cursor-pointer"
               >
                 <Download className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">PNG</span>
@@ -536,7 +536,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
                 type="button"
                 onClick={() => setIsExpanded(false)}
                 title="Exit Fullscreen (Esc)"
-                className="flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-mono text-neutral-400 hover:bg-white/[0.08] hover:text-white transition-colors cursor-pointer"
+                className="flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-mono text-neutral-400 hover:bg-white/8 hover:text-white transition-colors cursor-pointer"
               >
                 <Minimize2 className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Exit</span>

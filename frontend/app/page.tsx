@@ -30,26 +30,26 @@ export default function HomePage() {
     <>
       <Navbar />
       <ScrollSectionTracker />
-      <main className="w-full bg-[#050507] overflow-x-hidden relative">
+      <main className="w-full bg-bg overflow-x-hidden relative">
         {/* Rich Ambient Atmospheric Radial Gradients */}
         <div
-          className="pointer-events-none absolute left-1/2 top-0 h-[600px] w-full max-w-7xl -translate-x-1/2 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(99,102,241,0.18),rgba(147,51,234,0.08)_40%,transparent_75%)]"
+          className="pointer-events-none absolute left-1/2 top-0 h-150 w-full max-w-7xl -translate-x-1/2 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(99,102,241,0.18),rgba(147,51,234,0.08)_40%,transparent_75%)]"
           aria-hidden="true"
         />
         <div
-          className="pointer-events-none absolute left-[-10%] top-[25%] h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.07)_0%,transparent_70%)] blur-[100px]"
+          className="pointer-events-none absolute left-[-10%] top-[25%] h-150 w-150 rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.07)_0%,transparent_70%)] blur-[100px]"
           aria-hidden="true"
         />
         <div
-          className="pointer-events-none absolute right-[-10%] top-[40%] h-[700px] w-[700px] rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.06)_0%,transparent_70%)] blur-[120px]"
+          className="pointer-events-none absolute right-[-10%] top-[40%] h-175 w-175 rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.06)_0%,transparent_70%)] blur-[120px]"
           aria-hidden="true"
         />
         <div
-          className="pointer-events-none absolute left-[15%] top-[65%] h-[650px] w-[650px] rounded-full bg-[radial-gradient(circle,rgba(139,92,246,0.07)_0%,transparent_70%)] blur-[110px]"
+          className="pointer-events-none absolute left-[15%] top-[65%] h-162.5 w-162.5 rounded-full bg-[radial-gradient(circle,rgba(139,92,246,0.07)_0%,transparent_70%)] blur-[110px]"
           aria-hidden="true"
         />
         <div
-          className="pointer-events-none absolute right-[10%] top-[82%] h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.05)_0%,transparent_70%)] blur-[110px]"
+          className="pointer-events-none absolute right-[10%] top-[82%] h-150 w-150 rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.05)_0%,transparent_70%)] blur-[110px]"
           aria-hidden="true"
         />
 

@@ -34,8 +34,8 @@ export function Navbar() {
     <header
       className={`sticky top-0 z-50 w-full transition-all duration-200 border-b ${
         isScrolled
-          ? "border-white/[0.08] bg-[#050507]/90 backdrop-blur-md shadow-2xl shadow-black/80"
-          : "border-transparent bg-[#050507]/60 backdrop-blur-sm"
+          ? "border-white/8 bg-bg/90 backdrop-blur-md shadow-2xl shadow-black/80"
+          : "border-transparent bg-bg/60 backdrop-blur-sm"
       }`}
     >
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -46,35 +46,35 @@ export function Navbar() {
         <div className="flex items-center gap-2 sm:gap-3">
           <Link
             href="/projects"
-            className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-white hover:bg-white/[0.05]"
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-white hover:bg-white/5"
           >
             Projects
           </Link>
 
           <Link
-            href="/roadmaps"
-            className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-white hover:bg-white/[0.05]"
+            href="/tracks/golang"
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-white hover:bg-white/5"
           >
-            Roadmaps
+            Tracks
           </Link>
 
           <Link
             href="/showcases"
-            className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-white hover:bg-white/[0.05]"
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-white hover:bg-white/5"
           >
             Showcase
           </Link>
 
           <Link
             href="/blog"
-            className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-white hover:bg-white/[0.05]"
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-white hover:bg-white/5"
           >
             Blog
           </Link>
 
           <Link
             href="/discussions"
-            className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-white hover:bg-white/[0.05]"
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-white hover:bg-white/5"
           >
             Discussions
           </Link>
@@ -82,7 +82,7 @@ export function Navbar() {
           {user && (
             <Link
               href="/profile"
-              className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-white hover:bg-white/[0.05]"
+              className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-white hover:bg-white/5"
             >
               My Workspace
             </Link>
@@ -103,7 +103,7 @@ export function Navbar() {
             <div className="flex items-center gap-2">
               <Link
                 href="/profile"
-                className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 transition-all hover:border-white/20 hover:bg-white/[0.08]"
+                className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/4 px-2.5 py-1 transition-all hover:border-white/20 hover:bg-white/8"
                 title="View your profile & dashboard"
               >
                 {user.avatar ? (
@@ -128,7 +128,7 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={() => void handleLogout()}
-                className="flex cursor-pointer items-center gap-1 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1 text-xs font-medium text-neutral-400 transition-all hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
+                className="flex cursor-pointer items-center gap-1 rounded-lg border border-white/10 bg-white/3 px-2.5 py-1 text-xs font-medium text-neutral-400 transition-all hover:border-white/20 hover:bg-white/8 hover:text-white"
                 title="Sign out"
               >
                 <LogOut className="h-3 w-3" />
@@ -138,7 +138,7 @@ export function Navbar() {
           ) : (
             <Link
               href="/login"
-              className="inline-flex items-center rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-neutral-200 transition-all hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
+              className="inline-flex items-center rounded-lg border border-white/10 bg-white/4 px-3 py-1.5 text-xs font-medium text-neutral-200 transition-all hover:border-white/20 hover:bg-white/8 hover:text-white"
             >
               Sign In
             </Link>

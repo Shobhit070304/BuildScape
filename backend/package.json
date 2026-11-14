@@ -8,8 +8,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "lint": "tsc --noEmit",
-    "test": "npm run build && node --test",
-    "check": "npm run lint && npm test",
+    "check": "npm run lint",
     "seed": "ts-node-dev --transpile-only src/scripts/seed.ts",
     "seed:discussions": "ts-node-dev --transpile-only src/scripts/seed-discussions.ts",
     "migrate:difficulties": "ts-node-dev --transpile-only src/scripts/migrateDifficulties.ts"

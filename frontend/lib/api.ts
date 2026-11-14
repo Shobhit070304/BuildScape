@@ -182,7 +182,20 @@ export const api = {
     }),
 
   getMySavedProjects: () =>
-    request<{ savedProjects: string[] }>("/api/projects/my/saved"),
+    request<{
+      savedProjects: string[];
+      projects?: Array<{
+        _id: string;
+        slug: string;
+        title: string;
+        track: string;
+        difficulty: string;
+        estimatedHours: number;
+        techStack?: string[];
+        tagline?: string;
+        category?: string;
+      }>;
+    }>("/api/projects/my/saved"),
 
   getProgress: (slug: string) =>
     request<ProgressResponse>(`/api/projects/${slug}/progress`),

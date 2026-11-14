@@ -30,7 +30,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
-      router.push("/profile");
+      router.push("/login?next=/projects");
       return;
     }
     await toggleSaveProject(project.slug);
@@ -39,7 +39,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   return (
     <Link
       href={`/projects/${project.slug}`}
-      className="group relative flex flex-col justify-between rounded-2xl border border-white/[0.06] bg-gradient-to-b from-[#0C0D14]/90 to-[#07070A]/95 p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-white/20 hover:from-[#10121C] hover:to-[#0A0A0F] shadow-lg shadow-black/60 before:absolute before:inset-x-0 before:top-0 before:h-[1px] before:bg-gradient-to-r before:from-transparent before:via-white/[0.08] before:to-transparent hover:before:via-indigo-500/40"
+      className="group relative flex flex-col justify-between rounded-2xl border border-white/6 bg-linear-to-b from-[#0C0D14]/90 to-[#07070A]/95 p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-white/20 hover:from-[#10121C] hover:to-[#0A0A0F] shadow-lg shadow-black/60 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-linear-to-r before:from-transparent before:via-white/8 before:to-transparent hover:before:via-indigo-500/40"
     >
       <div>
         {/* Top Header: Title & Free/Bookmark */}
@@ -73,7 +73,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
       </div>
 
       {/* Bottom Metadata - Sleek & Borderless */}
-      <div className="flex items-center justify-between pt-4 border-t border-white/[0.05] text-xs font-mono">
+      <div className="flex items-center justify-between pt-4 border-t border-white/5 text-xs font-mono">
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-neutral-400">
           {/* Track with Brand Logo */}
           <span className="inline-flex items-center gap-1.5 font-medium text-neutral-200">

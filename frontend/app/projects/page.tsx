@@ -20,6 +20,7 @@ import { api, type EnrolledProjectItem } from "@/lib/api";
 import type { Project } from "@/lib/projects";
 import { useAuth } from "@/context/AuthContext";
 import { TechIcon } from "@/components/TechBadge";
+import { isProjectInTrack } from "@/lib/tracks";
 
 // Strictly 3 Levels: Beginner, Intermediate, Advanced
 const LEVEL_OPTIONS = ["Beginner", "Intermediate", "Advanced"] as const;
@@ -84,7 +85,7 @@ export default function ProjectsPage() {
     return Array.from(new Set([...CORE_TRACKS, ...fromProjects])).filter(Boolean);
   }, [projects]);
 
-  // Working on projects: either user's active enrollments, or flagship starters
+  // Working on projects: only real user enrollments (no fake fallbacks)
   const workingOnList = useMemo(() => {
     if (enrollments.length > 0) {
       return enrollments.slice(0, 2).map((item) => ({
@@ -100,27 +101,8 @@ export default function ProjectsPage() {
           : "recently",
       }));
     }
-    // Default starter projects
-    if (projects.length >= 2) {
-      return [
-        {
-          slug: projects[0].slug,
-          title: projects[0].title,
-          track: projects[0].track,
-          difficulty: projects[0].difficulty,
-          startedText: "1 month ago",
-        },
-        {
-          slug: projects[1].slug,
-          title: projects[1].title,
-          track: projects[1].track,
-          difficulty: projects[1].difficulty,
-          startedText: "3 months ago",
-        },
-      ];
-    }
     return [];
-  }, [enrollments, projects]);
+  }, [enrollments]);
 
   const filtered = useMemo(() => {
     return projects.filter((p: Project) => {
@@ -134,8 +116,8 @@ export default function ProjectsPage() {
 
       const matchTrack =
         !selectedTrack ||
-        p.track.toLowerCase() === selectedTrack.toLowerCase() ||
-        p.techStack.some((t) => t.toLowerCase() === selectedTrack.toLowerCase());
+        isProjectInTrack(p.track, selectedTrack) ||
+        p.track.toLowerCase() === selectedTrack.toLowerCase();
 
       const matchLevel =
         !selectedLevel || p.difficulty.toLowerCase() === selectedLevel.toLowerCase();
@@ -149,33 +131,31 @@ export default function ProjectsPage() {
   return (
     <>
       <Navbar />
-      <main className="w-full bg-[#050507] min-h-screen text-white pb-24 relative overflow-hidden">
-        {/* Track Hover Slider Rail */}
+      <main className="w-full bg-bg min-h-screen text-white pb-24 relative overflow-hidden">
+        {/* Full-Height Track Slider Rail */}
         <TrackSidebarRail
           selectedTrack={selectedTrack}
           onSelectTrack={(track) => {
             setShowSavedOnly(false);
             setSelectedTrack(track);
           }}
-          showSavedOnly={showSavedOnly}
-          onToggleSaved={setShowSavedOnly}
         />
 
         {/* Rich Ambient Atmospheric Lighting */}
         <div
-          className="pointer-events-none absolute left-1/2 top-0 h-[500px] w-full max-w-7xl -translate-x-1/2 bg-[radial-gradient(ellipse_80%_60%_at_50%_-15%,rgba(99,102,241,0.14),rgba(168,85,247,0.06)_40%,transparent_75%)]"
+          className="pointer-events-none absolute left-1/2 top-0 h-125 w-full max-w-7xl -translate-x-1/2 bg-[radial-gradient(ellipse_80%_60%_at_50%_-15%,rgba(99,102,241,0.14),rgba(168,85,247,0.06)_40%,transparent_75%)]"
           aria-hidden="true"
         />
         <div
-          className="pointer-events-none absolute right-[-5%] top-[20%] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle,rgba(6,182,212,0.06)_0%,transparent_70%)] blur-[120px]"
+          className="pointer-events-none absolute right-[-5%] top-[20%] h-125 w-125 rounded-full bg-[radial-gradient(circle,rgba(6,182,212,0.06)_0%,transparent_70%)] blur-[120px]"
           aria-hidden="true"
         />
         <div
-          className="pointer-events-none absolute left-[-5%] top-[50%] h-[550px] w-[550px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.06)_0%,transparent_70%)] blur-[130px]"
+          className="pointer-events-none absolute left-[-5%] top-[50%] h-137.5 w-137.5 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.06)_0%,transparent_70%)] blur-[130px]"
           aria-hidden="true"
         />
 
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 relative">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 xl:pl-24 pt-12 sm:pt-16 lg:pt-20 relative">
           {/* ───────────────── 1. NOW WORKING ON SECTION (TOP) ───────────────── */}
           {workingOnList.length > 0 && (
             <section className="mb-8">
@@ -198,10 +178,10 @@ export default function ProjectsPage() {
                   <Link
                     key={item.slug}
                     href={`/projects/${item.slug}/workspace`}
-                    className="group flex items-center justify-between rounded-xl border border-white/[0.08] bg-[#0A0A0E] p-3.5 sm:p-4 transition-all hover:border-white/20 hover:bg-[#0E0E14] shadow-sm"
+                    className="group flex items-center justify-between rounded-xl border border-white/8 bg-[#0A0A0E] p-3.5 sm:p-4 transition-all hover:border-white/20 hover:bg-surface-card shadow-sm"
                   >
                     <div className="flex items-center gap-3.5 min-w-0">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-[#0E0E14] text-white shadow-sm">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-surface-card text-white shadow-sm">
                         <TechIcon name={item.track} className="h-5 w-5 shrink-0" />
                       </div>
                       <div className="min-w-0">
@@ -232,32 +212,15 @@ export default function ProjectsPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    setShowSavedOnly(false);
                     setSelectedTrack(null);
                   }}
                   className={`rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all ${
                     selectedTrack === null && !showSavedOnly
                       ? "bg-white text-black shadow-xs font-bold"
-                      : "text-neutral-400 hover:text-white hover:bg-white/[0.04]"
+                      : "text-neutral-400 hover:text-white hover:bg-white/4"
                   }`}
                 >
                   All
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowSavedOnly(!showSavedOnly);
-                    setSelectedTrack(null);
-                  }}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all ${
-                    showSavedOnly
-                      ? "bg-indigo-600 text-white shadow-xs font-bold"
-                      : "text-neutral-400 hover:text-white hover:bg-white/[0.04]"
-                  }`}
-                >
-                  <Bookmark className={`h-3 w-3 ${showSavedOnly ? "fill-white" : ""}`} />
-                  <span>Saved{savedProjects.length > 0 ? ` (${savedProjects.length})` : ""}</span>
                 </button>
 
                 {availableTracks.map((track) => {
@@ -267,13 +230,12 @@ export default function ProjectsPage() {
                       type="button"
                       key={track}
                       onClick={() => {
-                        setShowSavedOnly(false);
                         setSelectedTrack(isSelected ? null : track);
                       }}
                       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all ${
                         isSelected
                           ? "bg-white text-black shadow-xs font-bold"
-                          : "text-neutral-400 hover:text-white hover:bg-white/[0.04]"
+                          : "text-neutral-400 hover:text-white hover:bg-white/4"
                       }`}
                     >
                       <TechIcon name={track} className="h-3.5 w-3.5 shrink-0" />
@@ -296,7 +258,7 @@ export default function ProjectsPage() {
                   className={`rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all ${
                     selectedLevel === null
                       ? "bg-white text-black shadow-xs font-bold"
-                      : "text-neutral-400 hover:text-white hover:bg-white/[0.04]"
+                      : "text-neutral-400 hover:text-white hover:bg-white/4"
                   }`}
                 >
                   All
@@ -311,7 +273,7 @@ export default function ProjectsPage() {
                       className={`rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all ${
                         isSelected
                           ? "bg-white text-black shadow-xs font-bold"
-                          : "text-neutral-400 hover:text-white hover:bg-white/[0.04]"
+                          : "text-neutral-400 hover:text-white hover:bg-white/4"
                       }`}
                     >
                       {lvl}
@@ -321,22 +283,42 @@ export default function ProjectsPage() {
               </div>
             </div>
 
-            {/* SEARCH & COUNTER ROW */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-white/[0.06]">
-              <div className="flex items-center gap-2 text-xs font-mono text-neutral-400">
-                <Layers className="h-3.5 w-3.5 text-neutral-400" />
-                <span>
-                  {filtered.length} {filtered.length === 1 ? "project" : "projects"}
-                </span>
-                {(selectedTrack || selectedLevel || search) && (
+            {/* SEARCH & COUNTER ROW (With Repositioned Saved Queue Toggle) */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-white/6">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 text-xs font-mono text-neutral-400">
+                  <Layers className="h-3.5 w-3.5 text-neutral-400" />
+                  <span>
+                    {filtered.length} {filtered.length === 1 ? "project" : "projects"}
+                  </span>
+                </div>
+
+                <div className="h-3.5 w-px bg-white/10 hidden sm:block" />
+
+                {/* Repositioned Saved Queue Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setShowSavedOnly(!showSavedOnly)}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-all border ${
+                    showSavedOnly
+                      ? "bg-indigo-600 text-white border-indigo-500 shadow-sm font-bold"
+                      : "border-white/10 bg-white/3 text-neutral-300 hover:text-white hover:bg-white/7"
+                  }`}
+                >
+                  <Bookmark className={`h-3 w-3 ${showSavedOnly ? "fill-white text-white" : "text-neutral-400"}`} />
+                  <span>Saved Queue{savedProjects.length > 0 ? ` (${savedProjects.length})` : ""}</span>
+                </button>
+
+                {(selectedTrack || selectedLevel || search || showSavedOnly) && (
                   <button
                     type="button"
                     onClick={() => {
                       setSelectedTrack(null);
                       setSelectedLevel(null);
                       setSearch("");
+                      setShowSavedOnly(false);
                     }}
-                    className="ml-2 inline-flex items-center gap-1 text-[11px] text-neutral-400 hover:text-white cursor-pointer"
+                    className="inline-flex items-center gap-1 text-[11px] text-neutral-400 hover:text-white cursor-pointer ml-1"
                   >
                     <X className="h-3 w-3" />
                     <span>Clear filters</span>
@@ -387,7 +369,7 @@ export default function ProjectsPage() {
               </button>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="rounded-2xl border border-white/[0.08] bg-[#0A0A0E] p-12 text-center shadow-xl">
+            <div className="rounded-2xl border border-white/8 bg-[#0A0A0E] p-12 text-center shadow-xl">
               <p className="font-sans text-sm font-semibold text-white mb-1">
                 No projects matched your criteria.
               </p>

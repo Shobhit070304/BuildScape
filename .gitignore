@@ -14,11 +14,13 @@ node_modules/
 # Local seed and generated data directories
 # ──────────────────────────────────────────
 backend/data/
+data/
 
 # ──────────────────────────────────────────
-# Agent artifacts
+# Agent artifacts & temp logs
 # ──────────────────────────────────────────
 .agent/
+*.tsbuildinfo
 
 # ──────────────────────────────────────────
 # Build output
@@ -35,17 +37,13 @@ next-env.d.ts
 .turbo/
 
 # ──────────────────────────────────────────
-# TypeScript
-# ──────────────────────────────────────────
-*.tsbuildinfo
-
-# ──────────────────────────────────────────
-# Environment variables
+# Environment variables (Never commit secret keys)
 # ──────────────────────────────────────────
 .env
 .env.*
 !.env.example
 !frontend/.env.local.example
+!backend/.env.example
 
 # ──────────────────────────────────────────
 # Testing & coverage
